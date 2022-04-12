@@ -20,3 +20,5 @@ build
 
 cmd/leader/leader
 cmd/worker/worker
+leader.yaml
+worker.yaml

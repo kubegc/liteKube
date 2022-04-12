@@ -1,12 +1,21 @@
 package apiserver
 
-import "github.com/litekube/LiteKube/pkg/help"
+import (
+	"fmt"
+	"sort"
+
+	"github.com/litekube/LiteKube/pkg/help"
+	"github.com/litekube/LiteKube/pkg/options/common"
+)
+
+type PrintFunc func(format string, a ...interface{}) error
 
 // struct to store args from input
 type ApiserverOptions struct {
 	ReservedOptions     map[string]string             `yaml:"reserve"`
 	ProfessionalOptions *ApiserverProfessionalOptions `yaml:"professional"`
 	Options             *ApiserverLitekubeOptions     `yaml:"options"`
+	IgnoreOptions       map[string]string             `yaml:"-"`
 }
 
 func NewApiserverOptions() *ApiserverOptions {
@@ -14,23 +23,38 @@ func NewApiserverOptions() *ApiserverOptions {
 		ReservedOptions:     make(map[string]string),
 		ProfessionalOptions: NewApiserverProfessionalOptions(),
 		Options:             NewApiserverLitekubeOptions(),
+		IgnoreOptions:       make(map[string]string),
 	}
 }
 
 // delete keys already be disable or define in other block
-// return all the bad keys, nil
-func (opt *ApiserverOptions) CheckReservedOptions(banArgs []string) ([]string, error) {
-	checkArgs := append(UnreservedArgs, banArgs...)
+func (opt *ApiserverOptions) CheckReservedOptions() error {
+	// deep copy options
+	optionsMap, oErr := common.StructToMap(opt.Options)
+	if oErr != nil {
+		return oErr
+	}
 
-	args := make([]string, 0, len(checkArgs))
-	for _, arg := range checkArgs {
-		if _, ok := opt.ReservedOptions[arg]; ok {
-			args = append(args, arg)
-			delete(opt.ReservedOptions, arg)
+	for k, _ := range optionsMap {
+		if value, ok := opt.ReservedOptions[k]; ok {
+			opt.IgnoreOptions[k] = value
+			delete(opt.ReservedOptions, k)
 		}
 	}
 
-	return args, nil
+	// deep copy professional-options
+	professionalOptionsMap, pErr := common.StructToMap(opt.ProfessionalOptions)
+	if pErr != nil {
+		return pErr
+	}
+
+	for k, _ := range professionalOptionsMap {
+		if value, ok := opt.ReservedOptions[k]; ok {
+			opt.IgnoreOptions[k] = value
+			delete(opt.ReservedOptions, k)
+		}
+	}
+	return nil
 }
 
 func (opt *ApiserverOptions) HelpSection() *help.Section {
@@ -50,4 +74,68 @@ func (opt *ApiserverOptions) HelpSection() *help.Section {
 	section.AddSection(litekubeoptionsSection)
 
 	return section
+}
+
+func (opt *ApiserverOptions) ToMap() (map[string]string, error) {
+	// check error define for flags
+	opt.CheckReservedOptions()
+
+	args := make(map[string]string)
+
+	// deep copy reserved-options
+	for k, v := range opt.ReservedOptions {
+		args[k] = v
+	}
+
+	// deep copy options
+	optionsMap, oErr := common.StructToMap(opt.Options)
+	if oErr != nil {
+		return nil, oErr
+	}
+
+	for k, v := range optionsMap {
+		args[k] = v
+	}
+
+	// deep copy professional-options
+	professionalOptionsMap, pErr := common.StructToMap(opt.ProfessionalOptions)
+	if pErr != nil {
+		return nil, pErr
+	}
+
+	for k, v := range professionalOptionsMap {
+		args[k] = v
+	}
+
+	return args, nil
+}
+
+// print all flags
+func (opt *ApiserverOptions) PrintFlags(prefix string, printFunc func(format string, a ...interface{}) error) error {
+	// print flags
+	flags, err := opt.ToMap()
+	if err != nil {
+		return err
+	}
+	printMap(flags, prefix, printFunc)
+	// print flags-ignored
+	printMap(opt.IgnoreOptions, fmt.Sprintf("%s-<%s>", prefix, UnreserveTip), printFunc)
+	return nil
+}
+
+func printMap(m map[string]string, prefix string, printFunc PrintFunc) {
+	if m == nil {
+		return
+	}
+
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		printFunc("--%s-%s=%s", prefix, key, m[key])
+	}
 }

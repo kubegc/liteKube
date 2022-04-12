@@ -22,18 +22,24 @@ func NewLeaderCommand() *cobra.Command {
 		Long: fmt.Sprintf("%s is a lite leader-component with almost nearly the same capabilities as the K8S Leader", ComponentName),
 
 		// stop printing usage when the command errors
-		SilenceUsage: false,
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			verflag.PrintAndExitIfRequested() // --version=false/true/simple/raw to print version
 
 			klog.Info("Welcome to LiteKube Leader, a lite cluster with almost nearly the same capabilities as the K8S Leader node")
 			klog.Info(version.GetSimple())
 
-			// // load config from disk-file and merge with flags
-			// if errs := opt.LoadConfig(); len(errs) != 0 {
-			// 	klog.Error("some error in your configs")
-			// 	return fmt.Errorf("some error in your configs")
-			// }
+			// load config from --config-file
+			if err := opt.LoadConfig(); err != nil {
+				return err
+			}
+
+			opt.PrintFlags(func() func(format string, a ...interface{}) error {
+				return func(format string, a ...interface{}) error {
+					klog.Infof(format, a...)
+					return nil
+				}
+			}())
 
 			// // complete all default server options,current is none-function
 			// if err := opt.Complete(); err != nil {
