@@ -36,8 +36,8 @@ func (opt *ApiserverOptions) CheckReservedOptions(banArgs []string) ([]string, e
 func (opt *ApiserverOptions) HelpSection() *help.Section {
 	section := help.NewSection("kube-apiserver", "kube-Apiserver's startup parameters, we keep almost the same Settings as the original except logs relation: https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/", nil)
 
-	reserveSection := help.NewSection("reserve", "", nil)
-	reserveSection.AddTip("<name-1>", "<value-1>", "refer to kube-apiserver official website, it will be parse as \"--<name-1>=<value-1>\"", "")
+	reserveSection := help.NewSection("reserve", "reserve parameters, you can still add args unmentioned before refer to kube-apiserver official website.", nil)
+	reserveSection.AddTip("<name-1>", "<value-1>", "it will be parse as \"--<name-1>=<value-1>\"", "")
 	reserveSection.AddTip("<name-n>", "<value-n>", "and so on", "")
 	section.AddSection(reserveSection)
 

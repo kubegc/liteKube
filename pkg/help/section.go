@@ -78,7 +78,11 @@ func (section *Section) AddSection(newSection *Section) {
 	section.childs[newSection.name] = newSection
 }
 
-func (section *Section) PrintSectionWithOffset(w io.Writer, offset int) {
+func (section *Section) PrintSectionWithOffset(w io.Writer, offset int, format func(string) string) {
+	if format == nil {
+		format = FormatNone
+	}
+
 	if section == nil {
 		return
 	}
@@ -86,11 +90,14 @@ func (section *Section) PrintSectionWithOffset(w io.Writer, offset int) {
 	offsetString := strings.Repeat(" ", offset)
 	fmt.Fprintf(w, "%s%s:\n", offsetString, section.name)
 	if len(section.usetip) > 0 {
-		fmt.Fprintf(w, "%s<%s>\n\n", strings.Repeat(" ", offset+section.distance.tipOffset), section.usetip)
+		fmt.Fprintf(w, "%s%s\n", strings.Repeat(" ", offset+section.distance.tipOffset), format(section.usetip))
 	}
 
 	if section.contains != nil {
 		tipKeys := getKeys(section.contains)
+		if len(tipKeys) > 0 {
+			fmt.Fprintln(w)
+		}
 		for _, key := range tipKeys {
 			section.contains[key].(Tip).Fprint(w, offset+section.distance.tipOffset, section.distance.maxKeyLength, section.distance.maxValueTypeLength)
 		}
@@ -104,13 +111,29 @@ func (section *Section) PrintSectionWithOffset(w io.Writer, offset int) {
 			}
 
 			fmt.Println()
-			section.childs[key].(*Section).PrintSectionWithOffset(w, offset+section.distance.childOffset)
+			section.childs[key].(*Section).PrintSectionWithOffset(w, offset+section.distance.childOffset, format)
 		}
 	}
 }
 
-func (section *Section) PrintSection(w io.Writer) {
-	section.PrintSectionWithOffset(w, 0)
+func (section *Section) PrintSection(w io.Writer, format func(string) string) {
+	section.PrintSectionWithOffset(w, 0, format)
+}
+
+func FormatHeader(head string) func(string) string {
+	return func(raw string) string {
+		return head + raw
+	}
+}
+
+func FormatClamp(head, tail string) func(string) string {
+	return func(raw string) string {
+		return head + raw + tail
+	}
+}
+
+func FormatNone(raw string) string {
+	return raw
 }
 
 func getKeys(m map[string]interface{}) []string {

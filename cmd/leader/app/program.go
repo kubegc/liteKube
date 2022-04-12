@@ -3,6 +3,8 @@ package app
 import (
 	"fmt"
 
+	"github.com/litekube/LiteKube/pkg/help"
+	"github.com/litekube/LiteKube/pkg/options/leader"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
 	"github.com/litekube/LiteKube/pkg/version"
 	verflag "github.com/litekube/LiteKube/pkg/version/varflag"
@@ -20,7 +22,7 @@ func NewLeaderCommand() *cobra.Command {
 		Long: fmt.Sprintf("%s is a lite leader-component with almost nearly the same capabilities as the K8S Leader", ComponentName),
 
 		// stop printing usage when the command errors
-		SilenceUsage: true,
+		SilenceUsage: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			verflag.PrintAndExitIfRequested() // --version=false/true/simple/raw to print version
 
@@ -54,6 +56,10 @@ func NewLeaderCommand() *cobra.Command {
 		},
 	}
 
+	// add flags to cmd
+	addFlags(cmd)
+
+	// add help tips for program
 	usageFmt := "Usage:\n  %s\n\n"
 	yamlFmt := "\n[config-file format]:"
 	flagSections := opt.HelpSections()
@@ -61,21 +67,26 @@ func NewLeaderCommand() *cobra.Command {
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
 		fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine())
 		for _, section := range flagSections {
-			section.PrintSection(cmd.OutOrStderr())
+			section.PrintSection(cmd.OutOrStderr(), help.FormatClamp("<", ">"))
 		}
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
-		helpSection.PrintSection(cmd.OutOrStderr())
+		helpSection.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
 		return nil
 	})
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine())
 		for _, section := range flagSections {
-			section.PrintSection(cmd.OutOrStderr())
+			section.PrintSection(cmd.OutOrStderr(), help.FormatClamp("<", ">"))
 		}
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
-		helpSection.PrintSection(cmd.OutOrStderr())
+		helpSection.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
 	})
 
 	return cmd
 
+}
+
+func addFlags(cmd *cobra.Command) {
+	leader.AddFlagsTo(cmd.Flags())
+	verflag.AddFlagsTo(cmd.Flags())
 }
