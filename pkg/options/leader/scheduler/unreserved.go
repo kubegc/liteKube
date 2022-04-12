@@ -1,3 +1,3 @@
-package apiserver
+package scheduler
 
 const UnreserveTip = "ignore"

@@ -67,25 +67,35 @@ func NewLeaderCommand() *cobra.Command {
 
 	// add help tips for program
 	usageFmt := "Usage:\n  %s\n\n"
-	yamlFmt := "\n[config-file format]:"
+	yamlFmt := "\n[config-file format]:\n// setting for kube-apiserver,kube-controller-manager,kube-scheduler and litekube additions\n\n"
 	flagSections := opt.HelpSections()
-	helpSection := opt.ConfigHelpSection()
+	yamlSection := opt.ConfigHelpSection()
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
+		// print flags help
 		fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine())
 		for _, section := range flagSections {
 			section.PrintSection(cmd.OutOrStderr(), help.FormatClamp("<", ">"))
 		}
+
+		// print yaml help
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
-		helpSection.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
+		for _, section := range yamlSection {
+			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
+		}
 		return nil
 	})
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		// print flags help
 		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine())
 		for _, section := range flagSections {
 			section.PrintSection(cmd.OutOrStderr(), help.FormatClamp("<", ">"))
 		}
+
+		// print yaml help
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
-		helpSection.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
+		for _, section := range yamlSection {
+			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
+		}
 	})
 
 	return cmd

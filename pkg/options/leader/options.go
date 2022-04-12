@@ -7,20 +7,26 @@ import (
 
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
+	"github.com/litekube/LiteKube/pkg/options/leader/controllermanager"
 	"github.com/litekube/LiteKube/pkg/options/leader/global"
+	"github.com/litekube/LiteKube/pkg/options/leader/scheduler"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 )
 
 type LeaderOptions struct {
-	GlobalOptions    *global.GlobalOptions       `yaml:"global"`
-	ApiserverOptions *apiserver.ApiserverOptions `yaml:"kube-apiserver"`
+	GlobalOptions            *global.GlobalOptions                       `yaml:"global"`
+	ApiserverOptions         *apiserver.ApiserverOptions                 `yaml:"kube-apiserver"`
+	ControllerManagerOptions *controllermanager.ControllerManagerOptions `yaml:"kube-controller-manager"`
+	SchedulerOptions         *scheduler.SchedulerOptions                 `yaml:"kube-scheduler"`
 }
 
 func NewLeaderOptions() *LeaderOptions {
 	return &LeaderOptions{
-		ApiserverOptions: apiserver.NewApiserverOptions(),
-		GlobalOptions:    global.NewGlobalOptions(),
+		ApiserverOptions:         apiserver.NewApiserverOptions(),
+		ControllerManagerOptions: controllermanager.NewControllerManagerOptions(),
+		SchedulerOptions:         scheduler.NewSchedulerOptions(),
+		GlobalOptions:            global.NewGlobalOptions(),
 	}
 }
 
@@ -49,20 +55,17 @@ func (opt *LeaderOptions) LoadConfig() error {
 }
 
 // add yaml format help tips
-func (opt *LeaderOptions) ConfigHelpSection() *help.Section {
-	yamlSection := help.NewSection("Leader", "setting for kube-apiserver,kube-controller-manager,kube-scheduler and litekube additions", nil)
-	// add for global
-	yamlSection.AddSection(opt.GlobalOptions.HelpSection())
-
-	// add for kube-apiserver
-	yamlSection.AddSection(opt.ApiserverOptions.HelpSection())
-
-	return yamlSection
+func (opt *LeaderOptions) ConfigHelpSection() []*help.Section {
+	return []*help.Section{
+		opt.GlobalOptions.HelpSection(),
+		opt.ApiserverOptions.HelpSection(),
+		opt.ControllerManagerOptions.HelpSection(),
+		opt.SchedulerOptions.HelpSection(),
+	}
 }
 
 // add flags help tips
 func (opt *LeaderOptions) HelpSections() []*help.Section {
-	// add tips for apiserver
 	flagSection := help.NewSection("FLAGS", "", nil)
 	flagSection.AddTip("--"+ConfigFileFlagName, "string", "YAML File to store leader startup parameters", "")
 	flagSection.AddTip("--version", "string", "view the version info, value: {true,false,simple,raw}. ", "false")
@@ -75,5 +78,7 @@ func (opt *LeaderOptions) PrintFlags(printFunc func(format string, a ...interfac
 	printFunc("[flags]:")
 	opt.GlobalOptions.PrintFlags("litekube", printFunc)
 	opt.ApiserverOptions.PrintFlags("kube-apiserver", printFunc)
+	opt.ControllerManagerOptions.PrintFlags("kube-controller-manager", printFunc)
+	opt.SchedulerOptions.PrintFlags("kube-scheduler", printFunc)
 	return nil
 }
