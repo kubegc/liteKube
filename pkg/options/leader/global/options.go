@@ -1,6 +1,9 @@
 package global
 
 import (
+	"fmt"
+	"os/user"
+	"path/filepath"
 	"sort"
 
 	"github.com/litekube/LiteKube/pkg/help"
@@ -10,21 +13,45 @@ import (
 type PrintFunc func(format string, a ...interface{}) error
 
 type GlobalOptions struct {
-	LogDir   string `yaml:"log-dir"`
-	LogToDir bool   `yaml:"log-to-dir"`
-	LogToStd bool   `yaml:"log-to-std"`
+	WorkDir      string `yaml:"work-dir"`
+	LogDir       string `yaml:"log-dir"`
+	LogToDir     bool   `yaml:"log-to-dir"`
+	LogToStd     bool   `yaml:"log-to-std"`
+	EnableWorker bool   `yaml:"enable-worker"`
+	WorkerConfig string `yaml:"worker-config"`
+}
+
+var defaultGO GlobalOptions = GlobalOptions{
+	WorkDir:      filepath.Join(GetHomeDir(), "litekube/"),
+	LogDir:       "/var/log/litekube/",
+	LogToStd:     true,
+	LogToDir:     false,
+	EnableWorker: false,
+}
+
+func GetHomeDir() string {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "/"
+	}
+
+	return currentUser.HomeDir
 }
 
 func NewGlobalOptions() *GlobalOptions {
-	return &GlobalOptions{}
+	options := defaultGO
+	return &options
 }
 
 func (opt *GlobalOptions) HelpSection() *help.Section {
 	section := help.NewSection("global", "leader startup parameters and common args for kubernetes components", nil)
 
-	section.AddTip("log-dir", "string", "fold path to store logs", "")
-	section.AddTip("log-to-dir", "bool", "store log to disk or not", "false")
-	section.AddTip("log-to-std", "bool", "print log to disk or not", "true")
+	section.AddTip("work-dir", "string", "dir to store file generate by litekube", defaultGO.WorkDir)
+	section.AddTip("log-dir", "string", "fold path to store logs", defaultGO.LogDir)
+	section.AddTip("log-to-dir", "bool", "store log to disk or not", fmt.Sprintf("%t", defaultGO.LogToDir))
+	section.AddTip("log-to-std", "bool", "print log to disk or not", fmt.Sprintf("%t", defaultGO.LogToStd))
+	section.AddTip("enable-worker", "bool", "run worker together or not", fmt.Sprintf("%t", defaultGO.EnableWorker))
+	section.AddTip("worker-config", "string", "worker config, --enable-work=true is recommanded", defaultGO.WorkerConfig)
 	return section
 }
 

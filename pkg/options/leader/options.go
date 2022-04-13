@@ -51,6 +51,18 @@ func (opt *LeaderOptions) LoadConfig() error {
 		return fmt.Errorf("error while unmarshal config from file specify by --%s=%s, error info: %s", ConfigFileFlagName, ConfigFile, err.Error())
 	}
 
+	if err := opt.ApiserverOptions.CheckReservedOptions(); err != nil {
+		return err
+	}
+
+	if err := opt.ControllerManagerOptions.CheckReservedOptions(); err != nil {
+		return err
+	}
+
+	if err := opt.SchedulerOptions.CheckReservedOptions(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

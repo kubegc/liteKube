@@ -67,7 +67,7 @@ func NewLeaderCommand() *cobra.Command {
 
 	// add help tips for program
 	usageFmt := "Usage:\n  %s\n\n"
-	yamlFmt := "\n[config-file format]:\n// setting for kube-apiserver,kube-controller-manager,kube-scheduler and litekube additions\n\n"
+	yamlFmt := "\n[config-file format]:\n// setting for kube-apiserver,kube-controller-manager,kube-scheduler and litekube additions\n"
 	flagSections := opt.HelpSections()
 	yamlSection := opt.ConfigHelpSection()
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
@@ -80,7 +80,7 @@ func NewLeaderCommand() *cobra.Command {
 		// print yaml help
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
 		for _, section := range yamlSection {
-			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
+			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("# "))
 		}
 		return nil
 	})
@@ -94,7 +94,7 @@ func NewLeaderCommand() *cobra.Command {
 		// print yaml help
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
 		for _, section := range yamlSection {
-			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("// "))
+			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("# "))
 		}
 	})
 
