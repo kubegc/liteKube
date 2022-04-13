@@ -17,6 +17,7 @@ type GlobalOptions struct {
 	LogDir       string `yaml:"log-dir"`
 	LogToDir     bool   `yaml:"log-to-dir"`
 	LogToStd     bool   `yaml:"log-to-std"`
+	RunKine      bool   `yaml:"run-kine"`
 	EnableWorker bool   `yaml:"enable-worker"`
 	WorkerConfig string `yaml:"worker-config"`
 }
@@ -26,6 +27,7 @@ var defaultGO GlobalOptions = GlobalOptions{
 	LogDir:       "/var/log/litekube/",
 	LogToStd:     true,
 	LogToDir:     false,
+	RunKine:      true,
 	EnableWorker: false,
 }
 
@@ -50,6 +52,7 @@ func (opt *GlobalOptions) HelpSection() *help.Section {
 	section.AddTip("log-dir", "string", "fold path to store logs", defaultGO.LogDir)
 	section.AddTip("log-to-dir", "bool", "store log to disk or not", fmt.Sprintf("%t", defaultGO.LogToDir))
 	section.AddTip("log-to-std", "bool", "print log to disk or not", fmt.Sprintf("%t", defaultGO.LogToStd))
+	section.AddTip("run-kine", "bool", "run kine in leader process or not", fmt.Sprintf("%t", defaultGO.RunKine))
 	section.AddTip("enable-worker", "bool", "run worker together or not", fmt.Sprintf("%t", defaultGO.EnableWorker))
 	section.AddTip("worker-config", "string", "worker config, --enable-work=true is recommanded", defaultGO.WorkerConfig)
 	return section

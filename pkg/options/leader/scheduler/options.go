@@ -35,7 +35,7 @@ func (opt *SchedulerOptions) CheckReservedOptions() error {
 		return oErr
 	}
 
-	for k, _ := range optionsMap {
+	for k := range optionsMap {
 		if value, ok := opt.ReservedOptions[k]; ok {
 			opt.IgnoreOptions[k] = value
 			delete(opt.ReservedOptions, k)
@@ -48,7 +48,7 @@ func (opt *SchedulerOptions) CheckReservedOptions() error {
 		return pErr
 	}
 
-	for k, _ := range professionalOptionsMap {
+	for k := range professionalOptionsMap {
 		if value, ok := opt.ReservedOptions[k]; ok {
 			opt.IgnoreOptions[k] = value
 			delete(opt.ReservedOptions, k)

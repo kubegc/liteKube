@@ -8,11 +8,10 @@ type LeaderRuntime struct {
 
 func NewLeaderRuntime() *LeaderRuntime {
 	return &LeaderRuntime{
-		options: options.NewLeaderOptions(),
+		options: nil,
 	}
 }
 
 func (runtime *LeaderRuntime) LoadConfig(opt *options.LeaderOptions) {
-	opt.
-		runtime.options = opt
+	runtime.options = opt
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
 	"github.com/litekube/LiteKube/pkg/options/leader/controllermanager"
 	"github.com/litekube/LiteKube/pkg/options/leader/global"
+	"github.com/litekube/LiteKube/pkg/options/leader/kine"
 	"github.com/litekube/LiteKube/pkg/options/leader/scheduler"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
@@ -19,6 +20,7 @@ type LeaderOptions struct {
 	ApiserverOptions         *apiserver.ApiserverOptions                 `yaml:"kube-apiserver"`
 	ControllerManagerOptions *controllermanager.ControllerManagerOptions `yaml:"kube-controller-manager"`
 	SchedulerOptions         *scheduler.SchedulerOptions                 `yaml:"kube-scheduler"`
+	KineOptions              *kine.KineOptions                           `yaml:"kine"`
 }
 
 func NewLeaderOptions() *LeaderOptions {
@@ -27,6 +29,7 @@ func NewLeaderOptions() *LeaderOptions {
 		ControllerManagerOptions: controllermanager.NewControllerManagerOptions(),
 		SchedulerOptions:         scheduler.NewSchedulerOptions(),
 		GlobalOptions:            global.NewGlobalOptions(),
+		KineOptions:              kine.NewKineOptions(),
 	}
 }
 
@@ -73,6 +76,7 @@ func (opt *LeaderOptions) ConfigHelpSection() []*help.Section {
 		opt.ApiserverOptions.HelpSection(),
 		opt.ControllerManagerOptions.HelpSection(),
 		opt.SchedulerOptions.HelpSection(),
+		opt.KineOptions.HelpSection(),
 	}
 }
 
@@ -92,5 +96,6 @@ func (opt *LeaderOptions) PrintFlags(printFunc func(format string, a ...interfac
 	opt.ApiserverOptions.PrintFlags("kube-apiserver", printFunc)
 	opt.ControllerManagerOptions.PrintFlags("kube-controller-manager", printFunc)
 	opt.SchedulerOptions.PrintFlags("kube-scheduler", printFunc)
+	opt.KineOptions.PrintFlags("kine", printFunc)
 	return nil
 }
