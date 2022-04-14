@@ -1,17 +1,48 @@
 package config
 
-import options "github.com/litekube/LiteKube/pkg/options/leader"
+import (
+	options "github.com/litekube/LiteKube/pkg/options/leader"
+)
 
 type LeaderRuntime struct {
-	options *options.LeaderOptions
+	FlagsOption           *options.LeaderOptions
+	RuntimeOption         *RuntimeOptions
+	RuntimeAuthentication *RuntimeAuthentications
 }
 
-func NewLeaderRuntime() *LeaderRuntime {
+type RuntimeOptions struct {
+	*options.LeaderOptions
+	OwnKineCert bool
+}
+
+func NewLeaderRuntime(flags *options.LeaderOptions) *LeaderRuntime {
 	return &LeaderRuntime{
-		options: nil,
+		FlagsOption:           flags,
+		RuntimeOption:         NewRuntimeOptions(),
+		RuntimeAuthentication: nil,
 	}
 }
 
-func (runtime *LeaderRuntime) LoadConfig(opt *options.LeaderOptions) {
-	runtime.options = opt
+func NewRuntimeOptions() *RuntimeOptions {
+	return &RuntimeOptions{
+		LeaderOptions: options.NewLeaderOptions(),
+		OwnKineCert:   false,
+		//Logger:        nil,
+	}
+}
+
+func (runtime *LeaderRuntime) CheckArgs() {
+
+}
+
+// check kine args
+func (runtime *LeaderRuntime) CheckKine() error {
+	// disable kine
+	if !runtime.FlagsOption.GlobalOptions.RunKine {
+		runtime.FlagsOption.KineOptions = nil
+		return nil
+	}
+
+	// enable kine
+	return nil
 }

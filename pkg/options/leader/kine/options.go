@@ -12,30 +12,30 @@ type PrintFunc func(format string, a ...interface{}) error
 
 type KineOptions struct {
 	BindAddress    string `yaml:"bind-address"`
-	SecurePort     int16  `yaml:"secure-port"`
+	SecurePort     uint16 `yaml:"secure-port"`
 	CACert         string `yaml:"ca-cert"`
 	ServerCertFile string `yaml:"server-cert-file"`
 	ServerkeyFile  string `yaml:"server-key-file"`
 }
 
-var defaultKO KineOptions = KineOptions{
+var DefaultKO KineOptions = KineOptions{
 	BindAddress: "127.0.0.1",
 	SecurePort:  2379,
 }
 
 func NewKineOptions() *KineOptions {
-	options := defaultKO
+	options := DefaultKO
 	return &options
 }
 
 func (opt *KineOptions) HelpSection() *help.Section {
 	section := help.NewSection("kine", "lite-Database for litekube", nil)
 
-	section.AddTip("bind-address", "string", "The IP address on which to listen for the --secure-port port.", defaultKO.BindAddress)
-	section.AddTip("secure-port", "int16", "The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0.", fmt.Sprintf("%d", defaultKO.SecurePort))
-	section.AddTip("ca-cert", "string", "SSL Certificate Authority file used to secure kine communication.", defaultKO.CACert)
-	section.AddTip("server-cert-file", "string", "SSL certification file used to secure kine communication.", defaultKO.ServerCertFile)
-	section.AddTip("server-key-file", "string", "SSL key file used to secure etcd communication.", defaultKO.ServerkeyFile)
+	section.AddTip("bind-address", "string", "The IP address on which to listen for the --secure-port port.", DefaultKO.BindAddress)
+	section.AddTip("secure-port", "uint16", "The port on which to serve HTTPS with authentication and authorization. It cannot be switched off with 0.", fmt.Sprintf("%d", DefaultKO.SecurePort))
+	section.AddTip("ca-cert", "string", "SSL Certificate Authority file used to secure kine communication.", DefaultKO.CACert)
+	section.AddTip("server-cert-file", "string", "SSL certification file used to secure kine communication.", DefaultKO.ServerCertFile)
+	section.AddTip("server-key-file", "string", "SSL key file used to secure etcd communication.", DefaultKO.ServerkeyFile)
 	return section
 }
 

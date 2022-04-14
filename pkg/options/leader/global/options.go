@@ -2,10 +2,10 @@ package global
 
 import (
 	"fmt"
-	"os/user"
 	"path/filepath"
 	"sort"
 
+	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/options/common"
 )
@@ -22,39 +22,29 @@ type GlobalOptions struct {
 	WorkerConfig string `yaml:"worker-config"`
 }
 
-var defaultGO GlobalOptions = GlobalOptions{
-	WorkDir:      filepath.Join(GetHomeDir(), "litekube/"),
-	LogDir:       "/var/log/litekube/",
+var DefaultGO GlobalOptions = GlobalOptions{
+	WorkDir:      filepath.Join(global.HomePath, "litekube/"),
+	LogDir:       filepath.Join(global.HomePath, "litekube/logs/"),
 	LogToStd:     true,
 	LogToDir:     false,
 	RunKine:      true,
 	EnableWorker: false,
 }
 
-func GetHomeDir() string {
-	currentUser, err := user.Current()
-	if err != nil {
-		return "/"
-	}
-
-	return currentUser.HomeDir
-}
-
 func NewGlobalOptions() *GlobalOptions {
-	options := defaultGO
+	options := DefaultGO
 	return &options
 }
 
 func (opt *GlobalOptions) HelpSection() *help.Section {
 	section := help.NewSection("global", "leader startup parameters and common args for kubernetes components", nil)
-
-	section.AddTip("work-dir", "string", "dir to store file generate by litekube", defaultGO.WorkDir)
-	section.AddTip("log-dir", "string", "fold path to store logs", defaultGO.LogDir)
-	section.AddTip("log-to-dir", "bool", "store log to disk or not", fmt.Sprintf("%t", defaultGO.LogToDir))
-	section.AddTip("log-to-std", "bool", "print log to disk or not", fmt.Sprintf("%t", defaultGO.LogToStd))
-	section.AddTip("run-kine", "bool", "run kine in leader process or not", fmt.Sprintf("%t", defaultGO.RunKine))
-	section.AddTip("enable-worker", "bool", "run worker together or not", fmt.Sprintf("%t", defaultGO.EnableWorker))
-	section.AddTip("worker-config", "string", "worker config, --enable-work=true is recommanded", defaultGO.WorkerConfig)
+	section.AddTip("work-dir", "string", "dir to store file generate by litekube", DefaultGO.WorkDir)
+	section.AddTip("log-dir", "string", "fold path to store logs", DefaultGO.LogDir)
+	section.AddTip("log-to-dir", "bool", "store log to disk or not", fmt.Sprintf("%t", DefaultGO.LogToDir))
+	section.AddTip("log-to-std", "bool", "print log to disk or not", fmt.Sprintf("%t", DefaultGO.LogToStd))
+	section.AddTip("run-kine", "bool", "run kine in leader process or not", fmt.Sprintf("%t", DefaultGO.RunKine))
+	section.AddTip("enable-worker", "bool", "run worker together or not", fmt.Sprintf("%t", DefaultGO.EnableWorker))
+	section.AddTip("worker-config", "string", "worker config, --enable-work=true is recommanded", DefaultGO.WorkerConfig)
 	return section
 }
 

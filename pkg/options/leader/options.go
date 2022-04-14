@@ -10,6 +10,7 @@ import (
 	"github.com/litekube/LiteKube/pkg/options/leader/controllermanager"
 	"github.com/litekube/LiteKube/pkg/options/leader/global"
 	"github.com/litekube/LiteKube/pkg/options/leader/kine"
+	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
 	"github.com/litekube/LiteKube/pkg/options/leader/scheduler"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
@@ -21,6 +22,7 @@ type LeaderOptions struct {
 	ControllerManagerOptions *controllermanager.ControllerManagerOptions `yaml:"kube-controller-manager"`
 	SchedulerOptions         *scheduler.SchedulerOptions                 `yaml:"kube-scheduler"`
 	KineOptions              *kine.KineOptions                           `yaml:"kine"`
+	NetmamagerOptions        *netmanager.NetManagerOptions               `yaml:"network-manager"`
 }
 
 func NewLeaderOptions() *LeaderOptions {
@@ -30,6 +32,7 @@ func NewLeaderOptions() *LeaderOptions {
 		SchedulerOptions:         scheduler.NewSchedulerOptions(),
 		GlobalOptions:            global.NewGlobalOptions(),
 		KineOptions:              kine.NewKineOptions(),
+		NetmamagerOptions:        netmanager.NewNetManagerOptions(),
 	}
 }
 
@@ -73,6 +76,7 @@ func (opt *LeaderOptions) LoadConfig() error {
 func (opt *LeaderOptions) ConfigHelpSection() []*help.Section {
 	return []*help.Section{
 		opt.GlobalOptions.HelpSection(),
+		opt.NetmamagerOptions.HelpSection(),
 		opt.ApiserverOptions.HelpSection(),
 		opt.ControllerManagerOptions.HelpSection(),
 		opt.SchedulerOptions.HelpSection(),
@@ -93,6 +97,7 @@ func (opt *LeaderOptions) HelpSections() []*help.Section {
 func (opt *LeaderOptions) PrintFlags(printFunc func(format string, a ...interface{}) error) error {
 	printFunc("[flags]:")
 	opt.GlobalOptions.PrintFlags("litekube", printFunc)
+	opt.NetmamagerOptions.PrintFlags("network-manager", printFunc)
 	opt.ApiserverOptions.PrintFlags("kube-apiserver", printFunc)
 	opt.ControllerManagerOptions.PrintFlags("kube-controller-manager", printFunc)
 	opt.SchedulerOptions.PrintFlags("kube-scheduler", printFunc)

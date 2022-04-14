@@ -21,7 +21,7 @@ func StructToMap(s interface{}) (map[string]string, error) {
 	return args, nil
 }
 
-// delete item with value=""
+// delete item with value=
 func CleanMap(m map[string]string) {
 	for k, v := range m {
 		if len(v) < 1 {

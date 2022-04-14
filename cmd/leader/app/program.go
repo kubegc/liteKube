@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/litekube/LiteKube/pkg/help"
-	"github.com/litekube/LiteKube/pkg/options/leader"
+	runtimeconfig "github.com/litekube/LiteKube/pkg/leader/config"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
 	"github.com/litekube/LiteKube/pkg/version"
 	verflag "github.com/litekube/LiteKube/pkg/version/varflag"
@@ -34,7 +34,12 @@ func NewLeaderCommand() *cobra.Command {
 				return err
 			}
 
-			opt.PrintFlags(func() func(format string, a ...interface{}) error {
+			runtimeConfig := runtimeconfig.NewLeaderRuntime(opt)
+			if err := runtimeConfig.LoadFlags(); err != nil {
+				return err
+			}
+
+			runtimeConfig.RuntimeOption.LeaderOptions.PrintFlags(func() func(format string, a ...interface{}) error {
 				return func(format string, a ...interface{}) error {
 					klog.Infof(format, a...)
 					return nil
@@ -81,6 +86,7 @@ func NewLeaderCommand() *cobra.Command {
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
 		for _, section := range yamlSection {
 			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("# "))
+			fmt.Fprintln(cmd.OutOrStderr())
 		}
 		return nil
 	})
@@ -95,6 +101,7 @@ func NewLeaderCommand() *cobra.Command {
 		fmt.Fprintln(cmd.OutOrStderr(), yamlFmt)
 		for _, section := range yamlSection {
 			section.PrintSection(cmd.OutOrStderr(), help.FormatHeader("# "))
+			fmt.Fprintln(cmd.OutOrStderr())
 		}
 	})
 
@@ -103,6 +110,6 @@ func NewLeaderCommand() *cobra.Command {
 }
 
 func addFlags(cmd *cobra.Command) {
-	leader.AddFlagsTo(cmd.Flags())
+	options.AddFlagsTo(cmd.Flags())
 	verflag.AddFlagsTo(cmd.Flags())
 }
