@@ -31,6 +31,7 @@ func ValidateIssuer(child *x509.Certificate, issuer *x509.Certificate) bool {
 	return true
 }
 
+// validate if cert is valid to this ca
 func ValidateCA(certPath string, caCertPath string) bool {
 	certPool, err := LoadCertPool(caCertPath)
 	if err != nil {

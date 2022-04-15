@@ -97,7 +97,7 @@ func (opt *LeaderOptions) HelpSections() []*help.Section {
 
 func (opt *LeaderOptions) PrintFlags(printFunc func(format string, a ...interface{}) error) error {
 	printFunc("[flags]:")
-	opt.GlobalOptions.PrintFlags("litekube", printFunc)
+	opt.GlobalOptions.PrintFlags("global", printFunc)
 	opt.NetmamagerOptions.PrintFlags("network-manager", printFunc)
 	opt.ApiserverOptions.PrintFlags("kube-apiserver", printFunc)
 	opt.ControllerManagerOptions.PrintFlags("kube-controller-manager", printFunc)

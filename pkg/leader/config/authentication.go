@@ -8,9 +8,11 @@ import (
 )
 
 type RuntimeAuthentications struct {
-	CertDir    string
-	Kine       *authentication.KineAuthentication
-	Kubernetes *authentication.KubernetesAuthentication
+	CertDir              string
+	NetWorkManagerClient *authentication.NetworkManagerClient
+	NetWorkManager       *authentication.NetworkAuthentication
+	Kine                 *authentication.KineAuthentication
+	Kubernetes           *authentication.KubernetesAuthentication
 }
 
 func NewRuntimeAuthentication(rootCertPath string) *RuntimeAuthentications {
@@ -18,8 +20,10 @@ func NewRuntimeAuthentication(rootCertPath string) *RuntimeAuthentications {
 		rootCertPath = filepath.Join(globaloptions.DefaultGO.WorkDir, "tls/")
 	}
 	return &RuntimeAuthentications{
-		CertDir:    rootCertPath,
-		Kine:       nil,
-		Kubernetes: nil,
+		CertDir:              rootCertPath,
+		Kine:                 nil,
+		Kubernetes:           nil,
+		NetWorkManagerClient: nil,
+		NetWorkManager:       nil,
 	}
 }

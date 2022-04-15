@@ -10,7 +10,8 @@ import (
 type NetManagerOptions struct {
 	RegisterOptions *NetOptions `yaml:"register"`
 	JoinOptions     *NetOptions `yaml:"join"`
-	MarkToken       string      `yaml:"mark-token"`
+	Token           string      `yaml:"token"`
+	NodeToken       string      `yaml:"-"` // read from tls/Token/node.token, value not path
 }
 
 type NetOptions struct {
@@ -42,6 +43,7 @@ func NewJoinOptions() *NetOptions {
 }
 
 var DefaultNMO NetManagerOptions = NetManagerOptions{
+	Token:           "local",
 	RegisterOptions: NewRegisterOptions(),
 	JoinOptions:     NewJoinOptions(),
 }
@@ -53,7 +55,7 @@ func NewNetManagerOptions() *NetManagerOptions {
 
 func (opt *NetManagerOptions) HelpSection() *help.Section {
 	section := help.NewSection("network-manager", "network register and manager component for litekube", nil)
-	section.AddTip("make-token", "string", "token to indicates a host. Do not modify it later.", DefaultNMO.MarkToken)
+	section.AddTip("token", "string", "token value to add hosts to network.", DefaultNMO.Token)
 
 	registerSection := help.NewSection("register", "to register and query from manager", nil)
 	registerSection.AddTip("network-address", "string", "server address.", DefaultRONO.Address)

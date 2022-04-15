@@ -9,6 +9,8 @@ var LocalhostIP = net.ParseIP("127.0.0.1")
 var LocalHostDNSName = "localhost"
 var LocalIPs = QueryIps()
 
+const ReservedNodeToken = "reserverd"
+
 func QueryIps() []net.IP {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
