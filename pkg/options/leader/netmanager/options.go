@@ -2,13 +2,10 @@ package netmanager
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/options/common"
 )
-
-type PrintFunc func(format string, a ...interface{}) error
 
 type NetManagerOptions struct {
 	RegisterOptions *NetOptions `yaml:"register"`
@@ -80,27 +77,22 @@ func (opt *NetManagerOptions) HelpSection() *help.Section {
 // print all flags
 func (opt *NetManagerOptions) PrintFlags(prefix string, printFunc func(format string, a ...interface{}) error) error {
 	// print flags
-	flags, err := common.StructToMap(opt)
+	globalFlags, err := common.StructToMapNoRecursion(opt)
 	if err != nil {
 		return err
 	}
-	printMap(flags, prefix, printFunc)
+	common.PrintMap(globalFlags, prefix, printFunc)
+
+	joinFags, err := common.StructToMap(opt.JoinOptions)
+	if err != nil {
+		return err
+	}
+	common.PrintMap(joinFags, prefix+"-join", printFunc)
+
+	registerFlags, err := common.StructToMap(opt.RegisterOptions)
+	if err != nil {
+		return err
+	}
+	common.PrintMap(registerFlags, prefix+"-register", printFunc)
 	return nil
-}
-
-func printMap(m map[string]string, prefix string, printFunc PrintFunc) {
-	if m == nil {
-		return
-	}
-
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		printFunc("--%s-%s=%s", prefix, key, m[key])
-	}
 }

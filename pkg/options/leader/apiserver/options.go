@@ -2,13 +2,10 @@ package apiserver
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/options/common"
 )
-
-type PrintFunc func(format string, a ...interface{}) error
 
 // struct to store args from input
 type ApiserverOptions struct {
@@ -117,25 +114,8 @@ func (opt *ApiserverOptions) PrintFlags(prefix string, printFunc func(format str
 	if err != nil {
 		return err
 	}
-	printMap(flags, prefix, printFunc)
+	common.PrintMap(flags, prefix, printFunc)
 	// print flags-ignored
-	printMap(opt.IgnoreOptions, fmt.Sprintf("%s-<%s>", prefix, UnreserveTip), printFunc)
+	common.PrintMap(opt.IgnoreOptions, fmt.Sprintf("%s-<%s>", prefix, UnreserveTip), printFunc)
 	return nil
-}
-
-func printMap(m map[string]string, prefix string, printFunc PrintFunc) {
-	if m == nil {
-		return
-	}
-
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		printFunc("--%s-%s=%s", prefix, key, m[key])
-	}
 }

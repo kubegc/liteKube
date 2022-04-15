@@ -17,7 +17,21 @@ func StructToMap(s interface{}) (map[string]string, error) {
 	yaml.Unmarshal(bytes, &m)
 
 	args := make(map[string]string)
-	viewMap(m, args)
+	viewMap(m, args, true)
+	return args, nil
+}
+
+func StructToMapNoRecursion(s interface{}) (map[string]string, error) {
+	m := make(map[interface{}]interface{})
+	bytes, err := yaml.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+
+	yaml.Unmarshal(bytes, &m)
+
+	args := make(map[string]string)
+	viewMap(m, args, false)
 	return args, nil
 }
 
@@ -31,11 +45,13 @@ func CleanMap(m map[string]string) {
 }
 
 // transfer map[interface{}]interface{} to map[string]string
-func viewMap(s map[interface{}]interface{}, m map[string]string) {
+func viewMap(s map[interface{}]interface{}, m map[string]string, recursion bool) {
 	for k, v := range s {
 		// v is map
 		if _, ok := v.(map[interface{}]interface{}); ok {
-			viewMap(v.(map[interface{}]interface{}), m)
+			if recursion {
+				viewMap(v.(map[interface{}]interface{}), m, recursion)
+			}
 		} else {
 
 			m[Strval(k)] = Strval(v)

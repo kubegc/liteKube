@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	globalfunc "github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
 	"github.com/litekube/LiteKube/pkg/options/leader/controllermanager"
@@ -53,7 +54,7 @@ func (opt *LeaderOptions) LoadConfig() error {
 	}
 
 	// unmarshal yaml
-	if err := yaml.Unmarshal(bytes, opt); err != nil {
+	if err := yaml.Unmarshal(globalfunc.ReplaceCurrent(globalfunc.ReplaceHome(bytes)), opt); err != nil {
 		return fmt.Errorf("error while unmarshal config from file specify by --%s=%s, error info: %s", ConfigFileFlagName, ConfigFile, err.Error())
 	}
 

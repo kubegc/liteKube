@@ -2,7 +2,6 @@ package controllermanager
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/options/common"
@@ -117,25 +116,8 @@ func (opt *ControllerManagerOptions) PrintFlags(prefix string, printFunc func(fo
 	if err != nil {
 		return err
 	}
-	printMap(flags, prefix, printFunc)
+	common.PrintMap(flags, prefix, printFunc)
 	// print flags-ignored
-	printMap(opt.IgnoreOptions, fmt.Sprintf("%s-<%s>", prefix, UnreserveTip), printFunc)
+	common.PrintMap(opt.IgnoreOptions, fmt.Sprintf("%s-<%s>", prefix, UnreserveTip), printFunc)
 	return nil
-}
-
-func printMap(m map[string]string, prefix string, printFunc PrintFunc) {
-	if m == nil {
-		return
-	}
-
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		printFunc("--%s-%s=%s", prefix, key, m[key])
-	}
 }
