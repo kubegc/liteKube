@@ -12,4 +12,5 @@ func Exit(code int) {
 	klog.Infof("| ==> process exits voluntarily with code=%d", code)
 	klog.Info("----------------------------------------------")
 	shutdownHandler <- os.Interrupt
+	<-Stop
 }

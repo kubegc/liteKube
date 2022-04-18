@@ -21,6 +21,10 @@ type KineServer struct {
 }
 
 func NewKineServer(ctx context.Context, opt *kine.KineOptions, dbPath string) *KineServer {
+	if dbPath == "" {
+		dbPath = "/"
+	}
+
 	return &KineServer{
 		ctx:         ctx,
 		DBPath:      dbPath,

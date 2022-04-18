@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -20,35 +21,40 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func (runtime *LeaderRuntime) SetFlags(opt *options.LeaderOptions) {
-	runtime.FlagsOption = opt
+func (leaderRuntime *LeaderRuntime) SetFlags(opt *options.LeaderOptions) {
+	leaderRuntime.FlagsOption = opt
 }
 
 // load all flags
-func (runtime *LeaderRuntime) LoadFlags() error {
-	if runtime.FlagsOption == nil {
+func (leaderRuntime *LeaderRuntime) LoadFlags() error {
+	if leaderRuntime.FlagsOption == nil {
 		return fmt.Errorf("no flags input")
 	}
 
 	// init global flags
-	if err := runtime.LoadGloabl(); err != nil {
+	if err := leaderRuntime.LoadGloabl(); err != nil {
 		return err
 	}
 
 	// init kine flags
-	if err := runtime.LoadKine(); err != nil {
+	if err := leaderRuntime.LoadKine(); err != nil {
 		return err
 	}
 
 	// init network manager flags
-	if err := runtime.LoadNetManager(); err != nil {
+	if err := leaderRuntime.LoadNetManager(); err != nil {
 		return err
 	}
 
-	if config, err := yaml.Marshal(runtime.RuntimeOption); err != nil {
+	// run kine server, network manager server, network client to make environment for litekube
+	if err := leaderRuntime.RunForward(); err != nil {
+		return err
+	}
+
+	if config, err := yaml.Marshal(leaderRuntime.RuntimeOption); err != nil {
 		return err
 	} else {
-		startupDir := filepath.Join(runtime.RuntimeOption.GlobalOptions.WorkDir, "startup/")
+		startupDir := filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "startup/")
 		if err := os.MkdirAll(startupDir, os.ModePerm); err != nil {
 			return err
 		}
@@ -60,13 +66,31 @@ func (runtime *LeaderRuntime) LoadFlags() error {
 }
 
 // load or generate args for litekube-global
-func (runtime *LeaderRuntime) LoadGloabl() error {
+func (leaderRuntime *LeaderRuntime) LoadGloabl() error {
 	defer func() {
-		runtime.RuntimeAuthentication = NewRuntimeAuthentication(filepath.Join(runtime.RuntimeOption.GlobalOptions.WorkDir, "tls/"))
+		// set log
+		if leaderRuntime.RuntimeOption.GlobalOptions.LogToDir {
+			logfile := filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")
+			flag.Set("log_file", logfile)
+			flag.Set("logtostderr", "false")
+
+			if leaderRuntime.RuntimeOption.GlobalOptions.LogToStd {
+				flag.Set("alsologtostderr", "true")
+			} else {
+				flag.Set("alsologtostderr", "false")
+			}
+
+		} else {
+			flag.Set("logtostderr", fmt.Sprintf("%t", leaderRuntime.RuntimeOption.GlobalOptions.LogToStd))
+		}
 	}()
 
-	raw := runtime.FlagsOption.GlobalOptions
-	new := runtime.RuntimeOption.GlobalOptions
+	defer func() {
+		leaderRuntime.RuntimeAuthentication = NewRuntimeAuthentication(filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/"))
+	}()
+
+	raw := leaderRuntime.FlagsOption.GlobalOptions
+	new := leaderRuntime.RuntimeOption.GlobalOptions
 
 	// set default work-dir="~/litekube/"
 	new.WorkDir = raw.WorkDir
@@ -81,12 +105,17 @@ func (runtime *LeaderRuntime) LoadGloabl() error {
 	}
 
 	new.LogToDir = raw.LogToDir
+	if new.LogToDir {
+		if err := os.MkdirAll(new.LogDir, os.FileMode(0666)); err != nil {
+			return err
+		}
+	}
 	new.LogToStd = raw.LogToStd
 
 	// kine
 	new.RunKine = raw.RunKine
 	// invalid etcd server will enable kine
-	if runtime.RuntimeOption.ApiserverOptions.ProfessionalOptions.ECTDOptions.EtcdServers == "" {
+	if leaderRuntime.RuntimeOption.ApiserverOptions.ProfessionalOptions.ECTDOptions.EtcdServers == "" {
 		new.RunKine = true
 	}
 
@@ -103,14 +132,14 @@ func (runtime *LeaderRuntime) LoadGloabl() error {
 
 // load or generate args for kine server
 // client certificate will be generate to path, too
-func (runtime *LeaderRuntime) LoadKine() error {
-	if !runtime.RuntimeOption.GlobalOptions.RunKine {
-		runtime.RuntimeOption.KineOptions = nil
+func (leaderRuntime *LeaderRuntime) LoadKine() error {
+	if !leaderRuntime.RuntimeOption.GlobalOptions.RunKine {
+		leaderRuntime.RuntimeOption.KineOptions = nil
 		return nil
 	}
 
-	raw := runtime.FlagsOption.KineOptions
-	new := runtime.RuntimeOption.KineOptions
+	raw := leaderRuntime.FlagsOption.KineOptions
+	new := leaderRuntime.RuntimeOption.KineOptions
 
 	// check bind-address
 	if ip := net.ParseIP(raw.BindAddress); ip == nil {
@@ -131,15 +160,15 @@ func (runtime *LeaderRuntime) LoadKine() error {
 		klog.Info("built-in certificates for kine will be used")
 
 		// invalid cert， generate kine certs
-		runtime.OwnKineCert = true
-		runtime.RuntimeAuthentication.Kine = authentication.NewKineAuthentication(runtime.RuntimeAuthentication.CertDir, new.BindAddress)
-		if err := runtime.RuntimeAuthentication.Kine.GenerateOrSkip(); err != nil {
+		leaderRuntime.OwnKineCert = true
+		leaderRuntime.RuntimeAuthentication.Kine = authentication.NewKineAuthentication(leaderRuntime.RuntimeAuthentication.CertDir, new.BindAddress)
+		if err := leaderRuntime.RuntimeAuthentication.Kine.GenerateOrSkip(); err != nil {
 			return err
 		}
 
-		new.CACert = runtime.RuntimeAuthentication.Kine.CACert
-		new.ServerCertFile = runtime.RuntimeAuthentication.Kine.ServerCert
-		new.ServerkeyFile = runtime.RuntimeAuthentication.Kine.Serverkey
+		new.CACert = leaderRuntime.RuntimeAuthentication.Kine.CACert
+		new.ServerCertFile = leaderRuntime.RuntimeAuthentication.Kine.ServerCert
+		new.ServerkeyFile = leaderRuntime.RuntimeAuthentication.Kine.Serverkey
 	} else {
 		if !certificate.ValidateTLSPair(raw.ServerCertFile, raw.ServerkeyFile) || !certificate.ValidateCA(raw.ServerCertFile, raw.CACert) {
 			klog.Errorf("You specified an unavailable certificate for kine")
@@ -157,9 +186,9 @@ func (runtime *LeaderRuntime) LoadKine() error {
 
 // load network-manager client config
 // if run-network-manager==true, runtime.RuntimeAuthentication.NetWorkManager will init
-func (runtime *LeaderRuntime) LoadNetManager() error {
-	raw := runtime.FlagsOption.NetmamagerOptions
-	new := runtime.RuntimeOption.NetmamagerOptions
+func (leaderRuntime *LeaderRuntime) LoadNetManager() error {
+	raw := leaderRuntime.FlagsOption.NetmamagerOptions
+	new := leaderRuntime.RuntimeOption.NetmamagerOptions
 
 	// check bind-address
 	if ip := net.ParseIP(raw.RegisterOptions.Address); ip == nil {
@@ -189,12 +218,12 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 	}
 
 	// check Token
-	if runtime.RuntimeOption.GlobalOptions.RunNetManager {
+	if leaderRuntime.RuntimeOption.GlobalOptions.RunNetManager {
 		// generate certificate for network manager
 		klog.Infof("certificates for built-in network manager server will be used")
 		new.Token = "local"
-		runtime.RuntimeAuthentication.NetWorkManager = authentication.NewNetworkAuthentication(runtime.RuntimeAuthentication.CertDir, new.RegisterOptions.Address, new.JoinOptions.Address)
-		if err := runtime.RuntimeAuthentication.NetWorkManager.GenerateOrSkip(); err != nil {
+		leaderRuntime.RuntimeAuthentication.NetWorkManager = authentication.NewNetworkAuthentication(leaderRuntime.RuntimeAuthentication.CertDir, new.RegisterOptions.Address, new.JoinOptions.Address)
+		if err := leaderRuntime.RuntimeAuthentication.NetWorkManager.GenerateOrSkip(); err != nil {
 			return err
 		}
 	} else {
@@ -212,17 +241,17 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 		// check client certificate
 		// into TLS bootstrap
 		klog.Infof("start load network manager client certificate and node-token by --token")
-		runtime.RuntimeAuthentication.NetWorkManagerClient = authentication.NewNetworkManagerClient(runtime.RuntimeAuthentication.CertDir, new.Token)
-		if err := runtime.RuntimeAuthentication.NetWorkManagerClient.GenerateOrSkip(new.RegisterOptions.Address, int(new.RegisterOptions.SecurePort)); err != nil {
+		leaderRuntime.RuntimeAuthentication.NetWorkManagerClient = authentication.NewNetworkManagerClient(leaderRuntime.RuntimeAuthentication.CertDir, new.Token)
+		if err := leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.GenerateOrSkip(new.RegisterOptions.Address, int(new.RegisterOptions.SecurePort)); err != nil {
 			return err
 		}
 
-		if !runtime.RuntimeAuthentication.NetWorkManagerClient.Check() {
+		if !leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.Check() {
 			return fmt.Errorf("fail to load network-manager TLS args")
 		}
 
 		// node token
-		if nodeToken, err := runtime.RuntimeAuthentication.NetWorkManagerClient.Nodetoken(); err != nil {
+		if nodeToken, err := leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.Nodetoken(); err != nil {
 			return err
 		} else {
 			new.NodeToken = nodeToken
@@ -230,14 +259,14 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 
 		// cert
 		// join
-		new.JoinOptions.CACert = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinCACert
-		new.JoinOptions.ClientCertFile = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinClientCert
-		new.JoinOptions.ClientkeyFile = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinClientkey
+		new.JoinOptions.CACert = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.JoinCACert
+		new.JoinOptions.ClientCertFile = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.JoinClientCert
+		new.JoinOptions.ClientkeyFile = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.JoinClientkey
 
 		// register
-		new.RegisterOptions.CACert = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterCACert
-		new.RegisterOptions.ClientCertFile = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientCert
-		new.RegisterOptions.ClientkeyFile = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientkey
+		new.RegisterOptions.CACert = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.RegisterCACert
+		new.RegisterOptions.ClientCertFile = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientCert
+		new.RegisterOptions.ClientkeyFile = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientkey
 
 		klog.Infof("success to load network manager client certificates node-token by --token")
 		return nil
@@ -255,7 +284,7 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 			new.RegisterOptions.ClientCertFile = raw.RegisterOptions.ClientCertFile
 			new.RegisterOptions.ClientkeyFile = raw.RegisterOptions.ClientkeyFile
 			new.NodeToken = raw.NodeToken
-			runtime.RuntimeAuthentication.NetWorkManagerClient = nil
+			leaderRuntime.RuntimeAuthentication.NetWorkManagerClient = nil
 			klog.Infof("network manager client certificates specified ok, ignore --token")
 		} else {
 			return fmt.Errorf("you have provide bad network manager client certificates or node-token for network manager")
@@ -265,9 +294,9 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 	return nil
 }
 
-func (runtime *LeaderRuntime) LoadApiserver() error {
-	raw := runtime.FlagsOption.ApiserverOptions
-	new := runtime.RuntimeOption.ApiserverOptions
+func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
+	raw := leaderRuntime.FlagsOption.ApiserverOptions
+	new := leaderRuntime.RuntimeOption.ApiserverOptions
 
 	new.ReservedOptions = raw.ReservedOptions
 	new.IgnoreOptions = raw.IgnoreOptions
@@ -342,16 +371,16 @@ func (runtime *LeaderRuntime) LoadApiserver() error {
 	return nil
 }
 
-func (runtime *LeaderRuntime) LoadControllermanager() error {
+func (leaderRuntime *LeaderRuntime) LoadControllermanager() error {
 	return nil
 }
 
-func (runtime *LeaderRuntime) LoadScheduler() error {
+func (leaderRuntime *LeaderRuntime) LoadScheduler() error {
 	return nil
 }
 
-func (runtime *LeaderRuntime) LoadWorker() error {
-	if !runtime.FlagsOption.GlobalOptions.EnableWorker {
+func (leaderRuntime *LeaderRuntime) LoadWorker() error {
+	if !leaderRuntime.FlagsOption.GlobalOptions.EnableWorker {
 		return nil
 	}
 

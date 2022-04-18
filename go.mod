@@ -3,7 +3,7 @@ module github.com/litekube/LiteKube
 go 1.18
 
 replace (
-	github.com/k3s-io/kine => github.com/Litekube/kine v0.9.0-litekube
+	github.com/k3s-io/kine => github.com/Litekube/kine v0.9.0-lk1
 	k8s.io/api => github.com/k3s-io/kubernetes/staging/src/k8s.io/api v1.23.5-k3s1
 	k8s.io/apiextensions-apiserver => github.com/k3s-io/kubernetes/staging/src/k8s.io/apiextensions-apiserver v1.23.5-k3s1
 	k8s.io/apimachinery => github.com/k3s-io/kubernetes/staging/src/k8s.io/apimachinery v1.23.5-k3s1

@@ -28,7 +28,7 @@ func main() {
 	if err := cmd.Execute(); err != nil {
 		year, month, day := time.Now().Date()
 		klog.Infof("LiteKube exit at %d-%d-%d %d:%d:%d, error info: %s", year, month, day, time.Now().Hour(), time.Now().Minute(), time.Now().Second(), err.Error())
-		os.Exit(1)
+		os.Exit(-1)
 	}
 
 }

@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/litekube/LiteKube/pkg/help"
-	runtimeconfig "github.com/litekube/LiteKube/pkg/leader/config"
+	"github.com/litekube/LiteKube/pkg/leader/config"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
+	"github.com/litekube/LiteKube/pkg/util"
 	"github.com/litekube/LiteKube/pkg/version"
 	verflag "github.com/litekube/LiteKube/pkg/version/varflag"
 	"github.com/spf13/cobra"
@@ -34,27 +35,8 @@ func NewLeaderCommand() *cobra.Command {
 				return err
 			}
 
-			runtimeConfig := runtimeconfig.NewLeaderRuntime(opt)
-			if err := runtimeConfig.LoadFlags(); err != nil {
-				return err
-			}
-
-			runtimeConfig.RuntimeOption.PrintFlags(func() func(format string, a ...interface{}) error {
-				return func(format string, a ...interface{}) error {
-					klog.Infof(format, a...)
-					return nil
-				}
-			}())
-
-			// // complete all default server options,current is none-function
-			// if err := opt.Complete(); err != nil {
-			// 	klog.Errorf("complete options error: %v", err)
-			// 	return err
-			// }
-
-			// // ready to run
-			// return Run(opt, util.SetupSignalHandler())
-			return nil
+			// run leader
+			return Run(opt, util.SetupSignalHandler())
 		},
 		Args: func(cmd *cobra.Command, args []string) error { // Validate unresolved args
 			for _, arg := range args {
@@ -107,6 +89,34 @@ func NewLeaderCommand() *cobra.Command {
 
 	return cmd
 
+}
+
+func Run(opt *options.LeaderOptions, stopCh <-chan struct{}) error {
+	runtimeConfig := config.NewLeaderRuntime(opt)
+	defer runtimeConfig.Stop()
+
+	if err := runtimeConfig.LoadFlags(); err != nil {
+		return err
+	}
+
+	// print finally runtime-flags
+	runtimeConfig.RuntimeOption.PrintFlags(func() func(format string, a ...interface{}) error {
+		return func(format string, a ...interface{}) error {
+			klog.Infof(format, a...)
+			return nil
+		}
+	}())
+
+	// run k8s
+	if err := runtimeConfig.Run(); err != nil {
+		return err
+	}
+
+	<-stopCh // wait util read system close signal
+
+	klog.Info("We have prepare to close process, it won't take you too much time, wait please!")
+
+	return nil
 }
 
 func addFlags(cmd *cobra.Command) {

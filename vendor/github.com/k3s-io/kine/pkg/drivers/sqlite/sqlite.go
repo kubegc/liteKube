@@ -6,7 +6,6 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -63,7 +62,6 @@ func NewVariant(ctx context.Context, driverName, dataSourceName string, connPool
 	}
 
 	dataSourceName = filepath.Join(dataSourceName, "state.db?_journal=WAL&cache=shared")
-	fmt.Println(dataSourceName)
 
 	dialect, err := generic.Open(ctx, driverName, dataSourceName, connPoolConfig, "?", false)
 	if err != nil {
