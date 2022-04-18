@@ -317,6 +317,28 @@ func (runtime *LeaderRuntime) LoadApiserver() error {
 		new.Options.SecurePort = raw.Options.SecurePort
 	}
 
+	// load *LitekubeOptions
+	if ip := net.ParseIP(raw.ProfessionalOptions.BindAddress); ip == nil {
+		new.ProfessionalOptions.BindAddress = apiserver.DefaultAPO.BindAddress
+	} else {
+		new.ProfessionalOptions.BindAddress = raw.ProfessionalOptions.BindAddress
+	}
+
+	if ip := net.ParseIP(raw.ProfessionalOptions.AdvertiseAddress); ip == nil {
+		// no value util run network-manager client
+		new.ProfessionalOptions.BindAddress = ""
+	} else {
+		new.ProfessionalOptions.AdvertiseAddress = raw.ProfessionalOptions.BindAddress
+	}
+
+	// ProfessionalOptions
+
+	// ECTDOptions
+
+	// ServerCertOptions
+
+	// KubeletClientCertOptions
+
 	return nil
 }
 

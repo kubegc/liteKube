@@ -22,13 +22,15 @@ type ApiserverLitekubeOptions struct {
 }
 
 var DefaultALO ApiserverLitekubeOptions = ApiserverLitekubeOptions{
-	AllowPrivileged:       true,
-	AuthorizationMode:     modes.ModeWebhook,
-	EnableSwaggerUI:       false,
-	Profiling:             false,
-	ServiceClusterIpRange: "10.0.0.0/24",
-	ServiceNodePortRange:  "30000-32767",
-	SecurePort:            6443,
+	AllowPrivileged:        true,
+	AuthorizationMode:      modes.ModeWebhook,
+	AnonymousAuth:          false,
+	EnableSwaggerUI:        false,
+	EnableAdmissionPlugins: "NodeRestriction",
+	Profiling:              false,
+	ServiceClusterIpRange:  "10.0.0.0/16",
+	ServiceNodePortRange:   "30000-32767",
+	SecurePort:             6443,
 }
 
 func NewApiserverLitekubeOptions() *ApiserverLitekubeOptions {

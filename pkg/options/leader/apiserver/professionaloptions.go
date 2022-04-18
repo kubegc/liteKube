@@ -55,14 +55,14 @@ type ECTDOptions struct {
 	EtcdKeyfile    string `yaml:"etcd-keyfile"`
 }
 
-var defaultEO ECTDOptions = ECTDOptions{
+var DefaultEO ECTDOptions = ECTDOptions{
 	StorageBackend: "etcd3",
 	EtcdServers:    "https://127.0.0.1:2379",
 }
-var defaultKCCO KubeletClientCertOptions = KubeletClientCertOptions{}
-var defaultSCO ServerCertOptions = ServerCertOptions{}
+var DefaultKCCO KubeletClientCertOptions = KubeletClientCertOptions{}
+var DefaultSCO ServerCertOptions = ServerCertOptions{}
 
-var defaultAPO ApiserverProfessionalOptions = ApiserverProfessionalOptions{
+var DefaultAPO ApiserverProfessionalOptions = ApiserverProfessionalOptions{
 	ECTDOptions:                     *NewECTDOptions(),
 	ServerCertOptions:               *NewServerCertOptions(),
 	KubeletClientCertOptions:        *NewKubeletClientCertOptions(),
@@ -75,63 +75,63 @@ var defaultAPO ApiserverProfessionalOptions = ApiserverProfessionalOptions{
 }
 
 func NewKubeletClientCertOptions() *KubeletClientCertOptions {
-	options := defaultKCCO
+	options := DefaultKCCO
 	return &options
 }
 
 func NewServerCertOptions() *ServerCertOptions {
-	options := defaultSCO
+	options := DefaultSCO
 	return &options
 }
 
 func NewECTDOptions() *ECTDOptions {
-	options := defaultEO
+	options := DefaultEO
 	return &options
 }
 
 func NewApiserverProfessionalOptions() *ApiserverProfessionalOptions {
-	options := defaultAPO
+	options := DefaultAPO
 	return &options
 }
 
 func (opt *ServerCertOptions) AddTips(section *help.Section) {
-	section.AddTip("cert-dir", "string", "The directory where the TLS certs are located. If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored.", defaultSCO.CertDir)
-	section.AddTip("tls-cert-file", "string", "File containing the default x509 Certificate for HTTPS.", defaultSCO.TlsCertFile)
-	section.AddTip("tls-private-key-file", "string", "File containing the default x509 private key matching --tls-cert-file.", defaultSCO.TlsPrivateKeyFile)
-	section.AddTip("api-audiences", "string", "Identifiers of the API.", defaultSCO.ApiAudiencesr)
-	section.AddTip("token-auth-file", "string", "If set, the file that will be used to secure the secure port of the API server via token authentication.", defaultSCO.TokenAuthFile)
-	section.AddTip("enable-bootstrap-token-auth", "bool", "Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' namespace to be used for TLS bootstrapping authentication.", fmt.Sprintf("%t", defaultSCO.EnableBootstrapTokenAuth))
-	section.AddTip("service-account-key-file", "string", "File containing PEM-encoded x509 RSA or ECDSA private or public keys, used to verify ServiceAccount tokens.", defaultSCO.ServiceAccountKeyFile)
-	section.AddTip("service-account-issuer", "string", "Identifier of the service account token issuer.", defaultSCO.ServiceAccountIssuer)
+	section.AddTip("cert-dir", "string", "The directory where the TLS certs are located. If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored.", DefaultSCO.CertDir)
+	section.AddTip("tls-cert-file", "string", "File containing the default x509 Certificate for HTTPS.", DefaultSCO.TlsCertFile)
+	section.AddTip("tls-private-key-file", "string", "File containing the default x509 private key matching --tls-cert-file.", DefaultSCO.TlsPrivateKeyFile)
+	section.AddTip("api-audiences", "string", "Identifiers of the API.", DefaultSCO.ApiAudiencesr)
+	section.AddTip("token-auth-file", "string", "If set, the file that will be used to secure the secure port of the API server via token authentication.", DefaultSCO.TokenAuthFile)
+	section.AddTip("enable-bootstrap-token-auth", "bool", "Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' namespace to be used for TLS bootstrapping authentication.", fmt.Sprintf("%t", DefaultSCO.EnableBootstrapTokenAuth))
+	section.AddTip("service-account-key-file", "string", "File containing PEM-encoded x509 RSA or ECDSA private or public keys, used to verify ServiceAccount tokens.", DefaultSCO.ServiceAccountKeyFile)
+	section.AddTip("service-account-issuer", "string", "Identifier of the service account token issuer.", DefaultSCO.ServiceAccountIssuer)
 }
 
 func (opt *ECTDOptions) AddTips(section *help.Section) {
-	section.AddTip("storage-backend", "string", "The storage backend for persistence. (default).", defaultEO.StorageBackend)
-	section.AddTip("etcd-servers", "string", "List of etcd servers to connect with (scheme://ip:port), comma separated.", defaultEO.EtcdServers)
-	section.AddTip("etcd-cafile", "string", "SSL Certificate Authority file used to secure etcd communication.", defaultEO.EtcdCafile)
-	section.AddTip("etcd-certfile", "string", "SSL certification file used to secure etcd communication.", defaultEO.EtcdCertfile)
-	section.AddTip("etcd-keyfile", "string", "SSL key file used to secure etcd communication.", defaultEO.EtcdKeyfile)
+	section.AddTip("storage-backend", "string", "The storage backend for persistence. (default).", DefaultEO.StorageBackend)
+	section.AddTip("etcd-servers", "string", "List of etcd servers to connect with (scheme://ip:port), comma separated.", DefaultEO.EtcdServers)
+	section.AddTip("etcd-cafile", "string", "SSL Certificate Authority file used to secure etcd communication.", DefaultEO.EtcdCafile)
+	section.AddTip("etcd-certfile", "string", "SSL certification file used to secure etcd communication.", DefaultEO.EtcdCertfile)
+	section.AddTip("etcd-keyfile", "string", "SSL key file used to secure etcd communication.", DefaultEO.EtcdKeyfile)
 }
 
 func (opt *KubeletClientCertOptions) AddTips(section *help.Section) {
-	section.AddTip("kubelet-certificate-authority", "string", "Path to a cert file for the certificate authority.", defaultKCCO.KubeletCertificateAuthority)
-	section.AddTip("kubelet-client-certificate", "string", "Path to a client cert file for TLS.", defaultKCCO.KubeletClientCertificate)
-	section.AddTip("kubelet-client-key", "string", "Path to a client key file for TLS.", defaultKCCO.KubeletClientKey)
-	section.AddTip("client-ca-file", "string", "If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.", defaultKCCO.ClientCAFile)
-	section.AddTip("requestheader-client-ca-file", "string", "Root certificate bundle to use to verify client certificates on incoming requests before trusting usernames in headers specified by --requestheader-username-headers.", defaultKCCO.RequestheaderClientCAFile)
-	section.AddTip("requestheader-allowed-names", "string", "List of client certificate common names to allow to provide usernames in headers specified by --requestheader-username-headers.", defaultKCCO.RequestheaderAllowedNames)
-	section.AddTip("proxy-client-cert-file", "string", "Client certificate used to prove the identity of the aggregator or kube-apiserver when it must call out during a request. ", defaultKCCO.ProxyClientCertFile)
-	section.AddTip("proxy-client-key-file", "string", "Private key for the client certificate used to prove the identity of the aggregator or kube-apiserver when it must call out during a request. ", defaultKCCO.ProxyClientKeyFile)
+	section.AddTip("kubelet-certificate-authority", "string", "Path to a cert file for the certificate authority.", DefaultKCCO.KubeletCertificateAuthority)
+	section.AddTip("kubelet-client-certificate", "string", "Path to a client cert file for TLS.", DefaultKCCO.KubeletClientCertificate)
+	section.AddTip("kubelet-client-key", "string", "Path to a client key file for TLS.", DefaultKCCO.KubeletClientKey)
+	section.AddTip("client-ca-file", "string", "If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.", DefaultKCCO.ClientCAFile)
+	section.AddTip("requestheader-client-ca-file", "string", "Root certificate bundle to use to verify client certificates on incoming requests before trusting usernames in headers specified by --requestheader-username-headers.", DefaultKCCO.RequestheaderClientCAFile)
+	section.AddTip("requestheader-allowed-names", "string", "List of client certificate common names to allow to provide usernames in headers specified by --requestheader-username-headers.", DefaultKCCO.RequestheaderAllowedNames)
+	section.AddTip("proxy-client-cert-file", "string", "Client certificate used to prove the identity of the aggregator or kube-apiserver when it must call out during a request. ", DefaultKCCO.ProxyClientCertFile)
+	section.AddTip("proxy-client-key-file", "string", "Private key for the client certificate used to prove the identity of the aggregator or kube-apiserver when it must call out during a request. ", DefaultKCCO.ProxyClientKeyFile)
 }
 
 func (opt *ApiserverProfessionalOptions) AddTips(section *help.Section) {
-	section.AddTip("bind-address", "string", "The IP address on which to listen for the --secure-port port.", defaultAPO.BindAddress)
-	section.AddTip("advertise-address", "string", "The IP address on which to advertise the apiserver to members of the cluster.", defaultAPO.AdvertiseAddress)
-	section.AddTip("insecure-port", "uint16", "Disabled, HTTP Apiserver port", fmt.Sprintf("%d", defaultAPO.InsecurePort))
-	section.AddTip("requestheader-extra-headers-prefix", "string", "List of request header prefixes to inspect. X-Remote-Extra- is suggested.", defaultAPO.RequestheaderExtraHeadersPrefix)
-	section.AddTip("requestheader-group-headers", "string", "List of request headers to inspect for groups. X-Remote-Group is suggested.", defaultAPO.RequestheaderGroupHeaders)
-	section.AddTip("requestheader-username-headers", "string", "List of request headers to inspect for usernames. X-Remote-User is common.", defaultAPO.RequestheaderUsernameHeaders)
-	section.AddTip("feature-gates", "string", "A set of key=value pairs that describe feature gates for alpha/experimental features.", defaultAPO.FeatureGates)
+	section.AddTip("bind-address", "string", "The IP address on which to listen for the --secure-port port.", DefaultAPO.BindAddress)
+	section.AddTip("advertise-address", "string", "The IP address on which to advertise the apiserver to members of the cluster.", DefaultAPO.AdvertiseAddress)
+	section.AddTip("insecure-port", "uint16", "Disabled, HTTP Apiserver port", fmt.Sprintf("%d", DefaultAPO.InsecurePort))
+	section.AddTip("requestheader-extra-headers-prefix", "string", "List of request header prefixes to inspect. X-Remote-Extra- is suggested.", DefaultAPO.RequestheaderExtraHeadersPrefix)
+	section.AddTip("requestheader-group-headers", "string", "List of request headers to inspect for groups. X-Remote-Group is suggested.", DefaultAPO.RequestheaderGroupHeaders)
+	section.AddTip("requestheader-username-headers", "string", "List of request headers to inspect for usernames. X-Remote-User is common.", DefaultAPO.RequestheaderUsernameHeaders)
+	section.AddTip("feature-gates", "string", "A set of key=value pairs that describe feature gates for alpha/experimental features.", DefaultAPO.FeatureGates)
 
 	opt.ECTDOptions.AddTips(section)
 	opt.KubeletClientCertOptions.AddTips(section)
