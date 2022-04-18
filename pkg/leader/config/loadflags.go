@@ -70,6 +70,7 @@ func (leaderRuntime *LeaderRuntime) LoadGloabl() error {
 	defer func() {
 		// set log
 		if leaderRuntime.RuntimeOption.GlobalOptions.LogToDir {
+			klog.MaxSize = 10240
 			logfile := filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")
 			flag.Set("log_file", logfile)
 			flag.Set("logtostderr", "false")
