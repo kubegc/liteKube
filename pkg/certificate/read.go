@@ -9,6 +9,13 @@ import (
 )
 
 func LoadCertificate(certPath string) (*x509.Certificate, error) {
+	certificates, err := LoadCertificates(certPath)
+	if err != nil || certificates == nil || len(certificates) < 1 {
+		return nil, err
+	} else {
+		return certificates[0], err
+	}
+
 	// bytes, err := ioutil.ReadFile(certPath)
 	// if err != nil {
 	// 	return nil, err
@@ -23,9 +30,6 @@ func LoadCertificate(certPath string) (*x509.Certificate, error) {
 	// if err != nil {
 	// 	return nil, err
 	// }
-	certificates, err := LoadCertificates(certPath)
-
-	return certificates[0], err
 }
 
 // if client/server certificate generate by this package, return[0] is client/server certificate, return[1] is CA certificate
