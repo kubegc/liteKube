@@ -11,12 +11,12 @@ type NetManagerOptions struct {
 	RegisterOptions *NetOptions `yaml:"register"`
 	JoinOptions     *NetOptions `yaml:"join"`
 	Token           string      `yaml:"token"`
-	NodeToken       string      `yaml:"-"` // read from tls/Token/node.token, value not path
+	NodeToken       string      `yaml:"node-token"` // read from tls/Token/node.token, value not path
 }
 
 type NetOptions struct {
 	Address        string `yaml:"network-address"`
-	SecurePort     int16  `yaml:"secure-port"`
+	SecurePort     uint16 `yaml:"secure-port"`
 	CACert         string `yaml:"ca-cert"`
 	ClientCertFile string `yaml:"client-cert-file"`
 	ClientkeyFile  string `yaml:"client-key-file"`
@@ -55,21 +55,22 @@ func NewNetManagerOptions() *NetManagerOptions {
 
 func (opt *NetManagerOptions) HelpSection() *help.Section {
 	section := help.NewSection("network-manager", "network register and manager component for litekube", nil)
-	section.AddTip("token", "string", "token value to add hosts to network.", DefaultNMO.Token)
+	section.AddTip("token", "string", "token value to add hosts to network and auto load certificates and node-token. It will be ignored if you provide any certificates or value by --node-token", DefaultNMO.Token)
+	section.AddTip("node-token", "string", "[Not recommended] node-token value to mark one node to network, need to be given together with join and register certificates. Instead you can only specifies a valid --token.", DefaultNMO.NodeToken)
 
-	registerSection := help.NewSection("register", "to register and query from manager", nil)
+	registerSection := help.NewSection("register", "to register and query from manager. certificates need to be given together with --node-token. Or you can only ", nil)
 	registerSection.AddTip("network-address", "string", "server address.", DefaultRONO.Address)
 	registerSection.AddTip("secure-port", "uint16", "serving port.", fmt.Sprintf("%d", DefaultRONO.SecurePort))
-	registerSection.AddTip("ca-cert", "string", "SSL Certificate Authority file used to secure communication.", DefaultRONO.CACert)
-	registerSection.AddTip("client-cert-file", "string", "SSL certification file used to secure communication.", DefaultRONO.ClientCertFile)
-	registerSection.AddTip("client-key-file", "string", "SSL key file used to secure communication.", DefaultRONO.ClientkeyFile)
+	registerSection.AddTip("ca-cert", "string", "[Not recommended] SSL Certificate Authority file used to secure communication.", DefaultRONO.CACert)
+	registerSection.AddTip("client-cert-file", "string", "[Not recommended] SSL certification file used to secure communication.", DefaultRONO.ClientCertFile)
+	registerSection.AddTip("client-key-file", "string", "[Not recommended] SSL key file used to secure communication.", DefaultRONO.ClientkeyFile)
 
-	joinSection := help.NewSection("join", "to be joined and managered", nil)
+	joinSection := help.NewSection("join", "to be joined and managered. certificates need to be given together with --node-token, or you can only specifies a valid --token", nil)
 	joinSection.AddTip("network-address", "string", "server address.", DefaultJONO.Address)
 	joinSection.AddTip("secure-port", "uint16", "serving port.", fmt.Sprintf("%d", DefaultJONO.SecurePort))
-	joinSection.AddTip("ca-cert", "string", "SSL Certificate Authority file used to secure communication.", DefaultJONO.CACert)
-	joinSection.AddTip("client-cert-file", "string", "SSL certification file used to secure communication.", DefaultJONO.ClientCertFile)
-	joinSection.AddTip("client-key-file", "string", "SSL key file used to secure communication.", DefaultJONO.ClientkeyFile)
+	joinSection.AddTip("ca-cert", "string", "[Not recommended] SSL Certificate Authority file used to secure communication.", DefaultJONO.CACert)
+	joinSection.AddTip("client-cert-file", "string", "[Not recommended] SSL certification file used to secure communication.", DefaultJONO.ClientCertFile)
+	joinSection.AddTip("client-key-file", "string", "[Not recommended] SSL key file used to secure communication.", DefaultJONO.ClientkeyFile)
 
 	section.AddSection(registerSection)
 	section.AddSection(joinSection)

@@ -39,7 +39,7 @@ func NewLeaderCommand() *cobra.Command {
 				return err
 			}
 
-			runtimeConfig.RuntimeOption.LeaderOptions.PrintFlags(func() func(format string, a ...interface{}) error {
+			runtimeConfig.RuntimeOption.PrintFlags(func() func(format string, a ...interface{}) error {
 				return func(format string, a ...interface{}) error {
 					klog.Infof(format, a...)
 					return nil

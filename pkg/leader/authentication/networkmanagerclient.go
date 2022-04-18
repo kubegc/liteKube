@@ -10,7 +10,6 @@ import (
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/leader/global"
-	"k8s.io/klog/v2"
 )
 
 type NetworkManagerClient struct {
@@ -30,7 +29,7 @@ type NetworkManagerClient struct {
 
 func NewNetworkManagerClient(rootCertPath string, token string) *NetworkManagerClient {
 	if token == "" {
-		token = "local"
+		token = "unknown"
 	}
 
 	if rootCertPath == "" {
@@ -65,9 +64,8 @@ func (na *NetworkManagerClient) Nodetoken() (string, error) {
 
 // generate X.509 certificate for network-manager
 func (na *NetworkManagerClient) GenerateOrSkip(address string, port int) error {
-	if na.Check() {
-		// file exist
-		return nil
+	if na.Token == "unknown" {
+		return fmt.Errorf("token is unknown")
 	}
 
 	if na == nil {
@@ -75,7 +73,7 @@ func (na *NetworkManagerClient) GenerateOrSkip(address string, port int) error {
 	}
 
 	if na.Token == "local" {
-		return na.CreateSoftlinkForClient()
+		return na.CreatelinkForClient()
 	} else {
 		return na.TLSBootStrap(address, port)
 	}
@@ -83,6 +81,11 @@ func (na *NetworkManagerClient) GenerateOrSkip(address string, port int) error {
 
 // to be finish
 func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
+	if na.Check() {
+		// file exist, bootstrap ok.
+		return nil
+	}
+
 	if address == "" || port < 1 {
 		return fmt.Errorf("none tls bootstrap address and port for network-manager")
 	}
@@ -108,9 +111,10 @@ func (na *NetworkManagerClient) Check() bool {
 	return certificate.Exists(na.RegisterCACert, na.RegisterClientCert, na.RegisterClientkey, na.JoinCACert, na.JoinClientCert, na.JoinClientkey, na.NodeTokenPath)
 }
 
-func (na *NetworkManagerClient) CreateSoftlinkForClient() error {
-	if na.Check() {
-		return nil
+func (na *NetworkManagerClient) CreatelinkForClient() error {
+	// clear old link
+	if err := os.RemoveAll(na.ManagerCertDir); err != nil {
+		return err
 	}
 
 	if err := os.MkdirAll(na.RegisterManagerCertDir, os.ModePerm); err != nil {
@@ -121,30 +125,30 @@ func (na *NetworkManagerClient) CreateSoftlinkForClient() error {
 		return err
 	}
 
-	// create cert symlink for register
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "register/ca.key"), na.RegisterCACert); err != nil {
-		klog.Warningf("fail to create symlink for network-manager certificat err:%s", err.Error())
+	// create cert symlink for Register
+	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "register/ca.crt"), na.RegisterCACert); err != nil {
+		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "register/client.crt"), na.RegisterClientCert); err != nil {
-		klog.Warningf("fail to create symlink for network-manager certificat err:%s", err.Error())
+		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "register/client.key"), na.RegisterClientkey); err != nil {
-		klog.Warningf("fail to create symlink for network-manager certificat err:%s", err.Error())
+		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 
 	// create cert symlink for join
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "join/ca.key"), na.JoinCACert); err != nil {
-		klog.Warningf("fail to create symlink for network-manager certificat err:%s", err.Error())
+	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "join/ca.crt"), na.JoinCACert); err != nil {
+		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "join/client.crt"), na.JoinClientCert); err != nil {
-		klog.Warningf("fail to create symlink for network-manager certificat err:%s", err.Error())
+		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "join/client.key"), na.JoinClientkey); err != nil {
-		klog.Warningf("fail to create symlink for network-manager certificat err:%s", err.Error())
+		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 
 	if err := ioutil.WriteFile(na.NodeTokenPath, []byte(global.ReservedNodeToken), os.FileMode(0644)); err != nil {
-		klog.Warningf("fail to create node token")
+		return fmt.Errorf("fail to create node token")
 	}
 
 	if !na.Check() {

@@ -44,6 +44,7 @@ func GenerateSigningCertKey(regen bool, prefix, certFile, keyFile string) (bool,
 	return true, nil
 }
 
+// set regen=true to force gen new cert, CA certificate will be written as second certificate in $certPath
 func GenerateServerCertKey(regen bool, commonName string, organization []string, altNames *certutil.AltNames, caCertPath, caKeyPath, certPath, keyPath string) (bool, error) {
 	if !ValidateTLSPair(caCertPath, caKeyPath) {
 		return false, fmt.Errorf("bad CA")
@@ -62,6 +63,7 @@ func GenerateServerCertKey(regen bool, commonName string, organization []string,
 
 }
 
+// set regen=true to force gen new cert, CA certificate will be written as second certificate in $certPath
 func GenerateClientCertKey(regen bool, commonName string, organization []string, caCertPath, caKeyPath, certPath, keyPath string) (bool, error) {
 	if !ValidateTLSPair(caCertPath, caKeyPath) {
 		return false, fmt.Errorf("bad CA")
@@ -79,7 +81,7 @@ func GenerateClientCertKey(regen bool, commonName string, organization []string,
 	return true, nil
 }
 
-// set regen=true to force gen new cert
+// set regen=true to force gen new cert, CA certificate will be written as second certificate in $certPath
 func GenerateCertKey(regen bool, commonName string, organization []string, altNames *certutil.AltNames, extKeyUsage []x509.ExtKeyUsage, caCertPath, caKeyPath, certPath, keyPath string) (bool, error) {
 	caBytes, err := ioutil.ReadFile(caCertPath)
 	if err != nil {

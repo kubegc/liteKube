@@ -9,9 +9,9 @@ import (
 
 type RuntimeAuthentications struct {
 	CertDir              string
-	NetWorkManagerClient *authentication.NetworkManagerClient
-	NetWorkManager       *authentication.NetworkAuthentication
-	Kine                 *authentication.KineAuthentication
+	NetWorkManagerClient *authentication.NetworkManagerClient  // nil if user provide certificate
+	NetWorkManager       *authentication.NetworkAuthentication // nil if network manager not run in leader
+	Kine                 *authentication.KineAuthentication    // nil if not run kine in leader or provide server certificate by user
 	Kubernetes           *authentication.KubernetesAuthentication
 }
 

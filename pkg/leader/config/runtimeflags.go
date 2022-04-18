@@ -42,7 +42,7 @@ func (runtime *LeaderRuntime) LoadFlags() error {
 		return err
 	}
 
-	if config, err := yaml.Marshal(runtime.RuntimeOption.LeaderOptions); err != nil {
+	if config, err := yaml.Marshal(runtime.RuntimeOption); err != nil {
 		return err
 	} else {
 		if e := ioutil.WriteFile(filepath.Join(runtime.RuntimeOption.GlobalOptions.WorkDir, "config.yaml"), config, os.ModePerm); e != nil {
@@ -107,11 +107,15 @@ func (runtime *LeaderRuntime) LoadKine() error {
 	// check bind-address
 	if ip := net.ParseIP(raw.BindAddress); ip == nil {
 		new.BindAddress = kineoptions.DefaultKO.BindAddress
+	} else {
+		new.BindAddress = raw.BindAddress
 	}
 
 	// check https port
-	if raw.SecurePort < 1 {
+	if raw.SecurePort < 1 || raw.SecurePort > 65535 {
 		new.SecurePort = kineoptions.DefaultKO.SecurePort
+	} else {
+		new.SecurePort = raw.SecurePort
 	}
 
 	// check TLS certificate
@@ -119,7 +123,7 @@ func (runtime *LeaderRuntime) LoadKine() error {
 		klog.Info("built-in certificates for kine will be used")
 
 		// invalid cert， generate kine certs
-		runtime.RuntimeOption.OwnKineCert = true
+		runtime.OwnKineCert = true
 		runtime.RuntimeAuthentication.Kine = authentication.NewKineAuthentication(runtime.RuntimeAuthentication.CertDir, new.BindAddress)
 		if err := runtime.RuntimeAuthentication.Kine.GenerateOrSkip(); err != nil {
 			return err
@@ -151,65 +155,103 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 	// check bind-address
 	if ip := net.ParseIP(raw.RegisterOptions.Address); ip == nil {
 		new.RegisterOptions.Address = netmanager.DefaultRONO.Address
+	} else {
+		new.RegisterOptions.Address = raw.RegisterOptions.Address
 	}
 
 	if ip := net.ParseIP(raw.JoinOptions.Address); ip == nil {
 		new.JoinOptions.Address = netmanager.DefaultJONO.Address
+	} else {
+		new.JoinOptions.Address = raw.JoinOptions.Address
 	}
 
 	// check https port
-	if raw.RegisterOptions.SecurePort < 1 {
+	if raw.RegisterOptions.SecurePort < 1 || raw.RegisterOptions.SecurePort > 65535 {
 		new.RegisterOptions.SecurePort = netmanager.DefaultRONO.SecurePort
+	} else {
+		new.RegisterOptions.SecurePort = raw.RegisterOptions.SecurePort
 	}
 
 	// check https port
 	if raw.JoinOptions.SecurePort < 1 {
 		new.JoinOptions.SecurePort = netmanager.DefaultJONO.SecurePort
+	} else {
+		new.JoinOptions.SecurePort = raw.JoinOptions.SecurePort
 	}
 
 	// check Token
 	if runtime.RuntimeOption.GlobalOptions.RunNetManager {
 		// generate certificate for network manager
+		klog.Infof("certificates for built-in network manager server will be used")
 		new.Token = "local"
 		runtime.RuntimeAuthentication.NetWorkManager = authentication.NewNetworkAuthentication(runtime.RuntimeAuthentication.CertDir, new.RegisterOptions.Address, new.JoinOptions.Address)
 		if err := runtime.RuntimeAuthentication.NetWorkManager.GenerateOrSkip(); err != nil {
 			return err
 		}
-
 	} else {
 		if raw.Token == "local" {
-			return fmt.Errorf("bad token to connect with network-manager")
+			return fmt.Errorf("bad token(local) to connect with network-manager, only enable when network manager run in leader node")
+		} else if len(raw.Token) != 16 {
+			return fmt.Errorf("error network token format")
 		}
+
 		new.Token = raw.Token
 	}
 
-	// check client certificate
-	runtime.RuntimeAuthentication.NetWorkManagerClient = authentication.NewNetworkManagerClient(runtime.RuntimeAuthentication.CertDir, new.Token)
-	if err := runtime.RuntimeAuthentication.NetWorkManagerClient.GenerateOrSkip(new.RegisterOptions.Address, int(new.RegisterOptions.SecurePort)); err != nil {
-		return err
-	}
+	// try to load certificate provide by user
+	if certificate.NotExists(raw.RegisterOptions.CACert, raw.RegisterOptions.ClientCertFile, raw.RegisterOptions.ClientkeyFile) && certificate.NotExists(raw.JoinOptions.CACert, raw.JoinOptions.ClientCertFile, raw.JoinOptions.ClientkeyFile) && raw.NodeToken == "" {
+		// check client certificate
+		// into TLS bootstrap
+		klog.Infof("start load network manager client certificate and node-token by --token")
+		runtime.RuntimeAuthentication.NetWorkManagerClient = authentication.NewNetworkManagerClient(runtime.RuntimeAuthentication.CertDir, new.Token)
+		if err := runtime.RuntimeAuthentication.NetWorkManagerClient.GenerateOrSkip(new.RegisterOptions.Address, int(new.RegisterOptions.SecurePort)); err != nil {
+			return err
+		}
 
-	if !runtime.RuntimeAuthentication.NetWorkManagerClient.Check() {
-		return fmt.Errorf("fail to load network-manager TLS args")
-	}
+		if !runtime.RuntimeAuthentication.NetWorkManagerClient.Check() {
+			return fmt.Errorf("fail to load network-manager TLS args")
+		}
 
-	// node token
-	if nodeToken, err := runtime.RuntimeAuthentication.NetWorkManagerClient.Nodetoken(); err != nil {
-		return err
+		// node token
+		if nodeToken, err := runtime.RuntimeAuthentication.NetWorkManagerClient.Nodetoken(); err != nil {
+			return err
+		} else {
+			new.NodeToken = nodeToken
+		}
+
+		// cert
+		// join
+		new.JoinOptions.CACert = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinCACert
+		new.JoinOptions.ClientCertFile = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinClientCert
+		new.JoinOptions.ClientkeyFile = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinClientkey
+
+		// register
+		new.RegisterOptions.CACert = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterCACert
+		new.RegisterOptions.ClientCertFile = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientCert
+		new.RegisterOptions.ClientkeyFile = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientkey
+
+		klog.Infof("success to load network manager client certificates node-token by --token")
+		return nil
+
 	} else {
-		new.NodeToken = nodeToken
+		if certificate.ValidateTLSPair(raw.RegisterOptions.ClientCertFile, raw.RegisterOptions.ClientkeyFile) && certificate.ValidateCA(raw.RegisterOptions.ClientCertFile, raw.RegisterOptions.CACert) && certificate.ValidateTLSPair(raw.JoinOptions.ClientCertFile, raw.JoinOptions.ClientkeyFile) && certificate.ValidateCA(raw.JoinOptions.ClientCertFile, raw.JoinOptions.CACert) && len(raw.NodeToken) > 0 {
+			// cert
+			// join
+			new.JoinOptions.CACert = raw.JoinOptions.CACert
+			new.JoinOptions.ClientCertFile = raw.JoinOptions.ClientCertFile
+			new.JoinOptions.ClientkeyFile = raw.JoinOptions.ClientkeyFile
+
+			// register
+			new.RegisterOptions.CACert = raw.RegisterOptions.CACert
+			new.RegisterOptions.ClientCertFile = raw.RegisterOptions.ClientCertFile
+			new.RegisterOptions.ClientkeyFile = raw.RegisterOptions.ClientkeyFile
+			new.NodeToken = raw.NodeToken
+			runtime.RuntimeAuthentication.NetWorkManagerClient = nil
+			klog.Infof("network manager client certificates specified ok, ignore --token")
+		} else {
+			return fmt.Errorf("you have provide bad network manager client certificates or node-token for network manager")
+		}
 	}
-
-	// cert
-	// join
-	new.JoinOptions.CACert = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinCACert
-	new.JoinOptions.ClientCertFile = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinClientCert
-	new.JoinOptions.ClientkeyFile = runtime.RuntimeAuthentication.NetWorkManagerClient.JoinClientkey
-
-	// register
-	new.RegisterOptions.CACert = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterCACert
-	new.RegisterOptions.ClientCertFile = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientCert
-	new.RegisterOptions.ClientkeyFile = runtime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientkey
 
 	return nil
 }

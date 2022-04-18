@@ -6,8 +6,9 @@ import (
 
 type LeaderRuntime struct {
 	FlagsOption           *options.LeaderOptions
-	RuntimeOption         *RuntimeOptions
+	RuntimeOption         *options.LeaderOptions
 	RuntimeAuthentication *RuntimeAuthentications
+	OwnKineCert           bool
 }
 
 type RuntimeOptions struct {
@@ -18,31 +19,32 @@ type RuntimeOptions struct {
 func NewLeaderRuntime(flags *options.LeaderOptions) *LeaderRuntime {
 	return &LeaderRuntime{
 		FlagsOption:           flags,
-		RuntimeOption:         NewRuntimeOptions(),
+		RuntimeOption:         options.NewLeaderOptions(),
 		RuntimeAuthentication: nil,
+		OwnKineCert:           false,
 	}
 }
 
-func NewRuntimeOptions() *RuntimeOptions {
-	return &RuntimeOptions{
-		LeaderOptions: options.NewLeaderOptions(),
-		OwnKineCert:   false,
-		//Logger:        nil,
-	}
-}
+// func NewRuntimeOptions() *RuntimeOptions {
+// 	return &RuntimeOptions{
+// 		LeaderOptions: options.NewLeaderOptions(),
+
+// 		//Logger:        nil,
+// 	}
+// }
 
 func (runtime *LeaderRuntime) CheckArgs() {
 
 }
 
-// check kine args
-func (runtime *LeaderRuntime) CheckKine() error {
-	// disable kine
-	if !runtime.FlagsOption.GlobalOptions.RunKine {
-		runtime.FlagsOption.KineOptions = nil
-		return nil
-	}
+// // check kine args
+// func (runtime *LeaderRuntime) CheckKine() error {
+// 	// disable kine
+// 	if !runtime.FlagsOption.GlobalOptions.RunKine {
+// 		runtime.FlagsOption.KineOptions = nil
+// 		return nil
+// 	}
 
-	// enable kine
-	return nil
-}
+// 	// enable kine
+// 	return nil
+// }

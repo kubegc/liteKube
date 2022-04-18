@@ -2,6 +2,7 @@ package global
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -48,4 +49,17 @@ func ReplaceHome(raw []byte) []byte {
 func ReplaceCurrent(raw []byte) []byte {
 	re := regexp.MustCompile(`(,|"|\s)(\.)/`)
 	return re.ReplaceAll(raw, []byte(fmt.Sprintf("${1}%s/", strings.TrimRight(LocalPath, "/"))))
+}
+
+func CopyFile(source string, destination string) error {
+	fmt.Print(source, "\n", destination, "\n")
+	sourceBytes, err := ioutil.ReadFile(source)
+	if err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(destination, sourceBytes, os.FileMode(0644)); err != nil {
+		return err
+	}
+	return nil
 }
