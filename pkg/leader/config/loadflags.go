@@ -6,10 +6,13 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/leader/authentication"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
+	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/leader/global"
 	kineoptions "github.com/litekube/LiteKube/pkg/options/leader/kine"
 	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
@@ -45,8 +48,12 @@ func (runtime *LeaderRuntime) LoadFlags() error {
 	if config, err := yaml.Marshal(runtime.RuntimeOption); err != nil {
 		return err
 	} else {
-		if e := ioutil.WriteFile(filepath.Join(runtime.RuntimeOption.GlobalOptions.WorkDir, "config.yaml"), config, os.ModePerm); e != nil {
-			return e
+		startupDir := filepath.Join(runtime.RuntimeOption.GlobalOptions.WorkDir, "startup/")
+		if err := os.MkdirAll(startupDir, os.ModePerm); err != nil {
+			return err
+		}
+		if err := ioutil.WriteFile(filepath.Join(startupDir, "leader.yaml"), config, os.ModePerm); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -94,7 +101,8 @@ func (runtime *LeaderRuntime) LoadGloabl() error {
 	return nil
 }
 
-// load or generate args for kine
+// load or generate args for kine server
+// client certificate will be generate to path, too
 func (runtime *LeaderRuntime) LoadKine() error {
 	if !runtime.RuntimeOption.GlobalOptions.RunKine {
 		runtime.RuntimeOption.KineOptions = nil
@@ -148,6 +156,7 @@ func (runtime *LeaderRuntime) LoadKine() error {
 }
 
 // load network-manager client config
+// if run-network-manager==true, runtime.RuntimeAuthentication.NetWorkManager will init
 func (runtime *LeaderRuntime) LoadNetManager() error {
 	raw := runtime.FlagsOption.NetmamagerOptions
 	new := runtime.RuntimeOption.NetmamagerOptions
@@ -173,7 +182,7 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 	}
 
 	// check https port
-	if raw.JoinOptions.SecurePort < 1 {
+	if raw.JoinOptions.SecurePort < 1 || raw.JoinOptions.SecurePort > 65535 {
 		new.JoinOptions.SecurePort = netmanager.DefaultJONO.SecurePort
 	} else {
 		new.JoinOptions.SecurePort = raw.JoinOptions.SecurePort
@@ -251,6 +260,77 @@ func (runtime *LeaderRuntime) LoadNetManager() error {
 		} else {
 			return fmt.Errorf("you have provide bad network manager client certificates or node-token for network manager")
 		}
+	}
+
+	return nil
+}
+
+func (runtime *LeaderRuntime) LoadApiserver() error {
+	raw := runtime.FlagsOption.ApiserverOptions
+	new := runtime.RuntimeOption.ApiserverOptions
+
+	new.ReservedOptions = raw.ReservedOptions
+	new.IgnoreOptions = raw.IgnoreOptions
+
+	// load *LitekubeOptions
+	new.Options.AllowPrivileged = raw.Options.AllowPrivileged
+	new.Options.AuthorizationMode = raw.Options.AuthorizationMode
+	new.Options.AnonymousAuth = raw.Options.AnonymousAuth
+	new.Options.EnableSwaggerUI = raw.Options.EnableSwaggerUI
+	new.Options.EnableAdmissionPlugins = raw.Options.EnableAdmissionPlugins
+	new.Options.EncryptionProviderConfig = raw.Options.EncryptionProviderConfig
+	new.Options.Profiling = raw.Options.Profiling
+	// check --service-cluster-ip-range
+	if _, _, err := net.ParseCIDR(raw.Options.ServiceClusterIpRange); err != nil {
+		new.Options.ServiceClusterIpRange = apiserver.DefaultALO.ServiceClusterIpRange
+		new.IgnoreOptions["service-cluster-ip-range"] = raw.Options.ServiceClusterIpRange
+	} else {
+		new.Options.ServiceClusterIpRange = raw.Options.ServiceClusterIpRange
+	}
+	// check --service-node-port-range
+	new.Options.ServiceNodePortRange = ""
+	if ports := strings.Split(raw.Options.ServiceNodePortRange, "-"); len(ports) == 2 {
+		port_min := 30000
+		port_max := 65535
+		if p, err := strconv.Atoi(strings.TrimSpace(ports[0])); err == nil && p > 0 {
+			port_min = p
+		}
+
+		if p, err := strconv.Atoi(strings.TrimSpace(ports[1])); err == nil && p < 65536 {
+			port_max = p
+		}
+
+		if port_max > port_min && (port_max-port_min) > 100 {
+			new.Options.ServiceNodePortRange = fmt.Sprintf("%d-%d", port_min, port_max)
+		}
+	}
+
+	if new.Options.ServiceNodePortRange == "" {
+		// fail to parse port before
+		new.Options.ServiceNodePortRange = apiserver.DefaultALO.ServiceNodePortRange
+		new.IgnoreOptions["service-node-port-range"] = raw.Options.ServiceNodePortRange
+	}
+
+	if raw.Options.SecurePort < 1 || raw.Options.SecurePort > 65535 {
+		new.Options.SecurePort = apiserver.DefaultALO.SecurePort
+	} else {
+		new.Options.SecurePort = raw.Options.SecurePort
+	}
+
+	return nil
+}
+
+func (runtime *LeaderRuntime) LoadControllermanager() error {
+	return nil
+}
+
+func (runtime *LeaderRuntime) LoadScheduler() error {
+	return nil
+}
+
+func (runtime *LeaderRuntime) LoadWorker() error {
+	if !runtime.FlagsOption.GlobalOptions.EnableWorker {
+		return nil
 	}
 
 	return nil
