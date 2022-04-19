@@ -12,6 +12,7 @@ import (
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/leader/authentication"
+	"github.com/litekube/LiteKube/pkg/logger"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/leader/global"
@@ -69,21 +70,24 @@ func (leaderRuntime *LeaderRuntime) LoadFlags() error {
 func (leaderRuntime *LeaderRuntime) LoadGloabl() error {
 	defer func() {
 		// set log
-		if leaderRuntime.RuntimeOption.GlobalOptions.LogToDir {
-			klog.MaxSize = 10240
-			logfile := filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")
-			flag.Set("log_file", logfile)
-			flag.Set("logtostderr", "false")
+		// if leaderRuntime.RuntimeOption.GlobalOptions.LogToDir {
+		// 	klog.MaxSize = 10240
+		// 	logfile := filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")
+		// 	flag.Set("log_file", logfile)
+		// 	flag.Set("logtostderr", "false")
 
-			if leaderRuntime.RuntimeOption.GlobalOptions.LogToStd {
-				flag.Set("alsologtostderr", "true")
-			} else {
-				flag.Set("alsologtostderr", "false")
-			}
+		// 	if leaderRuntime.RuntimeOption.GlobalOptions.LogToStd {
+		// 		flag.Set("alsologtostderr", "true")
+		// 	} else {
+		// 		flag.Set("alsologtostderr", "false")
+		// 	}
 
-		} else {
-			flag.Set("logtostderr", fmt.Sprintf("%t", leaderRuntime.RuntimeOption.GlobalOptions.LogToStd))
-		}
+		// } else {
+		// 	flag.Set("logtostderr", fmt.Sprintf("%t", leaderRuntime.RuntimeOption.GlobalOptions.LogToStd))
+		// }
+		flag.Set("log_file", "false")
+		flag.Set("logtostderr", "false")
+		klog.SetOutput(logger.NewDefaultLogger(leaderRuntime.RuntimeOption.GlobalOptions.LogToStd, leaderRuntime.RuntimeOption.GlobalOptions.LogToDir, filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")))
 	}()
 
 	defer func() {
@@ -221,7 +225,7 @@ func (leaderRuntime *LeaderRuntime) LoadNetManager() error {
 	// check Token
 	if leaderRuntime.RuntimeOption.GlobalOptions.RunNetManager {
 		// generate certificate for network manager
-		klog.Infof("certificates for built-in network manager server will be used")
+		klog.Info("certificates for built-in network manager server will be used")
 		new.Token = "local"
 		leaderRuntime.RuntimeAuthentication.NetWorkManager = authentication.NewNetworkAuthentication(leaderRuntime.RuntimeAuthentication.CertDir, new.RegisterOptions.Address, new.JoinOptions.Address)
 		if err := leaderRuntime.RuntimeAuthentication.NetWorkManager.GenerateOrSkip(); err != nil {
@@ -241,7 +245,7 @@ func (leaderRuntime *LeaderRuntime) LoadNetManager() error {
 	if certificate.NotExists(raw.RegisterOptions.CACert, raw.RegisterOptions.ClientCertFile, raw.RegisterOptions.ClientkeyFile) && certificate.NotExists(raw.JoinOptions.CACert, raw.JoinOptions.ClientCertFile, raw.JoinOptions.ClientkeyFile) && raw.NodeToken == "" {
 		// check client certificate
 		// into TLS bootstrap
-		klog.Infof("start load network manager client certificate and node-token by --token")
+		klog.Info("start load network manager client certificate and node-token by --token")
 		leaderRuntime.RuntimeAuthentication.NetWorkManagerClient = authentication.NewNetworkManagerClient(leaderRuntime.RuntimeAuthentication.CertDir, new.Token)
 		if err := leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.GenerateOrSkip(new.RegisterOptions.Address, int(new.RegisterOptions.SecurePort)); err != nil {
 			return err
@@ -269,7 +273,7 @@ func (leaderRuntime *LeaderRuntime) LoadNetManager() error {
 		new.RegisterOptions.ClientCertFile = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientCert
 		new.RegisterOptions.ClientkeyFile = leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.RegisterClientkey
 
-		klog.Infof("success to load network manager client certificates node-token by --token")
+		klog.Info("success to load network manager client certificates node-token by --token")
 		return nil
 
 	} else {

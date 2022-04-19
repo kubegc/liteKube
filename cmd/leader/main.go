@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"math/rand"
-	"os"
 	"time"
 
 	"github.com/litekube/LiteKube/cmd/leader/app"
@@ -19,6 +19,9 @@ func main() {
 	klog.InitFlags(nil)
 	defer klog.Flush()
 
+	// add caller info
+	klog.AddCallerName = true
+
 	// Init Cobra command
 	cmd := app.NewLeaderCommand()
 	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
@@ -27,8 +30,10 @@ func main() {
 	// Run LiteKube
 	if err := cmd.Execute(); err != nil {
 		year, month, day := time.Now().Date()
-		klog.Infof("LiteKube exit at %d-%d-%d %d:%d:%d, error info: %s", year, month, day, time.Now().Hour(), time.Now().Minute(), time.Now().Second(), err.Error())
-		os.Exit(-1)
+		panic(fmt.Sprintf("LiteKube exit at %d-%d-%d %d:%d:%d, error info: %s", year, month, day, time.Now().Hour(), time.Now().Minute(), time.Now().Second(), err.Error()))
+	} else {
+		year, month, day := time.Now().Date()
+		klog.Infof("LiteKube goodby at %d-%d-%d %d:%d:%d", year, month, day, time.Now().Hour(), time.Now().Minute(), time.Now().Second())
 	}
 
 }

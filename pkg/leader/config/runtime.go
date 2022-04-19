@@ -16,6 +16,8 @@ type LeaderRuntime struct {
 	RuntimeOption         *options.LeaderOptions
 	RuntimeAuthentication *RuntimeAuthentications
 	KineServer            *runtime.KineServer
+	NetworkManagerServer  *runtime.NetWorkManager
+	NetworkClient         *runtime.NetWorkClient
 	OwnKineCert           bool
 }
 
@@ -47,12 +49,41 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 	defer leaderRuntime.Done()
 	leaderRuntime.Add()
 
-	// run kine and network-manager
-	leaderRuntime.KineServer = runtime.NewKineServer(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.KineOptions, filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/kine/"))
-	if err := leaderRuntime.KineServer.Run(); err != nil {
-		klog.Errorf("bad args for kine server")
+	if leaderRuntime.RuntimeOption.GlobalOptions.RunKine {
+		// run kine and network-manager
+		leaderRuntime.KineServer = runtime.NewKineServer(leaderRuntime.control.ctx,
+			leaderRuntime.RuntimeOption.KineOptions,
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/kine/"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kine.log"),
+		)
+		if err := leaderRuntime.KineServer.Run(); err != nil {
+			klog.Errorf("bad args for kine server")
+			return err
+		}
+	}
+
+	if leaderRuntime.RuntimeOption.GlobalOptions.RunNetManager {
+		leaderRuntime.NetworkManagerServer = runtime.NewNetWorkManager(leaderRuntime.control.ctx, leaderRuntime.RuntimeAuthentication.NetWorkManager,
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-manager.log"))
+		if err := leaderRuntime.NetworkManagerServer.Run(); err != nil {
+			klog.Errorf("bad args for network manager server")
+			return err
+		}
+	}
+
+	leaderRuntime.NetworkClient = runtime.NewNetWorkClient(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.NetmamagerOptions,
+		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"))
+	if err := leaderRuntime.NetworkClient.Run(); err != nil {
+		klog.Errorf("bad args for network manager client")
 		return err
 	}
+
+	return nil
+}
+
+func (leaderRuntime *LeaderRuntime) run() error {
+	defer leaderRuntime.Done()
+	leaderRuntime.Add()
 
 	return nil
 }
@@ -61,6 +92,8 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 func (leaderRuntime *LeaderRuntime) Run() error {
 	defer leaderRuntime.Done()
 	leaderRuntime.Add()
+	// add to same depth with LeaderRuntime.RunForward()
+	leaderRuntime.run()
 
 	return nil
 }

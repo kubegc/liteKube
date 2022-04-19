@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	goruntime "runtime"
 
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/leader/config"
@@ -92,6 +93,13 @@ func NewLeaderCommand() *cobra.Command {
 }
 
 func Run(opt *options.LeaderOptions, stopCh <-chan struct{}) error {
+	addKlogFlag()
+	// ptrs := make([]uintptr, 30)
+	// klog.BenchDepth = goruntime.Callers(0, ptrs)
+	// klog.BenchOffset = 3
+	// klog.BenchName = goruntime.FuncForPC(ptrs[1]).Name()
+	// fmt.Println(klog.BenchDepth, klog.BenchName)
+
 	runtimeConfig := config.NewLeaderRuntime(opt)
 	defer runtimeConfig.Stop()
 
@@ -117,6 +125,14 @@ func Run(opt *options.LeaderOptions, stopCh <-chan struct{}) error {
 	klog.Info("We have prepare to close process, it won't take you too much time, wait please!")
 
 	return nil
+}
+
+func addKlogFlag() {
+	ptrs := make([]uintptr, 12)
+	klog.BenchDepth = goruntime.Callers(1, ptrs)
+	klog.BenchOffset = 3
+	klog.BenchName = goruntime.FuncForPC(ptrs[1]).Name()
+	fmt.Println(klog.BenchDepth, klog.BenchName)
 }
 
 func addFlags(cmd *cobra.Command) {
