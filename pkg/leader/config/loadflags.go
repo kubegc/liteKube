@@ -52,6 +52,10 @@ func (leaderRuntime *LeaderRuntime) LoadFlags() error {
 		return err
 	}
 
+	if err := leaderRuntime.LoadApiserver(); err != nil {
+		return err
+	}
+
 	if config, err := yaml.Marshal(leaderRuntime.RuntimeOption); err != nil {
 		return err
 	} else {
@@ -360,7 +364,11 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 
 	if ip := net.ParseIP(raw.ProfessionalOptions.AdvertiseAddress); ip == nil {
 		// no value util run network-manager client
-		new.ProfessionalOptions.BindAddress = ""
+		if remoteIp, err := leaderRuntime.NetworkRegisterClient.QueryIp(); err != nil {
+			return err
+		} else {
+			new.ProfessionalOptions.BindAddress = remoteIp
+		}
 	} else {
 		new.ProfessionalOptions.AdvertiseAddress = raw.ProfessionalOptions.BindAddress
 	}

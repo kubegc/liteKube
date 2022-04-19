@@ -17,7 +17,8 @@ type LeaderRuntime struct {
 	RuntimeAuthentication *RuntimeAuthentications
 	KineServer            *runtime.KineServer
 	NetworkManagerServer  *runtime.NetWorkManager
-	NetworkClient         *runtime.NetWorkClient
+	NetworkJoinClient     *runtime.NetWorkJoinClient
+	NetworkRegisterClient *runtime.NetWorkRegisterClient
 	OwnKineCert           bool
 }
 
@@ -39,6 +40,9 @@ func NewLeaderRuntime(flags *options.LeaderOptions) *LeaderRuntime {
 		FlagsOption:           flags,
 		RuntimeOption:         options.NewLeaderOptions(),
 		RuntimeAuthentication: nil,
+		NetworkManagerServer:  nil,
+		NetworkJoinClient:     nil,
+		NetworkRegisterClient: nil,
 		OwnKineCert:           false,
 		KineServer:            nil,
 	}
@@ -63,21 +67,27 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 	}
 
 	if leaderRuntime.RuntimeOption.GlobalOptions.RunNetManager {
-		leaderRuntime.NetworkManagerServer = runtime.NewNetWorkManager(leaderRuntime.control.ctx, leaderRuntime.RuntimeAuthentication.NetWorkManager,
-			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-manager.log"))
+		leaderRuntime.NetworkManagerServer = runtime.NewNetWorkManager(leaderRuntime.control.ctx,
+			leaderRuntime.RuntimeAuthentication.NetWorkManager,
+			leaderRuntime.RuntimeOption.NetmamagerOptions,
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-manager.log"),
+		)
 		if err := leaderRuntime.NetworkManagerServer.Run(); err != nil {
 			klog.Errorf("bad args for network manager server")
 			return err
 		}
 	}
 
-	leaderRuntime.NetworkClient = runtime.NewNetWorkClient(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.NetmamagerOptions,
-		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"))
-	if err := leaderRuntime.NetworkClient.Run(); err != nil {
+	leaderRuntime.NetworkJoinClient = runtime.NewNetWorkJoinClient(leaderRuntime.control.ctx,
+		leaderRuntime.RuntimeOption.NetmamagerOptions,
+		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"),
+	)
+	if err := leaderRuntime.NetworkJoinClient.Run(); err != nil {
 		klog.Errorf("bad args for network manager client")
 		return err
 	}
 
+	leaderRuntime.NetworkRegisterClient = runtime.NewNetWorkRegisterClient(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.NetmamagerOptions)
 	return nil
 }
 
