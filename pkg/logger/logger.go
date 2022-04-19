@@ -39,7 +39,7 @@ func NewLogger(writeToStderr, writeToFile bool, defaultPath string) *Logger {
 		file:   defaultPath,
 	}
 
-	if !AppendToFile {
+	if !AppendToFile && writeToFile {
 		if fp, err := os.OpenFile(defaultPath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644); err != nil {
 			return nil
 		} else {
@@ -68,7 +68,7 @@ func (logger *Logger) SetLog(key, logfile string) error {
 		}
 	}
 
-	if !AppendToFile {
+	if !AppendToFile && logger.writeToFile {
 		if fp, err := os.OpenFile(logfile, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0644); err != nil {
 			return nil
 		} else {
