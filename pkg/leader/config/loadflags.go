@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
+	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/leader/authentication"
 	"github.com/litekube/LiteKube/pkg/logger"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
@@ -67,6 +68,9 @@ func (leaderRuntime *LeaderRuntime) LoadFlags() error {
 			return err
 		}
 	}
+
+	// release unuseful data to save resource
+	leaderRuntime.FlagsOption = nil
 	return nil
 }
 
@@ -349,19 +353,22 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		new.IgnoreOptions["service-node-port-range"] = raw.Options.ServiceNodePortRange
 	}
 
+	// secure-port
 	if raw.Options.SecurePort < 1 || raw.Options.SecurePort > 65535 {
 		new.Options.SecurePort = apiserver.DefaultALO.SecurePort
 	} else {
 		new.Options.SecurePort = raw.Options.SecurePort
 	}
 
-	// load *LitekubeOptions
+	// ProfessionalOptions
+	// bind-address
 	if ip := net.ParseIP(raw.ProfessionalOptions.BindAddress); ip == nil {
 		new.ProfessionalOptions.BindAddress = apiserver.DefaultAPO.BindAddress
 	} else {
 		new.ProfessionalOptions.BindAddress = raw.ProfessionalOptions.BindAddress
 	}
 
+	// advertiseAddress
 	if ip := net.ParseIP(raw.ProfessionalOptions.AdvertiseAddress); ip == nil {
 		// no value util run network-manager client
 		if remoteIp, err := leaderRuntime.NetworkRegisterClient.QueryIp(); err != nil {
@@ -373,15 +380,84 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		new.ProfessionalOptions.AdvertiseAddress = raw.ProfessionalOptions.BindAddress
 	}
 
-	// ProfessionalOptions
+	// InsecurePort
+	if raw.ProfessionalOptions.InsecurePort < 1 || raw.ProfessionalOptions.InsecurePort > 65535 {
+		new.ProfessionalOptions.InsecurePort = apiserver.DefaultAPO.InsecurePort
+	} else {
+		new.ProfessionalOptions.InsecurePort = raw.ProfessionalOptions.InsecurePort
+	}
+
+	new.ProfessionalOptions.RequestheaderExtraHeadersPrefix = raw.ProfessionalOptions.RequestheaderExtraHeadersPrefix
+	new.ProfessionalOptions.RequestheaderGroupHeaders = raw.ProfessionalOptions.RequestheaderGroupHeaders
+	new.ProfessionalOptions.RequestheaderUsernameHeaders = raw.ProfessionalOptions.RequestheaderUsernameHeaders
+	new.ProfessionalOptions.FeatureGates = raw.ProfessionalOptions.FeatureGates
 
 	// ECTDOptions
+	new.ProfessionalOptions.StorageBackend = raw.ProfessionalOptions.StorageBackend
+	// address
+	new.ProfessionalOptions.EtcdServers = raw.ProfessionalOptions.EtcdServers
+	if new.ProfessionalOptions.EtcdServers == "" {
+		new.ProfessionalOptions.EtcdServers = apiserver.DefaultEO.EtcdServers
+	}
+	// certificate
+	if certificate.NotExists(raw.ProfessionalOptions.EtcdCertfile, raw.ProfessionalOptions.EtcdKeyfile, raw.ProfessionalOptions.EtcdCafile) {
+		if leaderRuntime.RuntimeOption.KineOptions != nil && leaderRuntime.RuntimeOption.GlobalOptions.RunKine {
+			new.ProfessionalOptions.EtcdCafile = leaderRuntime.RuntimeAuthentication.Kine.CACert
+			new.ProfessionalOptions.EtcdCertfile = leaderRuntime.RuntimeAuthentication.Kine.ClientCert
+			new.ProfessionalOptions.EtcdKeyfile = leaderRuntime.RuntimeAuthentication.Kine.Clientkey
+		} else {
+			return fmt.Errorf("no Etcd certificate")
+		}
+	} else {
+		if !certificate.ValidateTLSPair(raw.ProfessionalOptions.EtcdCertfile, raw.ProfessionalOptions.EtcdKeyfile) {
+			klog.Errorf("you specified an invaild certificate for ETCD Client")
+			return fmt.Errorf("you specified an invaild certificate for ETCD Client")
+		}
+
+		new.ProfessionalOptions.EtcdCafile = raw.ProfessionalOptions.EtcdCafile
+		new.ProfessionalOptions.EtcdCertfile = raw.ProfessionalOptions.EtcdCertfile
+		new.ProfessionalOptions.EtcdKeyfile = raw.ProfessionalOptions.EtcdKeyfile
+	}
 
 	// ServerCertOptions
+	if raw.ProfessionalOptions.CertDir == "" {
+		raw.ProfessionalOptions.CertDir = filepath.Join(leaderRuntime.RuntimeAuthentication.CertDir, "kubernetes/tls/")
+	}
 
 	// KubeletClientCertOptions
 
+	// Assignment will not be allowed when leader runs again
+	if leaderRuntime.KubernetesCertOk() {
+		// assume certificates are ok without verify
+
+		// ServerCertOptions
+		// new.ProfessionalOptions.TlsCertFile = raw.ProfessionalOptions.TlsCertFile
+		// new.ProfessionalOptions.TlsCertFile = raw.ProfessionalOptions.TlsCertFile
+		// new.ProfessionalOptions.TlsPrivateKeyFile = raw.ProfessionalOptions.TlsPrivateKeyFile
+		// new.ProfessionalOptions.ApiAudiencesr = raw.ProfessionalOptions.ApiAudiencesr
+		// new.ProfessionalOptions.TokenAuthFile = raw.ProfessionalOptions.TokenAuthFile
+		// new.ProfessionalOptions.EnableBootstrapTokenAuth = raw.ProfessionalOptions.EnableBootstrapTokenAuth
+		// new.ProfessionalOptions.ServiceAccountKeyFile = raw.ProfessionalOptions.ServiceAccountKeyFile
+		// new.ProfessionalOptions.ServiceAccountIssuer = raw.ProfessionalOptions.ServiceAccountIssuer
+
+		// // KubeletClientCertOptions
+		// new.ProfessionalOptions.KubeletCertificateAuthority = raw.ProfessionalOptions.KubeletCertificateAuthority
+		// new.ProfessionalOptions.KubeletClientCertificate = raw.ProfessionalOptions.KubeletClientCertificate
+		// new.ProfessionalOptions.KubeletClientKey = raw.ProfessionalOptions.KubeletClientKey
+		// new.ProfessionalOptions.ClientCAFile = raw.ProfessionalOptions.ClientCAFile
+		// new.ProfessionalOptions.RequestheaderClientCAFile = raw.ProfessionalOptions.RequestheaderClientCAFile
+		// new.ProfessionalOptions.RequestheaderAllowedNames = raw.ProfessionalOptions.RequestheaderAllowedNames
+		// new.ProfessionalOptions.ProxyClientCertFile = raw.ProfessionalOptions.ProxyClientCertFile
+		// new.ProfessionalOptions.ProxyClientKeyFile = raw.ProfessionalOptions.ProxyClientKeyFile
+	} else {
+
+	}
+
 	return nil
+}
+
+func (leaderRuntime *LeaderRuntime) KubernetesCertOk() bool {
+	return global.Exists(filepath.Join(leaderRuntime.RuntimeAuthentication.CertDir, "kubernetes/.valid"))
 }
 
 func (leaderRuntime *LeaderRuntime) LoadControllermanager() error {

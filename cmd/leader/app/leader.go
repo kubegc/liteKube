@@ -94,11 +94,6 @@ func NewLeaderCommand() *cobra.Command {
 
 func Run(opt *options.LeaderOptions, stopCh <-chan struct{}) error {
 	addKlogFlag()
-	// ptrs := make([]uintptr, 30)
-	// klog.BenchDepth = goruntime.Callers(0, ptrs)
-	// klog.BenchOffset = 3
-	// klog.BenchName = goruntime.FuncForPC(ptrs[1]).Name()
-	// fmt.Println(klog.BenchDepth, klog.BenchName)
 
 	runtimeConfig := config.NewLeaderRuntime(opt)
 	defer runtimeConfig.Stop()
