@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"strings"
 
 	"k8s.io/klog/v2"
 )
@@ -11,6 +12,7 @@ import (
 var LocalhostIP = net.ParseIP("127.0.0.1")
 var LocalHostDNSName = "localhost"
 var LocalIPs = QueryIps()
+var testUrl = "www.baidu.com"
 
 const ReservedNodeToken = "reserverd"
 
@@ -36,10 +38,15 @@ func QueryIps() []net.IP {
 func RemoveRepeatIps(ips []net.IP) []net.IP {
 	new := make([]net.IP, 0, len(ips))
 	for _, ip := range ips {
+		if ip == nil {
+			continue
+		}
+
 		if !inIps(ip, new) {
 			new = append(new, ip)
 		}
 	}
+
 	return new
 }
 
@@ -79,4 +86,19 @@ func bigForIP(ip net.IP) *big.Int {
 		b = ip.To16()
 	}
 	return big.NewInt(0).SetBytes(b)
+}
+
+func ExternIp() string {
+	conn, err := net.Dial("udp", "www.baidu.com:80")
+	if err != nil {
+		return "127.0.0.1"
+	}
+	defer conn.Close()
+
+	if ip := net.ParseIP(strings.Split(conn.LocalAddr().String(), ":")[0]); ip == nil {
+		return "127.0.0.1"
+	} else {
+		return ip.String()
+	}
+
 }

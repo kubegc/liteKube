@@ -474,7 +474,7 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	new.ProfessionalOptions.RequestheaderClientCAFile = ka.ApiserverRequestHeaderCA
 	new.ProfessionalOptions.ProxyClientCertFile = ka.ApiserverClientAuthProxyCert
 	new.ProfessionalOptions.ProxyClientKeyFile = ka.ApiserverClientAuthProxyKey
-	new.ProfessionalOptions.KubeletCertificateAuthority = ka.ApiserverClientKubeletCA
+	new.ProfessionalOptions.KubeletCertificateAuthority = ka.ApiserverValidateKubeletServerCA
 	new.ProfessionalOptions.KubeletClientCertificate = ka.ApiserverClientKubeletCert
 	new.ProfessionalOptions.KubeletClientKey = ka.ApiserverClientKubeletKey
 

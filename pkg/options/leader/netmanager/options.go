@@ -3,6 +3,7 @@ package netmanager
 import (
 	"fmt"
 
+	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/help"
 	"github.com/litekube/LiteKube/pkg/options/common"
 )
@@ -23,12 +24,12 @@ type NetOptions struct {
 }
 
 var DefaultRONO NetOptions = NetOptions{
-	Address:    "127.0.0.1",
+	Address:    global.ExternIp(),
 	SecurePort: 6440,
 }
 
 var DefaultJONO NetOptions = NetOptions{
-	Address:    "127.0.0.1",
+	Address:    global.ExternIp(),
 	SecurePort: 6441,
 }
 

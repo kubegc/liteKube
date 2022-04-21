@@ -55,56 +55,69 @@ type KubernetesAuthentication struct {
 	KubernetesCertDir         string
 	KubernetesTLSDir          string
 	KubernetesKubeDir         string
-	CheckFile                 string
 	RequestheaderAllowedNames string
 
-	ApiserverValidateClientsCA          string
-	ApiserverValidateClientsCAKey       string
-	ClusterValidateServerCA             string
-	ClusterValidateServerCAKey          string
-	ApiserverRequestHeaderCA            string
-	ApiserverRequestHeaderCAKey         string
-	IPSECKey                            string
-	ServiceKeyPair                      string
-	PasswdFile                          string
+	ServiceKeyPair string
+
+	// apiserver as server:
+	// --------------------start-------------------
+	ApiserverValidateClientsCA    string
+	ApiserverValidateClientsCAKey string
+	ClusterValidateServerCA       string
+	ClusterValidateServerCAKey    string
+	ApiserverServerCert           string
+	ApiserverServerKey            string
+	// clients to access apiserver
+	// admin
+	AdminClientCert string
+	AdminClientKey  string
+	KubeConfigAdmin string
+	// controller
+	ControllerClientCert string
+	ControllerClientKey  string
+	KubeConfigController string
+	// cloud-controller
+	// ClientCloudControllerCert string
+	// ClientCloudControllerKey string
+	// KubeConfigCloudController string
+	// scheduler
+	SchedulerClientCert string
+	SchedulerClientKey  string
+	KubeConfigScheduler string
+	// kube-proxy
+	KubeProxyClientCert string
+	KubeProxyClientKey  string
+	// litekube
+	LitekubeControllerClientCert string
+	LitekubeControllerClientKey  string
+	// ---------------------end--------------------
+
+	// apiserver as client:
+	// --------------------start-------------------
+	// apiserver as client to external-aggregation-apiserver
+	ApiserverRequestHeaderCA     string
+	ApiserverRequestHeaderCAKey  string
+	ApiserverClientAuthProxyCert string
+	ApiserverClientAuthProxyKey  string
+	// apiserver as client to kubelet
 	KubeletValidateApiserverClientCA    string
 	KubeletValidateApiserverClientCAKey string
 	ApiserverValidateKubeletServerCA    string
 	ApiserverValidateKubeletServerCAKey string
-	TokenAuthFile                       string
+	ApiserverClientKubeletCert          string
+	ApiserverClientKubeletKey           string
+	KubeConfigApiserverToKubelet        string
+	// ---------------------end--------------------
 
-	NodePasswdFile string
-
-	KubeConfigAdmin              string
-	KubeConfigController         string
-	KubeConfigScheduler          string
-	KubeConfigApiserverToKubelet string
-	KubeConfigCloudController    string
-
-	ApiserverClientKubeletCA     string
-	AdminClientCert              string
-	AdminClientKey               string
-	ControllerClientCert         string
-	ControllerClientKey          string
-	ClientCloudControllerCert    string
-	ClientCloudControllerKey     string
-	SchedulerClientCert          string
-	SchedulerClientKey           string
-	ApiserverClientKubeletCert   string
-	ApiserverClientKubeletKey    string
-	KubeProxyClientCert          string
-	KubeProxyClientKey           string
-	LitekubeControllerClientCert string
-	LitekubeControllerClientKey  string
-
-	ApiserverServerCert string
-	ApiserverServerKey  string
+	TokenAuthFile string
 
 	ClientKubeletKey  string
 	ServingKubeletKey string
 
-	ApiserverClientAuthProxyCert string
-	ApiserverClientAuthProxyKey  string
+	IPSECKey   string
+	PasswdFile string
+
+	NodePasswdFile string
 }
 
 func NewKubernetesAuthentication(rootCertPath string, opt *apiserver.ApiserverOptions) *KubernetesAuthentication {
@@ -212,13 +225,13 @@ func NewKubernetesAuthentication(rootCertPath string, opt *apiserver.ApiserverOp
 		LitekubeControllerClientCert: path.Join(kubernetesCertDir, "litekube-controller", "litekube-controller.crt"),
 		LitekubeControllerClientKey:  path.Join(kubernetesCertDir, "litekube-controller", "litekube-controller.key"),
 
-		// ClientKubeletKey:  path.Join(kubernetesCertDir, "kubelet", "client-kubelet.key"),
-		// ServingKubeletKey: path.Join(kubernetesCertDir, "kubelet", "serving-kubelet.key"),
+		ClientKubeletKey:  path.Join(kubernetesCertDir, "kubelet", "client-kubelet.key"),
+		ServingKubeletKey: path.Join(kubernetesCertDir, "kubelet", "serving-kubelet.key"),
 
-		// IPSECKey:   path.Join(kubernetesCertDir, "other", "ipsec.psk"),
-		// PasswdFile: path.Join(kubernetesCertDir, "other", "passwd"),
+		IPSECKey:   path.Join(kubernetesCertDir, "other", "ipsec.psk"),
+		PasswdFile: path.Join(kubernetesCertDir, "other", "passwd"),
 
-		// NodePasswdFile: path.Join(kubernetesCertDir, "other", "node-passwd"),
+		NodePasswdFile: path.Join(kubernetesCertDir, "other", "node-passwd"),
 	}
 }
 
@@ -277,12 +290,12 @@ func (na *KubernetesAuthentication) generateServiceAccountKeys() error {
 
 // generate for kube-apiserver proxy to aggregation-apiserver
 func (na *KubernetesAuthentication) generateAggregationApiserverProxyCerts() error {
-	regen, err := certificate.GenerateSigningCertKey(false, "apiserver-auth-proxy", na.ApiserverRequestHeaderCA, na.ApiserverRequestHeaderCAKey)
+	regen, err := certificate.GenerateSigningCertKey(false, "litekube-request-header", na.ApiserverRequestHeaderCA, na.ApiserverRequestHeaderCAKey)
 	if err != nil {
 		return err
 	}
 
-	if _, err := certificate.GenerateClientCertKey(regen, "system:auth-proxy", nil, na.ApiserverRequestHeaderCA, na.ApiserverRequestHeaderCAKey, na.ApiserverClientAuthProxyCert, na.ApiserverClientAuthProxyKey); err != nil {
+	if _, err := certificate.GenerateClientCertKey(regen, na.RequestheaderAllowedNames, nil, na.ApiserverRequestHeaderCA, na.ApiserverRequestHeaderCAKey, na.ApiserverClientAuthProxyCert, na.ApiserverClientAuthProxyKey); err != nil {
 		return err
 	}
 	return nil
@@ -349,7 +362,7 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	// sign for  kube-apiserver server
 	clusterSignFactory := getSignedServerFactory(regenForServer, &certutil.AltNames{
 		DNSNames: []string{"kubernetes.default.svc", "kubernetes.default", "kubernetes", "localhost"},
-		IPs:      global.RemoveRepeatIps(append(global.LocalIPs, []net.IP{net.IP(na.ApiServerServiceIP), global.LocalhostIP, net.IP(na.ApiserverEndpointIp)}...)),
+		IPs:      global.RemoveRepeatIps(append(global.LocalIPs, []net.IP{net.ParseIP(na.ApiServerServiceIP), global.LocalhostIP, net.ParseIP(na.ApiserverEndpointIp)}...)),
 	}, na.ClusterValidateServerCA, na.ClusterValidateServerCAKey)
 
 	// kube-apiserver server
