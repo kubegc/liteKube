@@ -8,6 +8,18 @@ import (
 	certutil "github.com/rancher/dynamiclistener/cert"
 )
 
+func ValidateRSAKeyFile(keyFie string) bool {
+	if !Exists(keyFie) {
+		return false
+	}
+
+	if _, err := certutil.PrivateKeyFromFile(keyFie); err != nil {
+		return false
+	}
+
+	return true
+}
+
 // check if certificate and key are one pair
 func ValidateTLSPair(certPath string, keyPath string) bool {
 	if !Exists(certPath, keyPath) {

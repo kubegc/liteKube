@@ -10,6 +10,23 @@ import (
 	certutil "github.com/rancher/dynamiclistener/cert"
 )
 
+func GenerateRSAKeyPair(regen bool, keyFie string) (bool, error) {
+	if !regen && ValidateRSAKeyFile(keyFie) {
+		return false, nil
+	}
+
+	key, err := certutil.NewPrivateKey()
+	if err != nil {
+		return false, err
+	}
+
+	if err := certutil.WriteKey(keyFie, certutil.EncodePrivateKeyPEM(key)); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // write signing Certkey with `CN: {prefix}-ca@{time.Now().Unix()}` to certFile
 // if keyFile valid, it will be use, or generate.
 // if generate new ,then return (true,nil); or return (false,nil)

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
-	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/leader/authentication"
 	"github.com/litekube/LiteKube/pkg/logger"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
@@ -350,7 +349,7 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	if new.Options.ServiceNodePortRange == "" {
 		// fail to parse port before
 		new.Options.ServiceNodePortRange = apiserver.DefaultALO.ServiceNodePortRange
-		new.IgnoreOptions["service-node-port-range"] = raw.Options.ServiceNodePortRange
+		//new.IgnoreOptions["service-node-port-range"] = raw.Options.ServiceNodePortRange
 	}
 
 	// secure-port
@@ -374,10 +373,10 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		if remoteIp, err := leaderRuntime.NetworkRegisterClient.QueryIp(); err != nil {
 			return err
 		} else {
-			new.ProfessionalOptions.BindAddress = remoteIp
+			new.ProfessionalOptions.AdvertiseAddress = remoteIp
 		}
 	} else {
-		new.ProfessionalOptions.AdvertiseAddress = raw.ProfessionalOptions.BindAddress
+		new.ProfessionalOptions.AdvertiseAddress = raw.ProfessionalOptions.AdvertiseAddress
 	}
 
 	// InsecurePort
@@ -387,13 +386,17 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		new.ProfessionalOptions.InsecurePort = raw.ProfessionalOptions.InsecurePort
 	}
 
-	new.ProfessionalOptions.RequestheaderExtraHeadersPrefix = raw.ProfessionalOptions.RequestheaderExtraHeadersPrefix
-	new.ProfessionalOptions.RequestheaderGroupHeaders = raw.ProfessionalOptions.RequestheaderGroupHeaders
-	new.ProfessionalOptions.RequestheaderUsernameHeaders = raw.ProfessionalOptions.RequestheaderUsernameHeaders
+	// FeatureGates
 	new.ProfessionalOptions.FeatureGates = raw.ProfessionalOptions.FeatureGates
+	if new.ProfessionalOptions.FeatureGates == "" {
+		new.ProfessionalOptions.FeatureGates = apiserver.DefaultAPO.FeatureGates
+	}
 
 	// ECTDOptions
 	new.ProfessionalOptions.StorageBackend = raw.ProfessionalOptions.StorageBackend
+	if new.ProfessionalOptions.StorageBackend == "" {
+		new.ProfessionalOptions.StorageBackend = apiserver.DefaultEO.StorageBackend
+	}
 	// address
 	new.ProfessionalOptions.EtcdServers = raw.ProfessionalOptions.EtcdServers
 	if new.ProfessionalOptions.EtcdServers == "" {
@@ -419,45 +422,100 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		new.ProfessionalOptions.EtcdKeyfile = raw.ProfessionalOptions.EtcdKeyfile
 	}
 
-	// ServerCertOptions
-	if raw.ProfessionalOptions.CertDir == "" {
-		raw.ProfessionalOptions.CertDir = filepath.Join(leaderRuntime.RuntimeAuthentication.CertDir, "kubernetes/tls/")
+	// server cert options
+	new.ProfessionalOptions.ApiAudiences = raw.ProfessionalOptions.ApiAudiences
+	if new.ProfessionalOptions.ApiAudiences == "" {
+		new.ProfessionalOptions.ApiAudiences = apiserver.DefaultSCO.ApiAudiences
+	}
+	new.ProfessionalOptions.EnableBootstrapTokenAuth = raw.ProfessionalOptions.EnableBootstrapTokenAuth
+	new.ProfessionalOptions.ServiceAccountIssuer = raw.ProfessionalOptions.ServiceAccountIssuer
+	if new.ProfessionalOptions.ServiceAccountIssuer == "" {
+		new.ProfessionalOptions.ServiceAccountIssuer = apiserver.DefaultSCO.ServiceAccountIssuer
+	}
+	new.ProfessionalOptions.RequestheaderAllowedNames = raw.ProfessionalOptions.RequestheaderAllowedNames
+	if new.ProfessionalOptions.RequestheaderAllowedNames == "" {
+		new.ProfessionalOptions.RequestheaderAllowedNames = apiserver.DefaultSCO.RequestheaderAllowedNames
+	}
+	new.ProfessionalOptions.RequestheaderExtraHeadersPrefix = raw.ProfessionalOptions.RequestheaderExtraHeadersPrefix
+	if new.ProfessionalOptions.RequestheaderExtraHeadersPrefix == "" {
+		new.ProfessionalOptions.RequestheaderExtraHeadersPrefix = apiserver.DefaultSCO.RequestheaderExtraHeadersPrefix
+	}
+	new.ProfessionalOptions.RequestheaderGroupHeaders = raw.ProfessionalOptions.RequestheaderGroupHeaders
+	if new.ProfessionalOptions.RequestheaderGroupHeaders == "" {
+		new.ProfessionalOptions.RequestheaderGroupHeaders = apiserver.DefaultSCO.RequestheaderGroupHeaders
+	}
+	new.ProfessionalOptions.RequestheaderUsernameHeaders = raw.ProfessionalOptions.RequestheaderUsernameHeaders
+	if new.ProfessionalOptions.RequestheaderUsernameHeaders == "" {
+		new.ProfessionalOptions.RequestheaderUsernameHeaders = apiserver.DefaultSCO.RequestheaderUsernameHeaders
+	}
+	new.ProfessionalOptions.RequestheaderAllowedNames = raw.ProfessionalOptions.RequestheaderAllowedNames
+	if new.ProfessionalOptions.RequestheaderAllowedNames == "" {
+		new.ProfessionalOptions.RequestheaderAllowedNames = apiserver.DefaultSCO.RequestheaderAllowedNames
+	}
+	new.ProfessionalOptions.EnableAggregatorRouting = raw.ProfessionalOptions.EnableAggregatorRouting
+
+	// generate certificates
+	ka := authentication.NewKubernetesAuthentication(leaderRuntime.RuntimeAuthentication.CertDir, new)
+	leaderRuntime.RuntimeAuthentication.Kubernetes = ka
+	if ka == nil {
+		return fmt.Errorf("fail to generate certificates for kubernetes")
 	}
 
-	// KubeletClientCertOptions
+	if err := ka.GenerateOrSkip(); err != nil {
+		return err
+	}
 
-	// Assignment will not be allowed when leader runs again
-	if leaderRuntime.KubernetesCertOk() {
-		// assume certificates are ok without verify
+	new.ProfessionalOptions.CertDir = ka.KubernetesTLSDir
+	new.ProfessionalOptions.TlsCertFile = ka.ApiserverServerCert
+	new.ProfessionalOptions.TlsPrivateKeyFile = ka.ApiserverServerKey
+	new.ProfessionalOptions.TokenAuthFile = ka.TokenAuthFile
+	new.ProfessionalOptions.ServiceAccountKeyFile = ka.ServiceKeyPair
+	new.ProfessionalOptions.ClientCAFile = ka.ApiserverValidateClientsCA
+	new.ProfessionalOptions.RequestheaderClientCAFile = ka.ApiserverRequestHeaderCA
+	new.ProfessionalOptions.ProxyClientCertFile = ka.ApiserverClientAuthProxyCert
+	new.ProfessionalOptions.ProxyClientKeyFile = ka.ApiserverClientAuthProxyKey
+	new.ProfessionalOptions.KubeletCertificateAuthority = ka.ApiserverClientKubeletCA
+	new.ProfessionalOptions.KubeletClientCertificate = ka.ApiserverClientKubeletCert
+	new.ProfessionalOptions.KubeletClientKey = ka.ApiserverClientKubeletKey
 
-		// ServerCertOptions
-		// new.ProfessionalOptions.TlsCertFile = raw.ProfessionalOptions.TlsCertFile
-		// new.ProfessionalOptions.TlsCertFile = raw.ProfessionalOptions.TlsCertFile
-		// new.ProfessionalOptions.TlsPrivateKeyFile = raw.ProfessionalOptions.TlsPrivateKeyFile
-		// new.ProfessionalOptions.ApiAudiencesr = raw.ProfessionalOptions.ApiAudiencesr
-		// new.ProfessionalOptions.TokenAuthFile = raw.ProfessionalOptions.TokenAuthFile
-		// new.ProfessionalOptions.EnableBootstrapTokenAuth = raw.ProfessionalOptions.EnableBootstrapTokenAuth
-		// new.ProfessionalOptions.ServiceAccountKeyFile = raw.ProfessionalOptions.ServiceAccountKeyFile
-		// new.ProfessionalOptions.ServiceAccountIssuer = raw.ProfessionalOptions.ServiceAccountIssuer
-
-		// // KubeletClientCertOptions
-		// new.ProfessionalOptions.KubeletCertificateAuthority = raw.ProfessionalOptions.KubeletCertificateAuthority
-		// new.ProfessionalOptions.KubeletClientCertificate = raw.ProfessionalOptions.KubeletClientCertificate
-		// new.ProfessionalOptions.KubeletClientKey = raw.ProfessionalOptions.KubeletClientKey
-		// new.ProfessionalOptions.ClientCAFile = raw.ProfessionalOptions.ClientCAFile
-		// new.ProfessionalOptions.RequestheaderClientCAFile = raw.ProfessionalOptions.RequestheaderClientCAFile
-		// new.ProfessionalOptions.RequestheaderAllowedNames = raw.ProfessionalOptions.RequestheaderAllowedNames
-		// new.ProfessionalOptions.ProxyClientCertFile = raw.ProfessionalOptions.ProxyClientCertFile
-		// new.ProfessionalOptions.ProxyClientKeyFile = raw.ProfessionalOptions.ProxyClientKeyFile
-	} else {
-
+	if raw.ProfessionalOptions.CertDir != "" {
+		new.ProfessionalOptions.CertDir = raw.ProfessionalOptions.CertDir
+	}
+	if raw.ProfessionalOptions.TlsCertFile != "" {
+		new.ProfessionalOptions.TlsCertFile = raw.ProfessionalOptions.TlsCertFile
+	}
+	if raw.ProfessionalOptions.TlsPrivateKeyFile != "" {
+		new.ProfessionalOptions.TlsPrivateKeyFile = raw.ProfessionalOptions.TlsPrivateKeyFile
+	}
+	if raw.ProfessionalOptions.TokenAuthFile != "" {
+		new.ProfessionalOptions.TokenAuthFile = raw.ProfessionalOptions.TokenAuthFile
+	}
+	if raw.ProfessionalOptions.ServiceAccountKeyFile != "" {
+		new.ProfessionalOptions.ServiceAccountKeyFile = raw.ProfessionalOptions.ServiceAccountKeyFile
+	}
+	if raw.ProfessionalOptions.ClientCAFile != "" {
+		new.ProfessionalOptions.ClientCAFile = raw.ProfessionalOptions.ClientCAFile
+	}
+	if raw.ProfessionalOptions.RequestheaderClientCAFile != "" {
+		new.ProfessionalOptions.RequestheaderClientCAFile = raw.ProfessionalOptions.RequestheaderClientCAFile
+	}
+	if raw.ProfessionalOptions.ProxyClientCertFile != "" {
+		new.ProfessionalOptions.ProxyClientCertFile = raw.ProfessionalOptions.ProxyClientCertFile
+	}
+	if raw.ProfessionalOptions.ProxyClientKeyFile != "" {
+		new.ProfessionalOptions.ProxyClientKeyFile = raw.ProfessionalOptions.ProxyClientKeyFile
+	}
+	if raw.ProfessionalOptions.KubeletCertificateAuthority != "" {
+		new.ProfessionalOptions.KubeletCertificateAuthority = raw.ProfessionalOptions.KubeletCertificateAuthority
+	}
+	if raw.ProfessionalOptions.KubeletClientCertificate != "" {
+		new.ProfessionalOptions.KubeletClientCertificate = raw.ProfessionalOptions.KubeletClientCertificate
+	}
+	if raw.ProfessionalOptions.KubeletClientKey != "" {
+		new.ProfessionalOptions.KubeletClientKey = raw.ProfessionalOptions.KubeletClientKey
 	}
 
 	return nil
-}
-
-func (leaderRuntime *LeaderRuntime) KubernetesCertOk() bool {
-	return global.Exists(filepath.Join(leaderRuntime.RuntimeAuthentication.CertDir, "kubernetes/.valid"))
 }
 
 func (leaderRuntime *LeaderRuntime) LoadControllermanager() error {

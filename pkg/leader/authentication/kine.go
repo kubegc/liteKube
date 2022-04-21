@@ -62,7 +62,7 @@ func (kine *KineAuthentication) GenerateOrSkip() error {
 	if _, err := certificate.GenerateServerCertKey(regen, "kine-server", nil,
 		&cert.AltNames{
 			DNSNames: append(kine.QueryRemoteDNSNames(), global.LocalHostDNSName),
-			IPs:      append(global.LocalIPs, kine.QueryRemoteIps()...),
+			IPs:      global.RemoveRepeatIps(append(global.LocalIPs, kine.QueryRemoteIps()...)),
 		}, kine.CACert, kine.CAKey, kine.ServerCert, kine.Serverkey); err != nil {
 		return err
 	}

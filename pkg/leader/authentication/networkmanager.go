@@ -86,7 +86,7 @@ func (na *NetworkAuthentication) GenerateOrSkip() error {
 	if _, err := certificate.GenerateServerCertKey(regenRegister, "register-server", nil,
 		&cert.AltNames{
 			DNSNames: append(na.QueryRemoteDNSNames(), global.LocalHostDNSName),
-			IPs:      append(append(global.LocalIPs, []net.IP{net.ParseIP(na.RegisterBindAddress), net.ParseIP(na.JoinBindAddress)}...), na.QueryRemoteIps()...),
+			IPs:      global.RemoveRepeatIps(append(append(global.LocalIPs, []net.IP{net.ParseIP(na.RegisterBindAddress), net.ParseIP(na.JoinBindAddress)}...), na.QueryRemoteIps()...)),
 		}, na.RegisterCACert, na.RegisterCAKey, na.RegisterServerCert, na.RegisterServerkey); err != nil {
 		return err
 	}

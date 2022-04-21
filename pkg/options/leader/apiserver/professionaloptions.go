@@ -15,8 +15,7 @@ type ApiserverProfessionalOptions struct {
 	BindAddress      string `yaml:"bind-address"`
 	AdvertiseAddress string `yaml:"advertise-address"`
 	InsecurePort     uint16 `yaml:"insecure-port"`
-
-	FeatureGates string `yaml:"feature-gates"`
+	FeatureGates     string `yaml:"feature-gates"`
 }
 
 // server security
@@ -29,6 +28,7 @@ type ServerCertOptions struct {
 	EnableBootstrapTokenAuth bool   `yaml:"enable-bootstrap-token-auth"`
 	ServiceAccountKeyFile    string `yaml:"service-account-key-file"`
 	ServiceAccountIssuer     string `yaml:"service-account-issuer"`
+	ClientCAFile             string `yaml:"client-ca-file"`
 
 	// for access-proxy to kube-apiserver
 	RequestheaderExtraHeadersPrefix string `yaml:"requestheader-extra-headers-prefix"`
@@ -47,7 +47,6 @@ type KubeletClientCertOptions struct {
 	KubeletCertificateAuthority string `yaml:"kubelet-certificate-authority"`
 	KubeletClientCertificate    string `yaml:"kubelet-client-certificate"`
 	KubeletClientKey            string `yaml:"kubelet-client-key"`
-	ClientCAFile                string `yaml:"client-ca-file"`
 }
 
 // etcd options
@@ -65,8 +64,9 @@ var DefaultEO ECTDOptions = ECTDOptions{
 }
 var DefaultKCCO KubeletClientCertOptions = KubeletClientCertOptions{}
 var DefaultSCO ServerCertOptions = ServerCertOptions{
-	ApiAudiences:         "unknown",
-	ServiceAccountIssuer: "litekube",
+	ApiAudiences:             "unknown",
+	EnableBootstrapTokenAuth: true,
+	ServiceAccountIssuer:     "litekube",
 
 	RequestheaderExtraHeadersPrefix: "X-Remote-Extra-",
 	RequestheaderGroupHeaders:       "X-Remote-Group",
@@ -121,6 +121,7 @@ func (opt *ServerCertOptions) AddTips(section *help.Section) {
 	section.AddTip("proxy-client-cert-file", "string", "Client certificate used to prove the identity of the aggregator or kube-apiserver when it must call out during a request. ", DefaultSCO.ProxyClientCertFile)
 	section.AddTip("proxy-client-key-file", "string", "Private key for the client certificate used to prove the identity of the aggregator or kube-apiserver when it must call out during a request. ", DefaultSCO.ProxyClientKeyFile)
 	section.AddTip("enable-aggregator-routing", "bool", "set true is suggested.", fmt.Sprintf("%t", DefaultSCO.EnableAggregatorRouting))
+	section.AddTip("client-ca-file", "string", "If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.", DefaultSCO.ClientCAFile)
 }
 
 func (opt *ECTDOptions) AddTips(section *help.Section) {
@@ -135,7 +136,6 @@ func (opt *KubeletClientCertOptions) AddTips(section *help.Section) {
 	section.AddTip("kubelet-certificate-authority", "string", "Path to a cert file for the certificate authority.", DefaultKCCO.KubeletCertificateAuthority)
 	section.AddTip("kubelet-client-certificate", "string", "Path to a client cert file for TLS.", DefaultKCCO.KubeletClientCertificate)
 	section.AddTip("kubelet-client-key", "string", "Path to a client key file for TLS.", DefaultKCCO.KubeletClientKey)
-	section.AddTip("client-ca-file", "string", "If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.", DefaultKCCO.ClientCAFile)
 }
 
 func (opt *ApiserverProfessionalOptions) AddTips(section *help.Section) {
