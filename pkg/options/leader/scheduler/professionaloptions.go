@@ -16,22 +16,22 @@ type SchedulerProfessionalOptions struct {
 	AuthenticationKubeconfig string `yaml:"authentication-kubeconfig"`
 }
 
-var defaultSPO SchedulerProfessionalOptions = SchedulerProfessionalOptions{
+var DefaultSPO SchedulerProfessionalOptions = SchedulerProfessionalOptions{
 	BindAddress: "0.0.0.0",
 	SecurePort:  10259,
 	LeaderElect: false,
 }
 
 func NewSchedulerProfessionalOptions() *SchedulerProfessionalOptions {
-	options := defaultSPO
+	options := DefaultSPO
 	return &options
 }
 
 func (opt *SchedulerProfessionalOptions) AddTips(section *help.Section) {
-	section.AddTip("bind-address", "string", "The IP address on which to listen for the --secure-port port. ", defaultSPO.BindAddress)
-	section.AddTip("secure-port", "uint16", "The port on which to serve HTTPS with authentication and authorization. If 0, don't serve HTTPS at all.", fmt.Sprintf("%d", defaultSPO.SecurePort))
-	section.AddTip("leader-elect", "bool", "Start a leader election client and gain leadership before executing the main loop. Enable this when running replicated components for high availability.", fmt.Sprintf("%t", defaultSPO.LeaderElect))
-	section.AddTip("authorization-kubeconfig", "string", "kubeconfig file pointing at the 'core' kubernetes server with enough rights to create subjectaccessreviews.authorization.k8s.io. ", defaultSPO.AuthorizationKubeconfig)
-	section.AddTip("authentication-kubeconfig", "string", "kubeconfig file pointing at the 'core' kubernetes server with enough rights to create tokenreviews.authentication.k8s.io.", defaultSPO.AuthenticationKubeconfig)
-	section.AddTip("kubeconfig", "string", "deprecated. Path to kubeconfig file with authorization and master location information. ", defaultSPO.KubeConfig)
+	section.AddTip("bind-address", "string", "The IP address on which to listen for the --secure-port port. ", DefaultSPO.BindAddress)
+	section.AddTip("secure-port", "uint16", "The port on which to serve HTTPS with authentication and authorization. If 0, don't serve HTTPS at all.", fmt.Sprintf("%d", DefaultSPO.SecurePort))
+	section.AddTip("leader-elect", "bool", "Start a leader election client and gain leadership before executing the main loop. Enable this when running replicated components for high availability.", fmt.Sprintf("%t", DefaultSPO.LeaderElect))
+	section.AddTip("authorization-kubeconfig", "string", "kubeconfig file pointing at the 'core' kubernetes server with enough rights to create subjectaccessreviews.authorization.k8s.io. ", DefaultSPO.AuthorizationKubeconfig)
+	section.AddTip("authentication-kubeconfig", "string", "kubeconfig file pointing at the 'core' kubernetes server with enough rights to create tokenreviews.authentication.k8s.io.", DefaultSPO.AuthenticationKubeconfig)
+	section.AddTip("kubeconfig", "string", "deprecated. Path to kubeconfig file with authorization and master location information. ", DefaultSPO.KubeConfig)
 }

@@ -15,9 +15,11 @@ import (
 	"github.com/litekube/LiteKube/pkg/logger"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
+	"github.com/litekube/LiteKube/pkg/options/leader/controllermanager"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/leader/global"
 	kineoptions "github.com/litekube/LiteKube/pkg/options/leader/kine"
 	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
+	"github.com/litekube/LiteKube/pkg/options/leader/scheduler"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 )
@@ -52,7 +54,18 @@ func (leaderRuntime *LeaderRuntime) LoadFlags() error {
 		return err
 	}
 
+	// init flags for kube-apiserver
 	if err := leaderRuntime.LoadApiserver(); err != nil {
+		return err
+	}
+
+	// init flags for controller-manager
+	if err := leaderRuntime.LoadControllermanager(); err != nil {
+		return err
+	}
+
+	// init kube-scheduler
+	if err := leaderRuntime.LoadScheduler(); err != nil {
 		return err
 	}
 
@@ -359,7 +372,7 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		new.Options.SecurePort = raw.Options.SecurePort
 	}
 
-	// ProfessionalOptions
+	// load *ProfessionalOptions
 	// bind-address
 	if ip := net.ParseIP(raw.ProfessionalOptions.BindAddress); ip == nil {
 		new.ProfessionalOptions.BindAddress = apiserver.DefaultAPO.BindAddress
@@ -465,6 +478,43 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		return err
 	}
 
+	if raw.ProfessionalOptions.CertDir != "" {
+		ka.KubernetesTLSDir = raw.ProfessionalOptions.CertDir
+	}
+	if raw.ProfessionalOptions.TlsCertFile != "" {
+		ka.ApiserverServerCert = raw.ProfessionalOptions.TlsCertFile
+	}
+	if raw.ProfessionalOptions.TlsPrivateKeyFile != "" {
+		ka.ApiserverServerKey = raw.ProfessionalOptions.TlsPrivateKeyFile
+	}
+	if raw.ProfessionalOptions.TokenAuthFile != "" {
+		ka.TokenAuthFile = raw.ProfessionalOptions.TokenAuthFile
+	}
+	if raw.ProfessionalOptions.ServiceAccountKeyFile != "" {
+		ka.ServiceKeyPair = raw.ProfessionalOptions.ServiceAccountKeyFile
+	}
+	if raw.ProfessionalOptions.ClientCAFile != "" {
+		ka.ApiserverValidateClientsCA = raw.ProfessionalOptions.ClientCAFile
+	}
+	if raw.ProfessionalOptions.RequestheaderClientCAFile != "" {
+		ka.ApiserverRequestHeaderCA = raw.ProfessionalOptions.RequestheaderClientCAFile
+	}
+	if raw.ProfessionalOptions.ProxyClientCertFile != "" {
+		ka.ApiserverClientAuthProxyCert = raw.ProfessionalOptions.ProxyClientCertFile
+	}
+	if raw.ProfessionalOptions.ProxyClientKeyFile != "" {
+		ka.ApiserverClientAuthProxyKey = raw.ProfessionalOptions.ProxyClientKeyFile
+	}
+	if raw.ProfessionalOptions.KubeletCertificateAuthority != "" {
+		ka.ApiserverValidateKubeletServerCA = raw.ProfessionalOptions.KubeletCertificateAuthority
+	}
+	if raw.ProfessionalOptions.KubeletClientCertificate != "" {
+		ka.ApiserverClientKubeletCert = raw.ProfessionalOptions.KubeletClientCertificate
+	}
+	if raw.ProfessionalOptions.KubeletClientKey != "" {
+		ka.ApiserverClientKubeletKey = raw.ProfessionalOptions.KubeletClientKey
+	}
+
 	new.ProfessionalOptions.CertDir = ka.KubernetesTLSDir
 	new.ProfessionalOptions.TlsCertFile = ka.ApiserverServerCert
 	new.ProfessionalOptions.TlsPrivateKeyFile = ka.ApiserverServerKey
@@ -478,58 +528,160 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	new.ProfessionalOptions.KubeletClientCertificate = ka.ApiserverClientKubeletCert
 	new.ProfessionalOptions.KubeletClientKey = ka.ApiserverClientKubeletKey
 
-	if raw.ProfessionalOptions.CertDir != "" {
-		new.ProfessionalOptions.CertDir = raw.ProfessionalOptions.CertDir
-	}
-	if raw.ProfessionalOptions.TlsCertFile != "" {
-		new.ProfessionalOptions.TlsCertFile = raw.ProfessionalOptions.TlsCertFile
-	}
-	if raw.ProfessionalOptions.TlsPrivateKeyFile != "" {
-		new.ProfessionalOptions.TlsPrivateKeyFile = raw.ProfessionalOptions.TlsPrivateKeyFile
-	}
-	if raw.ProfessionalOptions.TokenAuthFile != "" {
-		new.ProfessionalOptions.TokenAuthFile = raw.ProfessionalOptions.TokenAuthFile
-	}
-	if raw.ProfessionalOptions.ServiceAccountKeyFile != "" {
-		new.ProfessionalOptions.ServiceAccountKeyFile = raw.ProfessionalOptions.ServiceAccountKeyFile
-	}
-	if raw.ProfessionalOptions.ClientCAFile != "" {
-		new.ProfessionalOptions.ClientCAFile = raw.ProfessionalOptions.ClientCAFile
-	}
-	if raw.ProfessionalOptions.RequestheaderClientCAFile != "" {
-		new.ProfessionalOptions.RequestheaderClientCAFile = raw.ProfessionalOptions.RequestheaderClientCAFile
-	}
-	if raw.ProfessionalOptions.ProxyClientCertFile != "" {
-		new.ProfessionalOptions.ProxyClientCertFile = raw.ProfessionalOptions.ProxyClientCertFile
-	}
-	if raw.ProfessionalOptions.ProxyClientKeyFile != "" {
-		new.ProfessionalOptions.ProxyClientKeyFile = raw.ProfessionalOptions.ProxyClientKeyFile
-	}
-	if raw.ProfessionalOptions.KubeletCertificateAuthority != "" {
-		new.ProfessionalOptions.KubeletCertificateAuthority = raw.ProfessionalOptions.KubeletCertificateAuthority
-	}
-	if raw.ProfessionalOptions.KubeletClientCertificate != "" {
-		new.ProfessionalOptions.KubeletClientCertificate = raw.ProfessionalOptions.KubeletClientCertificate
-	}
-	if raw.ProfessionalOptions.KubeletClientKey != "" {
-		new.ProfessionalOptions.KubeletClientKey = raw.ProfessionalOptions.KubeletClientKey
-	}
-
 	return nil
 }
 
 func (leaderRuntime *LeaderRuntime) LoadControllermanager() error {
-	return nil
-}
+	raw := leaderRuntime.FlagsOption.ControllerManagerOptions
+	new := leaderRuntime.RuntimeOption.ControllerManagerOptions
+	ka := leaderRuntime.RuntimeAuthentication.Kubernetes
 
-func (leaderRuntime *LeaderRuntime) LoadScheduler() error {
-	return nil
-}
+	new.ReservedOptions = raw.ReservedOptions
+	new.IgnoreOptions = raw.IgnoreOptions
 
-func (leaderRuntime *LeaderRuntime) LoadWorker() error {
-	if !leaderRuntime.FlagsOption.GlobalOptions.EnableWorker {
-		return nil
+	// load *LitekubeOptions
+	new.Options.AllocateNodeCidrs = raw.Options.AllocateNodeCidrs
+	if _, _, err := net.ParseCIDR(raw.Options.ClusterCidr); err != nil {
+		new.Options.ClusterCidr = controllermanager.DefaultCMLO.ClusterCidr
+		//new.IgnoreOptions["service-cluster-ip-range"] = raw.Options.ServiceClusterIpRange
+	} else {
+		new.Options.ClusterCidr = raw.Options.ClusterCidr
+	}
+	new.Options.Profiling = raw.Options.Profiling
+	new.Options.UseServiceAccountCredentials = raw.Options.UseServiceAccountCredentials
+
+	// load *ProfessionalOptions
+	// bind-address
+	if ip := net.ParseIP(raw.ProfessionalOptions.BindAddress); ip == nil {
+		new.ProfessionalOptions.BindAddress = controllermanager.DefaultCMPO.BindAddress
+	} else {
+		new.ProfessionalOptions.BindAddress = raw.ProfessionalOptions.BindAddress
+	}
+
+	// secure-port
+	if raw.ProfessionalOptions.SecurePort < 1 || raw.ProfessionalOptions.SecurePort > 65535 {
+		new.ProfessionalOptions.SecurePort = controllermanager.DefaultCMPO.SecurePort
+	} else {
+		new.ProfessionalOptions.SecurePort = raw.ProfessionalOptions.SecurePort
+	}
+
+	new.ProfessionalOptions.LeaderElect = raw.ProfessionalOptions.LeaderElect
+	new.ProfessionalOptions.ConfigureCloudRoutes = raw.ProfessionalOptions.ConfigureCloudRoutes
+	new.ProfessionalOptions.Controllers = raw.ProfessionalOptions.Controllers
+	if new.ProfessionalOptions.Controllers == "" {
+		new.ProfessionalOptions.Controllers = controllermanager.DefaultCMPO.Controllers
+	}
+	new.ProfessionalOptions.FeatureGates = raw.ProfessionalOptions.FeatureGates
+	if new.ProfessionalOptions.FeatureGates == "" {
+		new.ProfessionalOptions.FeatureGates = controllermanager.DefaultCMPO.FeatureGates
+	}
+
+	// cert
+	new.ProfessionalOptions.Kubeconfig = ka.KubeConfigController
+	new.ProfessionalOptions.AuthenticationKubeconfig = ka.KubeConfigController
+	new.ProfessionalOptions.AuthorizationKubeconfig = ka.KubeConfigController
+	new.ProfessionalOptions.ServiceAccountPrivateKeyFile = ka.ServiceKeyPair
+	new.ProfessionalOptions.RootCaFile = ka.ClusterValidateServerCA
+	new.ProfessionalOptions.ClusterSigningKubeApiserverClientCertFile = ka.KubeletValidateApiserverClientCA
+	new.ProfessionalOptions.ClusterSigningKubeApiserverClientKeyFile = ka.KubeletValidateApiserverClientCAKey
+	new.ProfessionalOptions.ClusterSigningKubeletClientCertFile = ka.ApiserverValidateClientsCA
+	new.ProfessionalOptions.ClusterSigningKubeletClientKeyFile = ka.ApiserverValidateClientsCAKey
+	new.ProfessionalOptions.ClusterSigningKubeletServingCertFile = ka.ApiserverValidateKubeletServerCA
+	new.ProfessionalOptions.ClusterSigningKubeletServingKeyFile = ka.ApiserverValidateKubeletServerCAKey
+	new.ProfessionalOptions.ClusterSigningLegacyUnknownCertFile = ka.ApiserverValidateClientsCA
+	new.ProfessionalOptions.ClusterSigningLegacyUnknownKeyFile = ka.ApiserverValidateClientsCAKey
+
+	if raw.ProfessionalOptions.Kubeconfig != "" {
+		new.ProfessionalOptions.Kubeconfig = raw.ProfessionalOptions.Kubeconfig
+	}
+	if raw.ProfessionalOptions.AuthenticationKubeconfig != "" {
+		new.ProfessionalOptions.AuthenticationKubeconfig = raw.ProfessionalOptions.AuthenticationKubeconfig
+	}
+	if raw.ProfessionalOptions.AuthorizationKubeconfig != "" {
+		new.ProfessionalOptions.AuthorizationKubeconfig = raw.ProfessionalOptions.AuthorizationKubeconfig
+	}
+	if raw.ProfessionalOptions.ServiceAccountPrivateKeyFile != "" {
+		new.ProfessionalOptions.ServiceAccountPrivateKeyFile = raw.ProfessionalOptions.ServiceAccountPrivateKeyFile
+	}
+	if raw.ProfessionalOptions.RootCaFile != "" {
+		new.ProfessionalOptions.RootCaFile = raw.ProfessionalOptions.RootCaFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningKubeApiserverClientCertFile != "" {
+		new.ProfessionalOptions.ClusterSigningKubeApiserverClientCertFile = raw.ProfessionalOptions.ClusterSigningKubeApiserverClientCertFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningKubeApiserverClientKeyFile != "" {
+		new.ProfessionalOptions.ClusterSigningKubeApiserverClientKeyFile = raw.ProfessionalOptions.ClusterSigningKubeApiserverClientKeyFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningKubeletClientCertFile != "" {
+		new.ProfessionalOptions.ClusterSigningKubeletClientCertFile = raw.ProfessionalOptions.ClusterSigningKubeletClientCertFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningKubeApiserverClientKeyFile != "" {
+		new.ProfessionalOptions.ClusterSigningKubeApiserverClientKeyFile = raw.ProfessionalOptions.ClusterSigningKubeApiserverClientKeyFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningKubeletServingCertFile != "" {
+		new.ProfessionalOptions.ClusterSigningKubeletServingCertFile = raw.ProfessionalOptions.ClusterSigningKubeletServingCertFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningKubeletServingKeyFile != "" {
+		new.ProfessionalOptions.ClusterSigningKubeletServingKeyFile = raw.ProfessionalOptions.ClusterSigningKubeletServingKeyFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningLegacyUnknownCertFile != "" {
+		new.ProfessionalOptions.ClusterSigningLegacyUnknownCertFile = raw.ProfessionalOptions.ClusterSigningLegacyUnknownCertFile
+	}
+	if raw.ProfessionalOptions.ClusterSigningLegacyUnknownKeyFile != "" {
+		new.ProfessionalOptions.ClusterSigningLegacyUnknownKeyFile = raw.ProfessionalOptions.ClusterSigningLegacyUnknownKeyFile
 	}
 
 	return nil
 }
+
+func (leaderRuntime *LeaderRuntime) LoadScheduler() error {
+	raw := leaderRuntime.FlagsOption.SchedulerOptions
+	new := leaderRuntime.RuntimeOption.SchedulerOptions
+	ka := leaderRuntime.RuntimeAuthentication.Kubernetes
+
+	new.ReservedOptions = raw.ReservedOptions
+	new.IgnoreOptions = raw.IgnoreOptions
+
+	// load * LitekubeOptions
+	new.Options.Profiling = raw.Options.Profiling
+
+	// load * ProfessionalOptions
+	// bind-address
+	if ip := net.ParseIP(raw.ProfessionalOptions.BindAddress); ip == nil {
+		new.ProfessionalOptions.BindAddress = scheduler.DefaultSPO.BindAddress
+	} else {
+		new.ProfessionalOptions.BindAddress = raw.ProfessionalOptions.BindAddress
+	}
+
+	// secure-port
+	if raw.ProfessionalOptions.SecurePort < 1 || raw.ProfessionalOptions.SecurePort > 65535 {
+		new.ProfessionalOptions.SecurePort = scheduler.DefaultSPO.SecurePort
+	} else {
+		new.ProfessionalOptions.SecurePort = raw.ProfessionalOptions.SecurePort
+	}
+
+	new.ProfessionalOptions.LeaderElect = raw.ProfessionalOptions.LeaderElect
+	new.ProfessionalOptions.KubeConfig = ka.KubeConfigScheduler
+	new.ProfessionalOptions.AuthenticationKubeconfig = ka.KubeConfigScheduler
+	new.ProfessionalOptions.AuthorizationKubeconfig = ka.KubeConfigScheduler
+
+	if raw.ProfessionalOptions.KubeConfig != "" {
+		new.ProfessionalOptions.KubeConfig = raw.ProfessionalOptions.KubeConfig
+	}
+	if raw.ProfessionalOptions.AuthenticationKubeconfig != "" {
+		new.ProfessionalOptions.AuthenticationKubeconfig = raw.ProfessionalOptions.AuthenticationKubeconfig
+	}
+	if raw.ProfessionalOptions.AuthorizationKubeconfig != "" {
+		new.ProfessionalOptions.AuthorizationKubeconfig = raw.ProfessionalOptions.AuthorizationKubeconfig
+	}
+
+	return nil
+}
+
+// func (leaderRuntime *LeaderRuntime) LoadWorker() error {
+// 	if !leaderRuntime.FlagsOption.GlobalOptions.EnableWorker {
+// 		return nil
+// 	}
+
+// 	return nil
+// }
