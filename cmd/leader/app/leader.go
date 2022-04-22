@@ -132,5 +132,5 @@ func addKlogFlag() {
 
 func addFlags(cmd *cobra.Command) {
 	options.AddFlagsTo(cmd.Flags())
-	verflag.AddFlagsTo(cmd.Flags())
+	//verflag.AddFlagsTo(cmd.Flags())
 }

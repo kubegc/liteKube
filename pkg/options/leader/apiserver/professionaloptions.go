@@ -20,15 +20,16 @@ type ApiserverProfessionalOptions struct {
 
 // server security
 type ServerCertOptions struct {
-	CertDir                  string `yaml:"cert-dir"`
-	TlsCertFile              string `yaml:"tls-cert-file"`
-	TlsPrivateKeyFile        string `yaml:"tls-private-key-file"`
-	ApiAudiences             string `yaml:"api-audiences"`
-	TokenAuthFile            string `yaml:"token-auth-file"`
-	EnableBootstrapTokenAuth bool   `yaml:"enable-bootstrap-token-auth"`
-	ServiceAccountKeyFile    string `yaml:"service-account-key-file"`
-	ServiceAccountIssuer     string `yaml:"service-account-issuer"`
-	ClientCAFile             string `yaml:"client-ca-file"`
+	CertDir                      string `yaml:"cert-dir"`
+	TlsCertFile                  string `yaml:"tls-cert-file"`
+	TlsPrivateKeyFile            string `yaml:"tls-private-key-file"`
+	ApiAudiences                 string `yaml:"api-audiences"`
+	TokenAuthFile                string `yaml:"token-auth-file"`
+	EnableBootstrapTokenAuth     bool   `yaml:"enable-bootstrap-token-auth"`
+	ServiceAccountSigningKeyFile string `yaml:"service-account-signing-key-file"`
+	ServiceAccountKeyFile        string `yaml:"service-account-key-file"`
+	ServiceAccountIssuer         string `yaml:"service-account-issuer"`
+	ClientCAFile                 string `yaml:"client-ca-file"`
 
 	// for access-proxy to kube-apiserver
 	RequestheaderExtraHeadersPrefix string `yaml:"requestheader-extra-headers-prefix"`
@@ -111,6 +112,7 @@ func (opt *ServerCertOptions) AddTips(section *help.Section) {
 	section.AddTip("api-audiences", "string", "Identifiers of the API.", DefaultSCO.ApiAudiences)
 	section.AddTip("token-auth-file", "string", "If set, the file that will be used to secure the secure port of the API server via token authentication.", DefaultSCO.TokenAuthFile)
 	section.AddTip("enable-bootstrap-token-auth", "bool", "Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' namespace to be used for TLS bootstrapping authentication.", fmt.Sprintf("%t", DefaultSCO.EnableBootstrapTokenAuth))
+	section.AddTip("service-account-signing-key-file", "string", "File containing PEM-encoded x509 RSA or ECDSA private or public keys, used to verify ServiceAccount tokens.", DefaultSCO.ServiceAccountSigningKeyFile)
 	section.AddTip("service-account-key-file", "string", "File containing PEM-encoded x509 RSA or ECDSA private or public keys, used to verify ServiceAccount tokens.", DefaultSCO.ServiceAccountKeyFile)
 	section.AddTip("service-account-issuer", "string", "Identifier of the service account token issuer.", DefaultSCO.ServiceAccountIssuer)
 	section.AddTip("requestheader-extra-headers-prefix", "string", "List of request header prefixes to inspect. X-Remote-Extra- is suggested.", DefaultSCO.RequestheaderExtraHeadersPrefix)

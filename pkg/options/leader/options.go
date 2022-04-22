@@ -89,7 +89,7 @@ func (opt *LeaderOptions) ConfigHelpSection() []*help.Section {
 func (opt *LeaderOptions) HelpSections() []*help.Section {
 	flagSection := help.NewSection("FLAGS", "", nil)
 	flagSection.AddTip("--"+ConfigFileFlagName, "string", "YAML File to store leader startup parameters", "")
-	flagSection.AddTip("--version", "string", "view the version info, value: {true,false,simple,raw}. ", "false")
+	flagSection.AddTip("--versions", "string", "view the version info, value: {true,false,simple,raw}. ", "false")
 	flagSection.AddTip("--help", "bool", "print usage", "false")
 
 	return []*help.Section{flagSection}

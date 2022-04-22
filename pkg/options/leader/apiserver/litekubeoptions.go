@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/litekube/LiteKube/pkg/help"
 	"k8s.io/kubernetes/pkg/kubeapiserver/authorizer/modes"
@@ -23,7 +24,7 @@ type ApiserverLitekubeOptions struct {
 
 var DefaultALO ApiserverLitekubeOptions = ApiserverLitekubeOptions{
 	AllowPrivileged:        true,
-	AuthorizationMode:      modes.ModeWebhook,
+	AuthorizationMode:      strings.Join([]string{modes.ModeNode, modes.ModeRBAC}, ","),
 	AnonymousAuth:          false,
 	EnableSwaggerUI:        false,
 	EnableAdmissionPlugins: "NodeRestriction",

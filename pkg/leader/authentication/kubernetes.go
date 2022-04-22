@@ -143,6 +143,14 @@ func NewKubernetesAuthentication(rootCertPath string, opt *apiserver.ApiserverOp
 		return nil
 	}
 
+	if err := os.MkdirAll(filepath.Join(global.HomePath, ".kube/"), os.FileMode(0644)); err != nil {
+		return nil
+	}
+
+	if err := os.MkdirAll(filepath.Join(kubernetesRootDir, "tls/"), os.FileMode(0644)); err != nil {
+		return nil
+	}
+
 	return &KubernetesAuthentication{
 		ApiserverEndpoint:     fmt.Sprintf("https://%s:%d", opt.ProfessionalOptions.AdvertiseAddress, opt.Options.SecurePort),
 		ApiserverEndpointIp:   opt.ProfessionalOptions.AdvertiseAddress,
@@ -254,6 +262,13 @@ func (na *KubernetesAuthentication) GenerateOrSkip() error {
 	}
 
 	if err := na.generateTokenAuthFile(); err != nil {
+		return err
+	}
+
+	if global.Exists(filepath.Join(na.KubernetesKubeDir, "admin.conf")) {
+		os.Remove(filepath.Join(na.KubernetesKubeDir, "admin.conf"))
+	}
+	if err := os.Symlink(na.KubeConfigAdmin, filepath.Join(na.KubernetesKubeDir, "config")); err != nil {
 		return err
 	}
 

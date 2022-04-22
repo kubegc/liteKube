@@ -490,8 +490,13 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	if raw.ProfessionalOptions.TokenAuthFile != "" {
 		ka.TokenAuthFile = raw.ProfessionalOptions.TokenAuthFile
 	}
+	if raw.ProfessionalOptions.ServiceAccountSigningKeyFile != "" {
+		ka.ServiceKeyPair = raw.ProfessionalOptions.ServiceAccountSigningKeyFile
+	}
 	if raw.ProfessionalOptions.ServiceAccountKeyFile != "" {
-		ka.ServiceKeyPair = raw.ProfessionalOptions.ServiceAccountKeyFile
+		new.ProfessionalOptions.ServiceAccountKeyFile = raw.ProfessionalOptions.ServiceAccountKeyFile
+	} else {
+		new.ProfessionalOptions.ServiceAccountKeyFile = ka.ServiceKeyPair
 	}
 	if raw.ProfessionalOptions.ClientCAFile != "" {
 		ka.ApiserverValidateClientsCA = raw.ProfessionalOptions.ClientCAFile
@@ -519,7 +524,7 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	new.ProfessionalOptions.TlsCertFile = ka.ApiserverServerCert
 	new.ProfessionalOptions.TlsPrivateKeyFile = ka.ApiserverServerKey
 	new.ProfessionalOptions.TokenAuthFile = ka.TokenAuthFile
-	new.ProfessionalOptions.ServiceAccountKeyFile = ka.ServiceKeyPair
+	new.ProfessionalOptions.ServiceAccountSigningKeyFile = ka.ServiceKeyPair
 	new.ProfessionalOptions.ClientCAFile = ka.ApiserverValidateClientsCA
 	new.ProfessionalOptions.RequestheaderClientCAFile = ka.ApiserverRequestHeaderCA
 	new.ProfessionalOptions.ProxyClientCertFile = ka.ApiserverClientAuthProxyCert
@@ -527,6 +532,10 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	new.ProfessionalOptions.KubeletCertificateAuthority = ka.ApiserverValidateKubeletServerCA
 	new.ProfessionalOptions.KubeletClientCertificate = ka.ApiserverClientKubeletCert
 	new.ProfessionalOptions.KubeletClientKey = ka.ApiserverClientKubeletKey
+
+	if err := os.MkdirAll(ka.KubernetesTLSDir, os.FileMode(0644)); err != nil {
+		return err
+	}
 
 	return nil
 }

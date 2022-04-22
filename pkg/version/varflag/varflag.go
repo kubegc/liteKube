@@ -58,12 +58,22 @@ func (v *versionValue) String() string {
 
 // The type of the flag as required by the pflag.Value interface
 func (v *versionValue) Type() string {
-	return "version"
+	return "versions"
 }
 
 func VersionVar(p *versionValue, name string, value versionValue, usage string) {
 	*p = value
-	flag.Var(p, name, usage)
+	if f := flag.Lookup(name); f != nil {
+		f = &flag.Flag{
+			Name:      name,
+			Shorthand: "",
+			Usage:     usage,
+			Value:     p,
+			DefValue:  value.String(),
+		}
+	} else {
+		flag.Var(p, name, usage)
+	}
 
 	// "--version" will be treated as "--version=simple"
 	flag.Lookup(name).NoOptDefVal = strSimpleVersion
@@ -75,7 +85,7 @@ func Version(name string, value versionValue, usage string) *versionValue {
 	return p
 }
 
-const versionFlagName = "version"
+const versionFlagName = "versions"
 
 var (
 	versionFlag = Version(versionFlagName, VersionFalse, "Print version information and quit, true/false/raw/simple (default: simple)")

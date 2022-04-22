@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"strconv"
 
 	"gopkg.in/yaml.v2"
@@ -66,6 +67,9 @@ func Strval(value interface{}) string {
 	}
 
 	switch value.(type) {
+	case bool:
+		ft := value.(bool)
+		key = fmt.Sprintf("%t", ft)
 	case float64:
 		ft := value.(float64)
 		key = strconv.FormatFloat(ft, 'f', -1, 64)

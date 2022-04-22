@@ -23,3 +23,4 @@ cmd/worker/worker
 leader.yaml
 worker.yaml
 test
+kube-*

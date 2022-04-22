@@ -19,6 +19,7 @@ type LeaderRuntime struct {
 	NetworkManagerServer  *runtime.NetWorkManager
 	NetworkJoinClient     *runtime.NetWorkJoinClient
 	NetworkRegisterClient *runtime.NetWorkRegisterClient
+	KubernetesServer      *runtime.KubernatesServer
 	OwnKineCert           bool
 }
 
@@ -43,6 +44,7 @@ func NewLeaderRuntime(flags *options.LeaderOptions) *LeaderRuntime {
 		NetworkManagerServer:  nil,
 		NetworkJoinClient:     nil,
 		NetworkRegisterClient: nil,
+		KubernetesServer:      nil,
 		OwnKineCert:           false,
 		KineServer:            nil,
 	}
@@ -91,19 +93,24 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 	return nil
 }
 
-func (leaderRuntime *LeaderRuntime) run() error {
-	defer leaderRuntime.Done()
-	leaderRuntime.Add()
-
-	return nil
-}
-
 // run k8s
 func (leaderRuntime *LeaderRuntime) Run() error {
 	defer leaderRuntime.Done()
 	leaderRuntime.Add()
+
 	// add to same depth with LeaderRuntime.RunForward()
-	leaderRuntime.run()
+	leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
+		leaderRuntime.RuntimeOption.ApiserverOptions,
+		leaderRuntime.RuntimeOption.ControllerManagerOptions,
+		leaderRuntime.RuntimeOption.SchedulerOptions,
+		leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin,
+		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
+	)
+
+	if err := leaderRuntime.KubernetesServer.Run(); err != nil {
+		klog.Errorf("fail to start kubernetes server. Error: %s", err.Error())
+		return err
+	}
 
 	return nil
 }
