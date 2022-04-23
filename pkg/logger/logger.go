@@ -173,5 +173,6 @@ func findAndReplace(raw string) (string, []byte) {
 
 	s := string(datas[indexs[0]+1 : indexs[1]-1])
 
+	//return s, datas
 	return s, append(datas[:indexs[0]], datas[indexs[1]:]...)
 }

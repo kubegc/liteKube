@@ -46,6 +46,7 @@ users:
 )
 
 type KubernetesAuthentication struct {
+	KubectlPath               string
 	ApiserverEndpoint         string
 	ApiserverEndpointIp       string
 	ApiserverEndpointPort     uint16
@@ -151,7 +152,9 @@ func NewKubernetesAuthentication(rootCertPath string, opt *apiserver.ApiserverOp
 		return nil
 	}
 
+	kubeDir := filepath.Join(global.HomePath, ".kube/")
 	return &KubernetesAuthentication{
+		KubectlPath:           filepath.Join(kubeDir, "config"),
 		ApiserverEndpoint:     fmt.Sprintf("https://%s:%d", opt.ProfessionalOptions.AdvertiseAddress, opt.Options.SecurePort),
 		ApiserverEndpointIp:   opt.ProfessionalOptions.AdvertiseAddress,
 		ApiserverEndpointPort: opt.Options.SecurePort,
@@ -159,7 +162,7 @@ func NewKubernetesAuthentication(rootCertPath string, opt *apiserver.ApiserverOp
 		ApiServerServiceIP:    serviceIp.To4().String(),
 		KubernetesRootDir:     kubernetesRootDir,
 		KubernetesCertDir:     kubernetesCertDir,
-		KubernetesKubeDir:     filepath.Join(global.HomePath, ".kube/"),
+		KubernetesKubeDir:     kubeDir,
 		KubernetesTLSDir:      filepath.Join(kubernetesRootDir, "tls/"),
 		//CheckFile:                 filepath.Join(kubernetesRootDir, ".valid"),
 		RequestheaderAllowedNames: requestheaderAllowedNames,
@@ -265,10 +268,10 @@ func (na *KubernetesAuthentication) GenerateOrSkip() error {
 		return err
 	}
 
-	if global.Exists(filepath.Join(na.KubernetesKubeDir, "admin.conf")) {
-		os.Remove(filepath.Join(na.KubernetesKubeDir, "admin.conf"))
+	if global.Exists(na.KubectlPath) {
+		os.Remove(na.KubectlPath)
 	}
-	if err := os.Symlink(na.KubeConfigAdmin, filepath.Join(na.KubernetesKubeDir, "config")); err != nil {
+	if err := os.Symlink(na.KubeConfigAdmin, na.KubectlPath); err != nil {
 		return err
 	}
 
