@@ -16,6 +16,7 @@ type NetWorkRegisterClient struct {
 	CAPath      string
 	CertPath    string
 	KeyPath     string
+	NodeToken   string
 }
 
 func NewNetWorkRegisterClient(ctx context.Context, opt *netmanager.NetManagerOptions) *NetWorkRegisterClient {
@@ -26,12 +27,19 @@ func NewNetWorkRegisterClient(ctx context.Context, opt *netmanager.NetManagerOpt
 		CAPath:      opt.RegisterOptions.CACert,
 		CertPath:    opt.RegisterOptions.ClientCertFile,
 		KeyPath:     opt.RegisterOptions.ClientkeyFile,
+		NodeToken:   opt.NodeToken,
 	}
 
 	return NRClient
 }
 
+// query local ip
 func (c *NetWorkRegisterClient) QueryIp() (string, error) {
+	return c.QueryIpByToken(c.NodeToken)
+}
+
+// query ip by node-token
+func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error) {
 	if c == nil {
 		return "", fmt.Errorf("nil for NetWorkRegisterClient")
 	}

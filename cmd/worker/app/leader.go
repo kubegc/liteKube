@@ -5,30 +5,30 @@ import (
 	goruntime "runtime"
 
 	"github.com/litekube/LiteKube/pkg/help"
-	"github.com/litekube/LiteKube/pkg/leader/config"
-	options "github.com/litekube/LiteKube/pkg/options/leader"
+	options "github.com/litekube/LiteKube/pkg/options/worker"
 	"github.com/litekube/LiteKube/pkg/util"
 	"github.com/litekube/LiteKube/pkg/version"
 	verflag "github.com/litekube/LiteKube/pkg/version/varflag"
+	"github.com/litekube/LiteKube/pkg/worker/config"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 )
 
-var ComponentName = "Leader"
+var ComponentName = "Worker"
 
-func NewLeaderCommand() *cobra.Command {
-	opt := options.NewLeaderOptions()
+func NewWorkerCommand() *cobra.Command {
+	opt := options.NewWorkerOptions()
 
 	cmd := &cobra.Command{
 		Use:  ComponentName,
-		Long: fmt.Sprintf("%s is a lite leader-component with almost nearly the same capabilities as the K8S Leader", ComponentName),
+		Long: fmt.Sprintf("%s is a lite node-component with almost nearly the same capabilities as the K8S node", ComponentName),
 
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			verflag.PrintAndExitIfRequested() // --version=false/true/simple/raw to print version
 
-			klog.Infof("Welcome to LiteKube %s, a lite cluster with almost nearly the same capabilities as the K8S Leader node", ComponentName)
+			klog.Infof("Welcome to LiteKube %s, a lite cluster with almost nearly the same capabilities as the K8S node", ComponentName)
 			klog.Info(version.GetSimple())
 
 			// load config from --config-file
@@ -55,7 +55,7 @@ func NewLeaderCommand() *cobra.Command {
 
 	// add help tips for program
 	usageFmt := "Usage:\n  %s\n\n"
-	yamlFmt := "\n[config-file format]:\n// setting for kube-apiserver,kube-controller-manager,kube-scheduler and litekube additions\n"
+	yamlFmt := "\n[config-file format]:\n// setting for kubelet, kube-proxy and litekube additions\n"
 	flagSections := opt.HelpSections()
 	yamlSection := opt.ConfigHelpSection()
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
@@ -92,10 +92,10 @@ func NewLeaderCommand() *cobra.Command {
 
 }
 
-func Run(opt *options.LeaderOptions, stopCh <-chan struct{}) error {
+func Run(opt *options.WorkerOptions, stopCh <-chan struct{}) error {
 	addKlogFlag()
 
-	runtimeConfig := config.NewLeaderRuntime(opt)
+	runtimeConfig := config.NewWorkerRuntime(opt)
 	defer runtimeConfig.Stop()
 
 	if err := runtimeConfig.LoadFlags(); err != nil {

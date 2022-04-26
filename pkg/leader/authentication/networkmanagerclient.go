@@ -3,7 +3,6 @@ package authentication
 import (
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 
@@ -99,20 +98,24 @@ func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
 	return nil
 }
 
-func (na *NetworkManagerClient) QueryRemoteIps() []net.IP {
-	return []net.IP{}
-}
-
-func (na *NetworkManagerClient) QueryRemoteDNSNames() []string {
-	return []string{}
-}
-
 func (na *NetworkManagerClient) Check() bool {
 	return certificate.Exists(na.RegisterCACert, na.RegisterClientCert, na.RegisterClientkey, na.JoinCACert, na.JoinClientCert, na.JoinClientkey, na.NodeTokenPath)
 }
 
 func (na *NetworkManagerClient) CreatelinkForClient() error {
+	registerCACert := filepath.Join(na.ManagerRootCertPath, "register/ca.crt")
+	registerClientCert := filepath.Join(na.ManagerRootCertPath, "register/client.crt")
+	registerClientKey := filepath.Join(na.ManagerRootCertPath, "register/client.key")
+
+	joinCACert := filepath.Join(na.ManagerRootCertPath, "join/ca.crt")
+	joinClienCert := filepath.Join(na.ManagerRootCertPath, "join/client.crt")
+	joinClienKey := filepath.Join(na.ManagerRootCertPath, "join/client.key")
+
 	// clear old link
+	if !global.Exists(registerCACert, registerClientCert, registerClientKey, joinCACert, joinClienCert, joinClienKey) {
+		return fmt.Errorf("bad token to TLS bootstrap for network-manager")
+	}
+
 	if err := os.RemoveAll(na.ManagerCertDir); err != nil {
 		return err
 	}
@@ -126,24 +129,24 @@ func (na *NetworkManagerClient) CreatelinkForClient() error {
 	}
 
 	// create cert symlink for Register
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "register/ca.crt"), na.RegisterCACert); err != nil {
+	if err := os.Symlink(registerCACert, na.RegisterCACert); err != nil {
 		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "register/client.crt"), na.RegisterClientCert); err != nil {
+	if err := os.Symlink(registerClientCert, na.RegisterClientCert); err != nil {
 		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "register/client.key"), na.RegisterClientkey); err != nil {
+	if err := os.Symlink(registerClientKey, na.RegisterClientkey); err != nil {
 		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 
 	// create cert symlink for join
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "join/ca.crt"), na.JoinCACert); err != nil {
+	if err := os.Symlink(joinCACert, na.JoinCACert); err != nil {
 		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "join/client.crt"), na.JoinClientCert); err != nil {
+	if err := os.Symlink(joinClienCert, na.JoinClientCert); err != nil {
 		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
-	if err := os.Symlink(filepath.Join(na.ManagerRootCertPath, "join/client.key"), na.JoinClientkey); err != nil {
+	if err := os.Symlink(joinClienKey, na.JoinClientkey); err != nil {
 		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 

@@ -19,6 +19,7 @@ type NetWorkJoinClient struct {
 	CAPath      string
 	CertPath    string
 	KeyPath     string
+	NodeToken   string
 }
 
 func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions, logPath string) *NetWorkJoinClient {
@@ -31,6 +32,7 @@ func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions
 		CAPath:      opt.JoinOptions.CACert,
 		CertPath:    opt.JoinOptions.ClientCertFile,
 		KeyPath:     opt.JoinOptions.ClientkeyFile,
+		NodeToken:   opt.NodeToken,
 	}
 }
 
