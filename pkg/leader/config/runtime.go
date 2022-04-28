@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"sync"
 
@@ -20,6 +21,7 @@ type LeaderRuntime struct {
 	NetworkJoinClient     *runtime.NetWorkJoinClient
 	NetworkRegisterClient *runtime.NetWorkRegisterClient
 	KubernetesServer      *runtime.KubernatesServer
+	controlServer         *runtime.LiteKubeControl
 	OwnKineCert           bool
 }
 
@@ -46,6 +48,7 @@ func NewLeaderRuntime(flags *options.LeaderOptions) *LeaderRuntime {
 		NetworkRegisterClient: nil,
 		KubernetesServer:      nil,
 		OwnKineCert:           false,
+		controlServer:         nil,
 		KineServer:            nil,
 	}
 }
@@ -99,16 +102,33 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 	leaderRuntime.Add()
 
 	// add to same depth with LeaderRuntime.RunForward()
-	leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
-		leaderRuntime.RuntimeOption.ApiserverOptions,
-		leaderRuntime.RuntimeOption.ControllerManagerOptions,
-		leaderRuntime.RuntimeOption.SchedulerOptions,
-		leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin,
-		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
+	// leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
+	// 	leaderRuntime.RuntimeOption.ApiserverOptions,
+	// 	leaderRuntime.RuntimeOption.ControllerManagerOptions,
+	// 	leaderRuntime.RuntimeOption.SchedulerOptions,
+	// 	leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin,
+	// 	filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
+	// )
+
+	// if err := leaderRuntime.KubernetesServer.Run(); err != nil {
+	// 	klog.Errorf("fail to start kubernetes server. Error: %s", err.Error())
+	// 	return err
+	// }
+
+	leaderRuntime.controlServer = runtime.NewLiteKubeControl(leaderRuntime.control.ctx,
+		leaderRuntime.NetworkRegisterClient,
+		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/buffer"),
+		fmt.Sprintf("https://%s:%d", leaderRuntime.RuntimeOption.ApiserverOptions.ProfessionalOptions.AdvertiseAddress, leaderRuntime.RuntimeOption.ApiserverOptions.Options.SecurePort),
+		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.RootCaFile,
+		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.ClusterSigningKubeApiserverClientCertFile,
+		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.ClusterSigningKubeletClientCertFile,
+		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.ClusterSigningKubeletClientKeyFile,
+		leaderRuntime.RuntimeOption.ApiserverOptions.ProfessionalOptions.TokenAuthFile,
+		leaderRuntime.RuntimeOption.ControllerManagerOptions.Options.ClusterCidr,
 	)
 
-	if err := leaderRuntime.KubernetesServer.Run(); err != nil {
-		klog.Errorf("fail to start kubernetes server. Error: %s", err.Error())
+	if err := leaderRuntime.controlServer.Run(); err != nil {
+		klog.Errorf("fail to start litekube control server. Error: %s", err.Error())
 		return err
 	}
 

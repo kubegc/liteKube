@@ -2,6 +2,7 @@ package certificate
 
 import (
 	"crypto/x509"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 
@@ -30,6 +31,28 @@ func LoadCertificate(certPath string) (*x509.Certificate, error) {
 	// if err != nil {
 	// 	return nil, err
 	// }
+}
+
+func LoadCertificateAsBase64(certPath string) (string, error) {
+	cert, err := LoadCertificate(certPath)
+	if err != nil {
+		return "", err
+	}
+
+	base64 := base64.StdEncoding.EncodeToString(certutil.EncodeCertPEM(cert))
+	if len(base64) > 0 {
+		return base64, nil
+	} else {
+		return "", fmt.Errorf("fail to encode cert to base64")
+	}
+}
+
+func LoadFileAsBase64(filePath string) (string, error) {
+	if bytes, err := ioutil.ReadFile(filePath); err != nil {
+		return "", err
+	} else {
+		return base64.StdEncoding.EncodeToString(bytes), nil
+	}
 }
 
 // if client/server certificate generate by this package, return[0] is client/server certificate, return[1] is CA certificate

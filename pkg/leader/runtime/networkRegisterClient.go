@@ -47,3 +47,30 @@ func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error)
 	// grpc remote
 	return "192.168.154.101", nil
 }
+
+func (c *NetWorkRegisterClient) CreateBootStrapToken(life int64) (string, error) {
+	if c == nil {
+		return "", fmt.Errorf("nil for NetWorkRegisterClient")
+	}
+
+	// grpc remote
+	return "this-is-test-token", nil
+}
+
+func (c *NetWorkRegisterClient) GetBootStrapAddress() (string, error) {
+	if c == nil {
+		return "", fmt.Errorf("nil for NetWorkRegisterClient")
+	}
+
+	// grpc remote
+	return c.BindAddress, nil
+}
+
+func (c *NetWorkRegisterClient) GetBootStrapPort() (uint16, error) {
+	if c == nil {
+		return 0, fmt.Errorf("nil for NetWorkRegisterClient")
+	}
+
+	// grpc remote
+	return c.Port, nil
+}

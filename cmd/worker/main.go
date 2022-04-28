@@ -29,11 +29,9 @@ func main() {
 
 	// Run LiteKube
 	if err := cmd.Execute(); err != nil {
-		year, month, day := time.Now().Date()
-		panic(fmt.Sprintf("LiteKube worker exit at %d-%d-%d %d:%d:%d, error info: %s", year, month, day, time.Now().Hour(), time.Now().Minute(), time.Now().Second(), err.Error()))
+		panic(fmt.Sprintf("LiteKube worker exit at %s, error info: %s", time.Now().Format("2006-01-02 15:04:05"), err.Error()))
 	} else {
-		year, month, day := time.Now().Date()
-		klog.Infof("LiteKube worker goodby at %d-%d-%d %d:%d:%d", year, month, day, time.Now().Hour(), time.Now().Minute(), time.Now().Second())
+		klog.Infof("LiteKube worker goodby at %s", time.Now().Format("2006-01-02 15:04:05"))
 	}
 
 }

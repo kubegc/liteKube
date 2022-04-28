@@ -1,0 +1,84 @@
+// protoc --go-grpc_out=require_unimplemented_servers=false:../  --go_out=../  *.proto
+syntax = "proto3";
+
+option go_package="./control";
+
+package control;
+
+service LeaderControl {
+    rpc CheckHealth(NoneValue)returns (HealthDescription){}
+    rpc CreateToken(CreateTokenRequest) returns (TokenValue){}
+    rpc DeleteToken(TokenString) returns (NoneResponse){}
+    rpc QueryTokens(NoneValue) returns (TokenValueList){}
+    rpc BootStrapKubelet(BootStrapKubeletRequest) returns (BootStrapKubeletResponse){}
+    rpc BootStrapNetwork(BootStrapNetworkRequest) returns (BootStrapNetworkResponse){}
+    rpc BootStrapKubeProxy(BootStrapKubeProxyRequest) returns (BootStrapKubeProxyResponse){}
+}
+
+message NoneValue{}
+
+message TokenString{
+    string token=1;
+}
+
+message BootStrapNetworkRequest{
+    int64 life=1;
+}
+
+message BootStrapNetworkResponse{
+    int32 statusCode=1;
+    string message=2;
+    string ip=3;
+    uint32 port=4;
+    string token=5;
+}
+
+message NoneResponse{
+    int32 statusCode=1;
+    string message=2;
+}
+
+message HealthDescription{
+    string message=1;
+}
+
+message CreateTokenRequest{
+    int64 life=1;
+    bool isAdmin=2;
+}
+
+message TokenDescription{
+    string token=1;
+    string createTime=2;
+    int64 life=4;
+}
+
+message TokenValue{
+    int32 statusCode=1;
+    string message=2;
+    TokenDescription token=3;
+}
+
+message TokenValueList{
+    int32 statusCode=1;
+    string message=2;
+    repeated TokenDescription tokenList=3;
+}
+
+message BootStrapKubeletRequest{}
+
+message BootStrapKubeletResponse{
+    int32 statusCode=1;
+    string message=2;
+    string kubeconfig=3;
+    string validataCaCert=4;
+}
+
+message BootStrapKubeProxyRequest{}
+
+message BootStrapKubeProxyResponse{
+    int32 statusCode=1;
+    string message=2;
+    string clusterCIDR=3;
+    string kubeconfig=4;
+}
