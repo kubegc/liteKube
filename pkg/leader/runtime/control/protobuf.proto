@@ -7,6 +7,7 @@ package control;
 
 service LeaderControl {
     rpc CheckHealth(NoneValue)returns (HealthDescription){}
+    rpc NodeToken(NoneValue) returns (TokenString){}
     rpc CreateToken(CreateTokenRequest) returns (TokenValue){}
     rpc DeleteToken(TokenString) returns (NoneResponse){}
     rpc QueryTokens(NoneValue) returns (TokenValueList){}

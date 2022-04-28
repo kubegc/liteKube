@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LeaderControlClient interface {
 	CheckHealth(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*HealthDescription, error)
+	NodeToken(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*TokenString, error)
 	CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*TokenValue, error)
 	DeleteToken(ctx context.Context, in *TokenString, opts ...grpc.CallOption) (*NoneResponse, error)
 	QueryTokens(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*TokenValueList, error)
@@ -42,6 +43,15 @@ func NewLeaderControlClient(cc grpc.ClientConnInterface) LeaderControlClient {
 func (c *leaderControlClient) CheckHealth(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*HealthDescription, error) {
 	out := new(HealthDescription)
 	err := c.cc.Invoke(ctx, "/control.LeaderControl/CheckHealth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *leaderControlClient) NodeToken(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*TokenString, error) {
+	out := new(TokenString)
+	err := c.cc.Invoke(ctx, "/control.LeaderControl/NodeToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +117,7 @@ func (c *leaderControlClient) BootStrapKubeProxy(ctx context.Context, in *BootSt
 // for forward compatibility
 type LeaderControlServer interface {
 	CheckHealth(context.Context, *NoneValue) (*HealthDescription, error)
+	NodeToken(context.Context, *NoneValue) (*TokenString, error)
 	CreateToken(context.Context, *CreateTokenRequest) (*TokenValue, error)
 	DeleteToken(context.Context, *TokenString) (*NoneResponse, error)
 	QueryTokens(context.Context, *NoneValue) (*TokenValueList, error)
@@ -121,6 +132,9 @@ type UnimplementedLeaderControlServer struct {
 
 func (UnimplementedLeaderControlServer) CheckHealth(context.Context, *NoneValue) (*HealthDescription, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckHealth not implemented")
+}
+func (UnimplementedLeaderControlServer) NodeToken(context.Context, *NoneValue) (*TokenString, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NodeToken not implemented")
 }
 func (UnimplementedLeaderControlServer) CreateToken(context.Context, *CreateTokenRequest) (*TokenValue, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateToken not implemented")
@@ -166,6 +180,24 @@ func _LeaderControl_CheckHealth_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LeaderControlServer).CheckHealth(ctx, req.(*NoneValue))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LeaderControl_NodeToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NoneValue)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LeaderControlServer).NodeToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/control.LeaderControl/NodeToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LeaderControlServer).NodeToken(ctx, req.(*NoneValue))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -288,6 +320,10 @@ var LeaderControl_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckHealth",
 			Handler:    _LeaderControl_CheckHealth_Handler,
+		},
+		{
+			MethodName: "NodeToken",
+			Handler:    _LeaderControl_NodeToken_Handler,
 		},
 		{
 			MethodName: "CreateToken",

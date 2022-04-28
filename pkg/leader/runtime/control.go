@@ -75,12 +75,13 @@ users:
 )
 
 type LiteKubeControl struct {
-	ctx           context.Context
-	BindAddress   string
-	BindPort      uint16
-	server        *grpc.Server
-	NetworkClient *NetWorkRegisterClient
-	AuthFile      string
+	ctx                context.Context
+	BindAddress        string
+	BindPort           uint16
+	server             *grpc.Server
+	NetworkClient      *NetWorkRegisterClient
+	AuthFile           string
+	LocalHostNodeToken string
 
 	BufferPath                string
 	EndPoint                  string
@@ -107,12 +108,13 @@ type TokenDesc struct {
 	IsValid    bool
 }
 
-func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClient, bufferPath string, endpoint string, validateApiserverServerCA string, validateApiserverClientCA string, signalApiserverClientCert string, signalApiserverClientKey string, authTokenFile string, clusterCIDR string) *LiteKubeControl {
+func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClient, bufferPath string, nodeToken string, endpoint string, validateApiserverServerCA string, validateApiserverClientCA string, signalApiserverClientCert string, signalApiserverClientKey string, authTokenFile string, clusterCIDR string) *LiteKubeControl {
 	tmp := &LiteKubeControl{
 		ctx:                       ctx,
 		BindAddress:               "0.0.0.0",
 		BindPort:                  6442,
 		BufferPath:                bufferPath,
+		LocalHostNodeToken:        nodeToken,
 		EndPoint:                  endpoint,
 		NetworkClient:             networkClient,
 		ValidateApiserverServerCA: validateApiserverServerCA,
@@ -241,6 +243,10 @@ func (s *LiteKubeControl) CheckHealth(ctx context.Context, in *control.NoneValue
 	return &control.HealthDescription{Message: "ok"}, nil
 }
 
+func (s *LiteKubeControl) NodeToken(ctx context.Context, in *control.NoneValue) (*control.TokenString, error) {
+	return &control.TokenString{Token: s.LocalHostNodeToken}, nil
+}
+
 func (s *LiteKubeControl) BootStrapNetwork(ctx context.Context, in *control.BootStrapNetworkRequest) (*control.BootStrapNetworkResponse, error) {
 	if token, err := s.NetworkClient.CreateBootStrapToken(in.GetLife()); err != nil {
 		return &control.BootStrapNetworkResponse{StatusCode: int32(http.StatusInternalServerError), Message: "fail to create network bootstrap-token"}, nil
@@ -275,6 +281,7 @@ func (s *LiteKubeControl) CreateToken(ctx context.Context, in *control.CreateTok
 		Life:       tokenDesc.Life,
 	}}, nil
 }
+
 func (s *LiteKubeControl) QueryTokens(ctx context.Context, in *control.NoneValue) (*control.TokenValueList, error) {
 	tokensDesc, err := readTokens(s.AuthFile)
 	if err != nil {
