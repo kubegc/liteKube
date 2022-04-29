@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	goruntime "runtime"
 
 	"github.com/Litekube/network-controller/config"
@@ -21,7 +22,6 @@ type NetWorkJoinClient struct {
 	CertPath    string
 	KeyPath     string
 	NodeToken   string
-	NetClient   config.ClientConfig
 }
 
 func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions, logPath string) *NetWorkJoinClient {
@@ -34,17 +34,6 @@ func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions
 		CAPath:      opt.JoinOptions.CACert,
 		CertPath:    opt.JoinOptions.ClientCertFile,
 		KeyPath:     opt.JoinOptions.ClientkeyFile,
-		NodeToken:   opt.NodeToken,
-		NetClient: config.ClientConfig{
-			CAFile:          opt.JoinOptions.CACert,
-			ClientCertFile:  opt.JoinOptions.ClientCertFile,
-			ClientKeyFile:   opt.JoinOptions.ClientkeyFile,
-			ServerAddr:      opt.JoinOptions.Address,
-			Port:            int(opt.JoinOptions.SecurePort),
-			MTU:             1400,
-			Token:           opt.NodeToken,
-			RedirectGateway: false,
-		},
 	}
 
 }
@@ -60,11 +49,25 @@ func (s *NetWorkJoinClient) Run() error {
 
 	klog.Info("run network manager client")
 
-	client := network.NewClient(s.NetClient)
-	err := client.Run()
-	if err != nil {
-		return err
-	}
+	client := network.NewClient(config.ClientConfig{
+		CAFile:          s.CAPath,
+		ClientCertFile:  s.CertPath,
+		ClientKeyFile:   s.KeyPath,
+		ServerAddr:      s.BindAddress,
+		Port:            int(s.Port),
+		MTU:             1400,
+		Token:           s.NodeToken,
+		RedirectGateway: false,
+	})
+
+	go func() {
+		err := client.Run()
+		if err != nil {
+			fmt.Printf("network controller client exited: %v", err)
+			klog.Infof("network controller client exited: %v", err)
+			panic(err)
+		}
+	}()
 
 	return nil
 }

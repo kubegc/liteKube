@@ -2,9 +2,12 @@ package runtime
 
 import (
 	"context"
+	"fmt"
+	goruntime "runtime"
+
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/network"
-	goruntime "runtime"
+
 	// link to github.com/Litekube/kine, we have make some addition
 	"github.com/litekube/LiteKube/pkg/leader/authentication"
 	"github.com/litekube/LiteKube/pkg/logger"
@@ -31,8 +34,6 @@ type NetWorkManager struct {
 	JoinCAKey       string
 	JoinServerCert  string
 	JoinServerkey   string
-
-	NCServer config.ServerConfig
 }
 
 func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentication, clientOpt *netmanager.NetManagerOptions, logPath string) *NetWorkManager {
@@ -56,28 +57,6 @@ func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentic
 		JoinCAKey:       opt.JoinCAKey,
 		JoinServerCert:  opt.JoinServerCert,
 		JoinServerkey:   opt.JoinServerkey,
-
-		NCServer: config.ServerConfig{
-			Ip:   opt.RegisterBindAddress,
-			Port: int(clientOpt.JoinOptions.SecurePort),
-			// todo config BootstrapPort
-			BootstrapPort: 6439,
-			GrpcPort:      int(clientOpt.RegisterOptions.SecurePort),
-			// todo config NetworkAddr
-			NetworkAddr:     "10.1.1.1/24",
-			MTU:             1400,
-			Interconnection: false,
-
-			NetworkCAFile:         opt.JoinCACert,
-			NetworkCAKeyFile:      opt.JoinCAKey,
-			NetworkServerCertFile: opt.JoinServerCert,
-			NetworkServerKeyFile:  opt.JoinServerkey,
-
-			GrpcCAFile:         opt.RegisterCACert,
-			GrpcCAKeyFile:      opt.RegisterCAKey,
-			GrpcServerCertFile: opt.RegisterServerCert,
-			GrpcServerKeyFile:  opt.RegisterServerkey,
-		},
 	}
 }
 
@@ -92,11 +71,36 @@ func (s *NetWorkManager) Run() error {
 
 	klog.Info("run network manager")
 
-	server := network.NewServer(s.NCServer)
-	err := server.Run()
-	if err != nil {
-		return err
-	}
+	server := network.NewServer(config.ServerConfig{
+		Ip:   s.RegisterBindAddress,
+		Port: int(s.JoinPort),
+		// todo config BootstrapPort
+		BootstrapPort: 6439,
+		GrpcPort:      int(s.RegisterPort),
+		// todo config NetworkAddr
+		NetworkAddr:     "10.1.1.1/24",
+		MTU:             1400,
+		Interconnection: false,
+
+		NetworkCAFile:         s.JoinCACert,
+		NetworkCAKeyFile:      s.JoinCAKey,
+		NetworkServerCertFile: s.JoinServerCert,
+		NetworkServerKeyFile:  s.JoinServerkey,
+
+		GrpcCAFile:         s.RegisterServerCert,
+		GrpcCAKeyFile:      s.RegisterCAKey,
+		GrpcServerCertFile: s.RegisterServerCert,
+		GrpcServerKeyFile:  s.RegisterServerkey,
+	})
+
+	go func() {
+		err := server.Run()
+		if err != nil {
+			fmt.Printf("network controller exited: %v", err)
+			klog.Infof("network controller exited: %v", err)
+			panic(err)
+		}
+	}()
 
 	return nil
 }

@@ -14,22 +14,24 @@ import (
 )
 
 type NetworkControllerService struct {
-	unRegisterCh     chan string
-	grpcTlsConfig    config.TLSConfig
-	networkTlsConfig config.TLSConfig
-	bootstrapIp      string
-	port             string
+	unRegisterCh      chan string
+	grpcTlsConfig     config.TLSConfig
+	networkTlsConfig  config.TLSConfig
+	ip                string
+	bootstrapPort     string
+	networkServerPort string
 }
 
 var logger = utils.GetLogger()
 
-func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, bootstrapIp, port string) *NetworkControllerService {
+func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, ip, bootstrapPort, networkServerPort string) *NetworkControllerService {
 	return &NetworkControllerService{
-		unRegisterCh:     unRegisterCh,
-		grpcTlsConfig:    grpcTlsConfig,
-		networkTlsConfig: networkTlsConfig,
-		bootstrapIp:      bootstrapIp,
-		port:             port,
+		unRegisterCh:      unRegisterCh,
+		grpcTlsConfig:     grpcTlsConfig,
+		networkTlsConfig:  networkTlsConfig,
+		ip:                ip,
+		bootstrapPort:     bootstrapPort,
+		networkServerPort: networkServerPort,
 	}
 }
 
@@ -43,16 +45,17 @@ func (service *NetworkControllerService) GetBootStrapToken(ctx context.Context, 
 			Code:           code,
 			Message:        message,
 			BootStrapToken: token,
-			CloudIp:        service.bootstrapIp,
-			Port:           service.port,
+			CloudIp:        service.ip,
+			Port:           service.bootstrapPort,
 		}
 		logger.Debugf("resp: %+v", resp)
 		return
 	}
 
 	if req.ExpireTime == 0 {
-		req.ExpireTime = contant.IdleTokenExpireDuration
+		return wrappedResp(contant.STATUS_OK, contant.MESSAGE_OK, "")
 	}
+
 	token := utils.GetUniqueToken()
 	tm := sqlite.TokenMgr{}
 	// no need
@@ -178,6 +181,8 @@ func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_g
 			Code:              code,
 			Message:           message,
 			Token:             token,
+			CloudIp:           service.ip,
+			NetworkServerPort: service.networkServerPort,
 			GrpcCaCert:        "",
 			GrpcClientKey:     "",
 			GrpcClientCert:    "",

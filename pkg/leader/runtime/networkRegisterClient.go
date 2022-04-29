@@ -10,7 +10,7 @@ import (
 	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
 )
 
-var NRClient *NetWorkRegisterClient = nil
+//var NRClient *NetWorkRegisterClient = nil
 
 type NetWorkRegisterClient struct {
 	ctx             context.Context
@@ -25,7 +25,7 @@ type NetWorkRegisterClient struct {
 }
 
 func NewNetWorkRegisterClient(ctx context.Context, opt *netmanager.NetManagerOptions) *NetWorkRegisterClient {
-	NRClient = &NetWorkRegisterClient{
+	client := &NetWorkRegisterClient{
 		ctx:         ctx,
 		BindAddress: opt.RegisterOptions.Address,
 		Port:        opt.RegisterOptions.SecurePort,
@@ -33,21 +33,26 @@ func NewNetWorkRegisterClient(ctx context.Context, opt *netmanager.NetManagerOpt
 		CertPath:    opt.RegisterOptions.ClientCertFile,
 		KeyPath:     opt.RegisterOptions.ClientkeyFile,
 		NodeToken:   opt.NodeToken,
-		NCClient: &grpc_client.GrpcClient{
-			Ip:       opt.RegisterOptions.Address,
-			Port:     strconv.FormatUint(uint64(opt.RegisterOptions.SecurePort), 10),
-			CAFile:   opt.RegisterOptions.CACert,
-			CertFile: opt.RegisterOptions.ClientCertFile,
-			KeyFile:  opt.RegisterOptions.ClientkeyFile,
-		},
+		NCClient:    nil,
 		BootstrapClient: &grpc_client.GrpcBootStrapClient{
 			Ip:            "",
 			BootstrapPort: "",
 		},
 	}
-	NRClient.NCClient.InitGrpcClientConn()
 
-	return NRClient
+	client.NCClient = &grpc_client.GrpcClient{
+		Ip:       client.BindAddress,
+		Port:     strconv.FormatUint(uint64(client.Port), 10),
+		CAFile:   client.CAPath,
+		CertFile: client.CertPath,
+		KeyFile:  client.KeyPath,
+	}
+
+	if err := client.NCClient.InitGrpcClientConn(); err != nil {
+		panic(err)
+	}
+
+	return client
 }
 
 // query local ip
@@ -77,7 +82,7 @@ func (c *NetWorkRegisterClient) CreateBootStrapToken(life int64) (string, error)
 	}
 
 	req := &pb_gen.GetBootStrapTokenRequest{
-		ExpireTime: int32(life),
+		ExpireTime: int64(life),
 	}
 	resp, err := c.NCClient.C.GetBootStrapToken(c.ctx, req)
 	if err != nil {
@@ -98,12 +103,25 @@ func (c *NetWorkRegisterClient) GetBootStrapAddress() (string, error) {
 	if c == nil {
 		return "", fmt.Errorf("nil for NetWorkRegisterClient")
 	}
+
+	if c.BootstrapClient.Ip == "" {
+		if _, err := c.CreateBootStrapToken(0); err != nil {
+			return "", err
+		}
+	}
+
 	return c.BootstrapClient.Ip, nil
 }
 
 func (c *NetWorkRegisterClient) GetBootStrapPort() (uint16, error) {
 	if c == nil {
 		return 0, fmt.Errorf("nil for NetWorkRegisterClient")
+	}
+
+	if c.BootstrapClient.BootstrapPort == "" {
+		if _, err := c.CreateBootStrapToken(0); err != nil {
+			return 0, err
+		}
 	}
 
 	port, _ := strconv.ParseUint(c.BootstrapClient.BootstrapPort, 10, 16)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	goruntime "runtime"
 	"time"
 
@@ -73,7 +72,7 @@ func (s *ControllerManager) Run(kubeAdminPath string) error {
 		if err != nil {
 			fmt.Printf("kube-controller-manager exited: %v", err)
 			klog.Infof("kube-controller-manager exited: %v", err)
-			os.Exit(-3)
+			panic(err)
 		}
 	}()
 

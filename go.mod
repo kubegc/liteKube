@@ -39,7 +39,7 @@ replace (
 )
 
 require (
-	github.com/Litekube/network-controller v0.0.0-20220429062431-2bc7b1f9d345
+	github.com/Litekube/network-controller v0.0.0-20220429101502-083a2da777fc
 	github.com/k3s-io/kine v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/dynamiclistener v0.3.1

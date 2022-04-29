@@ -102,24 +102,24 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 	leaderRuntime.Add()
 
 	// add to same depth with LeaderRuntime.RunForward()
-	// leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
-	// 	leaderRuntime.RuntimeOption.ApiserverOptions,
-	// 	leaderRuntime.RuntimeOption.ControllerManagerOptions,
-	// 	leaderRuntime.RuntimeOption.SchedulerOptions,
-	// 	leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin,
-	// 	filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
-	// )
+	leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
+		leaderRuntime.RuntimeOption.ApiserverOptions,
+		leaderRuntime.RuntimeOption.ControllerManagerOptions,
+		leaderRuntime.RuntimeOption.SchedulerOptions,
+		leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin,
+		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
+	)
 
-	// if err := leaderRuntime.KubernetesServer.Run(); err != nil {
-	// 	klog.Errorf("fail to start kubernetes server. Error: %s", err.Error())
-	// 	return err
-	// }
+	if err := leaderRuntime.KubernetesServer.Run(); err != nil {
+		klog.Errorf("fail to start kubernetes server. Error: %s", err.Error())
+		return err
+	}
 
 	leaderRuntime.controlServer = runtime.NewLiteKubeControl(leaderRuntime.control.ctx,
 		leaderRuntime.NetworkRegisterClient,
 		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/buffer"),
-		fmt.Sprintf("https://%s:%d", leaderRuntime.RuntimeOption.ApiserverOptions.ProfessionalOptions.AdvertiseAddress, leaderRuntime.RuntimeOption.ApiserverOptions.Options.SecurePort),
 		leaderRuntime.RuntimeOption.NetmamagerOptions.NodeToken,
+		fmt.Sprintf("https://%s:%d", leaderRuntime.RuntimeOption.ApiserverOptions.ProfessionalOptions.AdvertiseAddress, leaderRuntime.RuntimeOption.ApiserverOptions.Options.SecurePort),
 		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.RootCaFile,
 		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.ClusterSigningKubeApiserverClientCertFile,
 		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.ClusterSigningKubeletClientCertFile,

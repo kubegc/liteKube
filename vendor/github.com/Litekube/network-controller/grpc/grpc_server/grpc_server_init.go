@@ -26,12 +26,13 @@ import (
 type GrpcServer struct {
 	*pb_gen.UnimplementedLiteKubeNCServiceServer
 	*pb_gen.UnimplementedLiteKubeNCBootstrapServiceServer
-	port             int
-	bootstrapPort    int
-	UnRegisterCh     chan string
-	service          *internal.NetworkControllerService
-	grpcTlsConfig    config.TLSConfig
-	networkTlsConfig config.TLSConfig
+	port              int
+	bootstrapPort     int
+	networkServerPort int
+	UnRegisterCh      chan string
+	service           *internal.NetworkControllerService
+	grpcTlsConfig     config.TLSConfig
+	networkTlsConfig  config.TLSConfig
 }
 
 var logger = utils.GetLogger()
@@ -43,9 +44,10 @@ func GetGServer() *GrpcServer {
 
 func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServer {
 	s := &GrpcServer{
-		port:          cfg.GrpcPort,
-		bootstrapPort: cfg.BootstrapPort,
-		UnRegisterCh:  unRegisterCh,
+		port:              cfg.GrpcPort,
+		bootstrapPort:     cfg.BootstrapPort,
+		networkServerPort: cfg.Port,
+		UnRegisterCh:      unRegisterCh,
 		grpcTlsConfig: config.TLSConfig{
 			CAFile:         cfg.GrpcCAFile,
 			CAKeyFile:      cfg.GrpcCAKeyFile,
@@ -67,7 +69,7 @@ func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 	if ip == "" {
 		ip = cfg.Ip
 	}
-	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.BootstrapPort))
+	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.Port))
 	return s
 }
 

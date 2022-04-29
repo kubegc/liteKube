@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"os"
 	goruntime "runtime"
 
 	// link to github.com/Litekube/kine, we have make some addition
@@ -61,7 +60,7 @@ func (s *Scheduler) Run() error {
 		if err != nil {
 			fmt.Printf("kube-scheduler exited: %v", err)
 			klog.Infof("kube-scheduler: %v", err)
-			os.Exit(-4)
+			panic(err)
 		}
 	}()
 
