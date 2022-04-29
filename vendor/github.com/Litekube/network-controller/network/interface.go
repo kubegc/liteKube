@@ -46,7 +46,7 @@ func newTun(name string) (iface *water.Interface, err error) {
 	// exec script
 	scmd := fmt.Sprintf("ip link set dev %s up mtu %d qlen 100", iface.Name(), MTU)
 	cmd := exec.Command("bash", "-c", scmd)
-	logger.Infof("exec command: ip %s", scmd)
+	logger.Infof("exec command: %s", scmd)
 	err = cmd.Run()
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 	// ip addr add dev tun0 local 10.1.1.1 peer 10.1.1.2
 	scmd := fmt.Sprintf("ip addr add dev %s local %s peer %s", iface.Name(), ip, peer)
 	cmd := exec.Command("bash", "-c", scmd)
-	logger.Infof("exec command: ip %+v", scmd)
+	logger.Infof("exec command: %+v", scmd)
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 	// ip route add 10.1.1.0/24 via 10.1.1.2 dev tun0
 	scmd = fmt.Sprintf("ip route add %s via %s dev %s", subnet, peer, iface.Name())
 	cmd = exec.Command("bash", "-c", scmd)
-	logger.Infof("exec command: ip %+v", scmd)
+	logger.Infof("exec command: %+v", scmd)
 	err = cmd.Run()
 	if err != nil {
 		return err

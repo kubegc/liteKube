@@ -58,9 +58,9 @@ func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 		},
 		networkTlsConfig: config.TLSConfig{
 			CAFile:         cfg.NetworkCAFile,
-			CAKeyFile:      cfg.NetworkCAFile,
-			ServerCertFile: cfg.NetworkCAFile,
-			ServerKeyFile:  cfg.NetworkCAFile,
+			CAKeyFile:      cfg.NetworkCAKeyFile,
+			ServerCertFile: cfg.NetworkServerCertFile,
+			ServerKeyFile:  cfg.NetworkServerKeyFile,
 			ClientCertFile: filepath.Join(cfg.NetworkCertDir, contant.ClientCertFile),
 			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
 		},
@@ -69,7 +69,7 @@ func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 	if ip == "" {
 		ip = cfg.Ip
 	}
-	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.Port))
+	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.GrpcPort), strconv.Itoa(cfg.Port))
 	return s
 }
 
