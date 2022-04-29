@@ -102,18 +102,18 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 	leaderRuntime.Add()
 
 	// add to same depth with LeaderRuntime.RunForward()
-	// leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
-	// 	leaderRuntime.RuntimeOption.ApiserverOptions,
-	// 	leaderRuntime.RuntimeOption.ControllerManagerOptions,
-	// 	leaderRuntime.RuntimeOption.SchedulerOptions,
-	// 	leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin,
-	// 	filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
-	// )
+	leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
+		leaderRuntime.RuntimeOption.ApiserverOptions,
+		leaderRuntime.RuntimeOption.ControllerManagerOptions,
+		leaderRuntime.RuntimeOption.SchedulerOptions,
+		leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin,
+		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
+	)
 
-	// if err := leaderRuntime.KubernetesServer.Run(); err != nil {
-	// 	klog.Errorf("fail to start kubernetes server. Error: %s", err.Error())
-	// 	return err
-	// }
+	if err := leaderRuntime.KubernetesServer.Run(); err != nil {
+		klog.Errorf("fail to start kubernetes server. Error: %s", err.Error())
+		return err
+	}
 
 	leaderRuntime.controlServer = runtime.NewLiteKubeControl(leaderRuntime.control.ctx,
 		leaderRuntime.NetworkRegisterClient,

@@ -18,10 +18,14 @@ type NetworkManagerClient struct {
 	ManagerRootCertPath    string
 	ManagerCertDir         string
 	RegisterManagerCertDir string
+	RegisterAddress        *string // value only tls-bootstrap without init
+	RegisterPort           *uint16 // value only tls-bootstrap without init
 	RegisterCACert         string
 	RegisterClientCert     string
 	RegisterClientkey      string
 	JoinManagerCertDir     string
+	JoinAddress            *string // value only tls-bootstrap without init
+	JoinPort               *uint16 // value only tls-bootstrap without init
 	JoinCACert             string
 	JoinClientCert         string
 	JoinClientkey          string
@@ -29,7 +33,7 @@ type NetworkManagerClient struct {
 	NodeTokenPath          string
 }
 
-func NewNetworkManagerClient(rootCertPath string, token string) *NetworkManagerClient {
+func NewNetworkManagerClient(rootCertPath string, token string, registerAddress *string, registerPort *uint16, joinAddress *string, joinPort *uint16) *NetworkManagerClient {
 	if token == "" {
 		token = "unknown"
 	}
@@ -47,10 +51,14 @@ func NewNetworkManagerClient(rootCertPath string, token string) *NetworkManagerC
 		ManagerRootCertPath:    managerRootCertPath,
 		ManagerCertDir:         managerCertDir,
 		RegisterManagerCertDir: registerManagerCertDir,
+		RegisterAddress:        registerAddress,
+		RegisterPort:           registerPort,
 		RegisterCACert:         filepath.Join(registerManagerCertDir, "ca.crt"),
 		RegisterClientCert:     filepath.Join(registerManagerCertDir, "client.crt"),
 		RegisterClientkey:      filepath.Join(registerManagerCertDir, "client.key"),
 		JoinManagerCertDir:     joinManagerCertDir,
+		JoinAddress:            joinAddress,
+		JoinPort:               joinPort,
 		JoinCACert:             filepath.Join(joinManagerCertDir, "ca.crt"),
 		JoinClientCert:         filepath.Join(joinManagerCertDir, "client.crt"),
 		JoinClientkey:          filepath.Join(joinManagerCertDir, "client.key"),
@@ -92,7 +100,7 @@ func (na *NetworkManagerClient) GenerateOrSkip() error {
 	}
 }
 
-// to be finish
+// download certificates and get node-token from network manager
 func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
 	if na.Check() {
 		// file exist, bootstrap ok.
@@ -109,6 +117,9 @@ func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
 	}
 
 	// generate certificate and node-token here.
+	// need to value address and port here like:
+	// *RegisterAddress="127.0.0.1", *RegisterPort=6440
+	// *JoinAddress="127.0.0.1", *JoinPort=6441
 	return nil
 }
 
