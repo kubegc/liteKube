@@ -316,7 +316,7 @@ func (s *LiteKubeControl) DeleteToken(ctx context.Context, in *control.TokenStri
 	}
 
 	if tokenDesc != nil {
-		return &control.NoneResponse{StatusCode: int32(http.StatusCreated), Message: tokenDesc.Token}, nil
+		return &control.NoneResponse{StatusCode: int32(http.StatusCreated), Message: fmt.Sprintf("now %s is remove", tokenDesc.Token)}, nil
 	} else {
 		return &control.NoneResponse{StatusCode: int32(http.StatusCreated), Message: "token to delete is not exist"}, nil
 	}

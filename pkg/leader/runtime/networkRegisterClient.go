@@ -98,12 +98,25 @@ func (c *NetWorkRegisterClient) GetBootStrapAddress() (string, error) {
 	if c == nil {
 		return "", fmt.Errorf("nil for NetWorkRegisterClient")
 	}
+
+	if c.BootstrapClient.Ip == "" {
+		if _, err := c.CreateBootStrapToken(1); err != nil {
+			return "", err
+		}
+	}
+
 	return c.BootstrapClient.Ip, nil
 }
 
 func (c *NetWorkRegisterClient) GetBootStrapPort() (uint16, error) {
 	if c == nil {
 		return 0, fmt.Errorf("nil for NetWorkRegisterClient")
+	}
+
+	if c.BootstrapClient.BootstrapPort == "" {
+		if _, err := c.CreateBootStrapToken(1); err != nil {
+			return 0, err
+		}
 	}
 
 	port, _ := strconv.ParseUint(c.BootstrapClient.BootstrapPort, 10, 16)

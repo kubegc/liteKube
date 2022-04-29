@@ -267,7 +267,7 @@ func (leaderRuntime *LeaderRuntime) LoadNetManager() error {
 		// into TLS bootstrap
 		klog.Info("start load network manager client certificate and node-token by --token")
 		leaderRuntime.RuntimeAuthentication.NetWorkManagerClient = authentication.NewNetworkManagerClient(leaderRuntime.RuntimeAuthentication.CertDir, new.Token)
-		if err := leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.GenerateOrSkip(new.RegisterOptions.Address, int(new.RegisterOptions.SecurePort)); err != nil {
+		if err := leaderRuntime.RuntimeAuthentication.NetWorkManagerClient.GenerateOrSkip(); err != nil {
 			return err
 		}
 

@@ -3,8 +3,11 @@ package authentication
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
@@ -36,7 +39,7 @@ func NewNetworkManagerClient(rootCertPath string, token string) *NetworkManagerC
 	}
 
 	managerRootCertPath := filepath.Join(rootCertPath, "network-manager/")
-	managerCertDir := filepath.Join(managerRootCertPath, token)
+	managerCertDir := filepath.Join(managerRootCertPath, strings.SplitN(token, "@", 2)[0])
 	registerManagerCertDir := filepath.Join(managerCertDir, "register")
 	joinManagerCertDir := filepath.Join(managerCertDir, "join")
 
@@ -62,7 +65,7 @@ func (na *NetworkManagerClient) Nodetoken() (string, error) {
 }
 
 // generate X.509 certificate for network-manager
-func (na *NetworkManagerClient) GenerateOrSkip(address string, port int) error {
+func (na *NetworkManagerClient) GenerateOrSkip() error {
 	if na.Token == "unknown" {
 		return fmt.Errorf("token is unknown")
 	}
@@ -74,7 +77,18 @@ func (na *NetworkManagerClient) GenerateOrSkip(address string, port int) error {
 	if na.Token == "local" {
 		return na.CreatelinkForClient()
 	} else {
-		return na.TLSBootStrap(address, port)
+		Endpoint := strings.SplitN(strings.SplitN(na.Token, "@", 2)[1], ":", 2)
+		var port int
+		if p, err := strconv.Atoi(Endpoint[1]); err != nil {
+			return fmt.Errorf("bad network-bootstrap port")
+		} else {
+			port = p
+		}
+
+		if ip := net.ParseIP(Endpoint[0]); ip == nil {
+			return fmt.Errorf("bad network-bootstrap ip")
+		}
+		return na.TLSBootStrap(Endpoint[0], port)
 	}
 }
 
@@ -85,7 +99,7 @@ func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
 		return nil
 	}
 
-	if address == "" || port < 1 {
+	if address == "" || port < 1 || port > 65535 {
 		return fmt.Errorf("none tls bootstrap address and port for network-manager")
 	}
 
