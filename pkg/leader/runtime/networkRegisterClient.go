@@ -100,7 +100,7 @@ func (c *NetWorkRegisterClient) GetBootStrapAddress() (string, error) {
 	}
 
 	if c.BootstrapClient.Ip == "" {
-		if _, err := c.CreateBootStrapToken(1); err != nil {
+		if _, err := c.CreateBootStrapToken(0); err != nil {
 			return "", err
 		}
 	}
@@ -114,7 +114,7 @@ func (c *NetWorkRegisterClient) GetBootStrapPort() (uint16, error) {
 	}
 
 	if c.BootstrapClient.BootstrapPort == "" {
-		if _, err := c.CreateBootStrapToken(1); err != nil {
+		if _, err := c.CreateBootStrapToken(0); err != nil {
 			return 0, err
 		}
 	}
