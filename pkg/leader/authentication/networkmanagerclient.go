@@ -12,6 +12,8 @@ import (
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/leader/global"
+	"gopkg.in/yaml.v2"
+	"k8s.io/klog/v2"
 )
 
 type NetworkManagerClient struct {
@@ -30,7 +32,16 @@ type NetworkManagerClient struct {
 	JoinClientCert         string
 	JoinClientkey          string
 	Token                  string
-	NodeTokenPath          string
+	NodeToken              string
+	InfoPath               string
+}
+
+type RemoteHostInfo struct {
+	RegisterAddress string // value only tls-bootstrap without init
+	RegisterPort    uint16 // value only tls-bootstrap without init
+	JoinAddress     string // value only tls-bootstrap without init
+	JoinPort        uint16 // value only tls-bootstrap without init
+	NodeToken       string
 }
 
 func NewNetworkManagerClient(rootCertPath string, token string, registerAddress *string, registerPort *uint16, joinAddress *string, joinPort *uint16) *NetworkManagerClient {
@@ -63,13 +74,49 @@ func NewNetworkManagerClient(rootCertPath string, token string, registerAddress 
 		JoinClientCert:         filepath.Join(joinManagerCertDir, "client.crt"),
 		JoinClientkey:          filepath.Join(joinManagerCertDir, "client.key"),
 		Token:                  token,
-		NodeTokenPath:          filepath.Join(managerCertDir, "node.token"),
+		NodeToken:              "",
+		InfoPath:               filepath.Join(managerCertDir, "info.yaml"),
 	}
 }
 
+func (na *NetworkManagerClient) LoadInfo() error {
+	if !global.Exists(na.InfoPath) {
+		return fmt.Errorf("info file not exist")
+	}
+
+	if bytes, err := ioutil.ReadFile(na.InfoPath); err != nil {
+		return err
+	} else {
+		data := RemoteHostInfo{}
+		if err := yaml.Unmarshal(bytes, &data); err != nil {
+			return err
+		} else {
+			if data.NodeToken != "" {
+				na.NodeToken = data.NodeToken
+			} else {
+				return fmt.Errorf("fail to load network controller server key information")
+			}
+
+			if data.RegisterAddress != "" {
+				*na.RegisterAddress = data.RegisterAddress
+			}
+			if data.RegisterPort != 0 {
+				*na.RegisterPort = data.RegisterPort
+			}
+			if data.JoinAddress != "" {
+				*na.JoinAddress = data.JoinAddress
+			}
+			if data.JoinPort != 0 {
+				*na.JoinPort = data.JoinPort
+			}
+		}
+	}
+
+	return nil
+}
+
 func (na *NetworkManagerClient) Nodetoken() (string, error) {
-	bytes, err := ioutil.ReadFile(na.NodeTokenPath)
-	return string(bytes), err
+	return na.NodeToken, nil
 }
 
 // generate X.509 certificate for network-manager
@@ -80,6 +127,11 @@ func (na *NetworkManagerClient) GenerateOrSkip() error {
 
 	if na == nil {
 		return fmt.Errorf("nil network authentication")
+	}
+
+	if na.Check() {
+		// file exist, bootstrap ok.
+		return nil
 	}
 
 	if na.Token == "local" {
@@ -102,11 +154,6 @@ func (na *NetworkManagerClient) GenerateOrSkip() error {
 
 // download certificates and get node-token from network manager
 func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
-	if na.Check() {
-		// file exist, bootstrap ok.
-		return nil
-	}
-
 	if address == "" || port < 1 || port > 65535 {
 		return fmt.Errorf("none tls bootstrap address and port for network-manager")
 	}
@@ -124,7 +171,16 @@ func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
 }
 
 func (na *NetworkManagerClient) Check() bool {
-	return certificate.Exists(na.RegisterCACert, na.RegisterClientCert, na.RegisterClientkey, na.JoinCACert, na.JoinClientCert, na.JoinClientkey, na.NodeTokenPath)
+	if !certificate.Exists(na.RegisterCACert, na.RegisterClientCert, na.RegisterClientkey, na.JoinCACert, na.JoinClientCert, na.JoinClientkey, na.InfoPath) {
+		return false
+	}
+
+	if err := na.LoadInfo(); err != nil {
+		klog.Warning("%v", err)
+		return false
+	}
+
+	return true
 }
 
 func (na *NetworkManagerClient) CreatelinkForClient() error {
@@ -175,12 +231,22 @@ func (na *NetworkManagerClient) CreatelinkForClient() error {
 		return fmt.Errorf("fail to create link for network-manager certificat err:%s", err.Error())
 	}
 
-	if err := ioutil.WriteFile(na.NodeTokenPath, []byte(global.ReservedNodeToken), os.FileMode(0644)); err != nil {
-		return fmt.Errorf("fail to create node token")
+	if bytes, err := yaml.Marshal(RemoteHostInfo{
+		RegisterAddress: *na.RegisterAddress,
+		RegisterPort:    *na.RegisterPort,
+		JoinAddress:     *na.JoinAddress,
+		JoinPort:        *na.JoinPort,
+		NodeToken:       na.NodeToken,
+	}); err != nil {
+		return fmt.Errorf("fail to marshal host info")
+	} else {
+		if err := ioutil.WriteFile(na.InfoPath, bytes, os.FileMode(0644)); err != nil {
+			return fmt.Errorf("fail to create node token")
+		}
 	}
 
 	if !na.Check() {
-		return fmt.Errorf("fail to create symlink for network-manager certificate")
+		return fmt.Errorf("fail to create symlink for network-manager certificate or recore info")
 	}
 
 	return nil
