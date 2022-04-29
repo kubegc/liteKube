@@ -14,7 +14,7 @@ type TokenMgr struct {
 	UpdateTime time.Time
 }
 
-func (tm *TokenMgr) Insert(t TokenMgr, expireTime int32) error {
+func (tm *TokenMgr) Insert(t TokenMgr, expireTime int64) error {
 	db = GetDb()
 	var sql string
 	if expireTime < 0 {

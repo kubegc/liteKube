@@ -176,7 +176,7 @@ func (na *NetworkManagerClient) Check() bool {
 	}
 
 	if err := na.LoadInfo(); err != nil {
-		klog.Warning("%v", err)
+		klog.Warningf("%v", err)
 		return false
 	}
 
@@ -236,7 +236,7 @@ func (na *NetworkManagerClient) CreatelinkForClient() error {
 		RegisterPort:    *na.RegisterPort,
 		JoinAddress:     *na.JoinAddress,
 		JoinPort:        *na.JoinPort,
-		NodeToken:       na.NodeToken,
+		NodeToken:       global.ReservedNodeToken,
 	}); err != nil {
 		return fmt.Errorf("fail to marshal host info")
 	} else {
@@ -246,7 +246,7 @@ func (na *NetworkManagerClient) CreatelinkForClient() error {
 	}
 
 	if !na.Check() {
-		return fmt.Errorf("fail to create symlink for network-manager certificate or recore info")
+		return fmt.Errorf("fail to create symlink for network-manager certificate or record info")
 	}
 
 	return nil

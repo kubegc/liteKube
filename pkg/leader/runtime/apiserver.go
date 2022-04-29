@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	goruntime "runtime"
 	"strings"
 	"time"
@@ -101,7 +100,7 @@ func (s *Apiserver) Run() error {
 		if err != nil {
 			fmt.Printf("kube-apiserver exited: %v", err)
 			klog.Infof("kube-apiserver exited: %v", err)
-			os.Exit(-2)
+			panic(err)
 		}
 	}()
 
