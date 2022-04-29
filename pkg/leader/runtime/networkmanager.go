@@ -2,8 +2,9 @@ package runtime
 
 import (
 	"context"
+	"github.com/Litekube/network-controller/config"
+	"github.com/Litekube/network-controller/network"
 	goruntime "runtime"
-
 	// link to github.com/Litekube/kine, we have make some addition
 	"github.com/litekube/LiteKube/pkg/leader/authentication"
 	"github.com/litekube/LiteKube/pkg/logger"
@@ -30,6 +31,8 @@ type NetWorkManager struct {
 	JoinCAKey       string
 	JoinServerCert  string
 	JoinServerkey   string
+
+	NCServer config.ServerConfig
 }
 
 func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentication, clientOpt *netmanager.NetManagerOptions, logPath string) *NetWorkManager {
@@ -53,6 +56,28 @@ func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentic
 		JoinCAKey:       opt.JoinCAKey,
 		JoinServerCert:  opt.JoinServerCert,
 		JoinServerkey:   opt.JoinServerkey,
+
+		NCServer: config.ServerConfig{
+			Ip:   opt.RegisterBindAddress,
+			Port: int(clientOpt.JoinOptions.SecurePort),
+			// todo config BootstrapPort
+			BootstrapPort: 6439,
+			GrpcPort:      int(clientOpt.RegisterOptions.SecurePort),
+			// todo config NetworkAddr
+			NetworkAddr:     "10.1.1.1/24",
+			MTU:             1400,
+			Interconnection: false,
+
+			NetworkCAFile:         opt.JoinCACert,
+			NetworkCAKeyFile:      opt.JoinCAKey,
+			NetworkServerCertFile: opt.JoinServerCert,
+			NetworkServerKeyFile:  opt.JoinServerkey,
+
+			GrpcCAFile:         opt.RegisterCACert,
+			GrpcCAKeyFile:      opt.RegisterCAKey,
+			GrpcServerCertFile: opt.RegisterServerCert,
+			GrpcServerKeyFile:  opt.RegisterServerkey,
+		},
 	}
 }
 
@@ -66,6 +91,12 @@ func (s *NetWorkManager) Run() error {
 	}
 
 	klog.Info("run network manager")
+
+	server := network.NewServer(s.NCServer)
+	err := server.Run()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

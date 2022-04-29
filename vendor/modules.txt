@@ -48,6 +48,18 @@ github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud
 github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/filter
 github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta
 github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/mock
+# github.com/Litekube/network-controller v0.0.0-20220429062431-2bc7b1f9d345
+## explicit; go 1.17
+github.com/Litekube/network-controller/certs
+github.com/Litekube/network-controller/config
+github.com/Litekube/network-controller/contant
+github.com/Litekube/network-controller/grpc/grpc_client
+github.com/Litekube/network-controller/grpc/grpc_server
+github.com/Litekube/network-controller/grpc/pb_gen
+github.com/Litekube/network-controller/internal
+github.com/Litekube/network-controller/network
+github.com/Litekube/network-controller/sqlite
+github.com/Litekube/network-controller/utils
 # github.com/NYTimes/gziphandler v1.1.1
 ## explicit; go 1.11
 github.com/NYTimes/gziphandler
@@ -303,7 +315,10 @@ github.com/gophercloud/gophercloud/openstack/networking/v2/networks
 github.com/gophercloud/gophercloud/openstack/networking/v2/ports
 github.com/gophercloud/gophercloud/openstack/utils
 github.com/gophercloud/gophercloud/pagination
-# github.com/gorilla/websocket v1.4.2
+# github.com/gorilla/mux v1.8.0
+## explicit; go 1.12
+github.com/gorilla/mux
+# github.com/gorilla/websocket v1.5.0
 ## explicit; go 1.12
 github.com/gorilla/websocket
 # github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -367,7 +382,7 @@ github.com/libopenstorage/openstorage/volume
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
-# github.com/mattn/go-sqlite3 v1.14.8
+# github.com/mattn/go-sqlite3 v1.14.12
 ## explicit; go 1.12
 github.com/mattn/go-sqlite3
 # github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369
@@ -399,6 +414,9 @@ github.com/munnerz/goautoneg
 # github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f
 ## explicit
 github.com/mxk/go-flowrate/flowrate
+# github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+## explicit
+github.com/op/go-logging
 # github.com/opencontainers/go-digest v1.0.0
 ## explicit; go 1.13
 github.com/opencontainers/go-digest
@@ -446,12 +464,18 @@ github.com/robfig/cron/v3
 # github.com/rubiojr/go-vhd v0.0.0-20200706105327-02e210299021
 ## explicit
 github.com/rubiojr/go-vhd/vhd
+# github.com/satori/go.uuid v1.2.0
+## explicit
+github.com/satori/go.uuid
 # github.com/sirupsen/logrus v1.8.1
 ## explicit; go 1.13
 github.com/sirupsen/logrus
 # github.com/soheilhy/cmux v0.1.5
 ## explicit; go 1.11
 github.com/soheilhy/cmux
+# github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
+## explicit
+github.com/songgao/water
 # github.com/spf13/cobra v1.4.0
 ## explicit; go 1.15
 github.com/spf13/cobra
@@ -713,8 +737,9 @@ golang.org/x/crypto/pkcs12
 golang.org/x/crypto/pkcs12/internal/rc2
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/salsa20/salsa
-# golang.org/x/net v0.0.0-20211209124913-491a49abca63
+# golang.org/x/net v0.0.0-20220412020605-290c469a71a5
 ## explicit; go 1.17
+golang.org/x/net/bpf
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
@@ -723,7 +748,10 @@ golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
+golang.org/x/net/internal/iana
+golang.org/x/net/internal/socket
 golang.org/x/net/internal/timeseries
+golang.org/x/net/ipv4
 golang.org/x/net/trace
 golang.org/x/net/websocket
 # golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
@@ -738,14 +766,15 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20210831042530-f4d43177bf5e
+# golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
+golang.org/x/sys/windows/registry
+# golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 ## explicit; go 1.17
 golang.org/x/term
 # golang.org/x/text v0.3.7

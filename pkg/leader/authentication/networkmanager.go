@@ -21,14 +21,15 @@ type NetworkAuthentication struct {
 	RegisterServerkey      string
 	RegisterClientCert     string
 	RegisterClientkey      string
-	JoinManagerCertDir     string
-	JoinBindAddress        string
-	JoinCACert             string
-	JoinCAKey              string
-	JoinServerCert         string
-	JoinServerkey          string
-	JoinClientCert         string
-	JoinClientkey          string
+
+	JoinManagerCertDir string
+	JoinBindAddress    string
+	JoinCACert         string
+	JoinCAKey          string
+	JoinServerCert     string
+	JoinServerkey      string
+	JoinClientCert     string
+	JoinClientkey      string
 }
 
 func NewNetworkAuthentication(rootCertPath string, registerBindAddress, joinBindAddress string) *NetworkAuthentication {
