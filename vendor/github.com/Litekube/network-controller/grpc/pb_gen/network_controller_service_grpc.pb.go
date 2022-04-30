@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LiteKubeNCServiceClient interface {
 	HelloWorld(ctx context.Context, in *HelloWorldRequest, opts ...grpc.CallOption) (*HelloWorldResponse, error)
+	HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 	GetBootStrapToken(ctx context.Context, in *GetBootStrapTokenRequest, opts ...grpc.CallOption) (*GetBootStrapTokenResponse, error)
 	CheckConnState(ctx context.Context, in *CheckConnStateRequest, opts ...grpc.CallOption) (*CheckConnResponse, error)
 	UnRegister(ctx context.Context, in *UnRegisterRequest, opts ...grpc.CallOption) (*UnRegisterResponse, error)
@@ -40,6 +41,15 @@ func NewLiteKubeNCServiceClient(cc grpc.ClientConnInterface) LiteKubeNCServiceCl
 func (c *liteKubeNCServiceClient) HelloWorld(ctx context.Context, in *HelloWorldRequest, opts ...grpc.CallOption) (*HelloWorldResponse, error) {
 	out := new(HelloWorldResponse)
 	err := c.cc.Invoke(ctx, "/pb.LiteKubeNCService/HelloWorld", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *liteKubeNCServiceClient) HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error) {
+	out := new(HealthCheckResponse)
+	err := c.cc.Invoke(ctx, "/pb.LiteKubeNCService/HealthCheck", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +97,7 @@ func (c *liteKubeNCServiceClient) GetRegistedIp(ctx context.Context, in *GetRegi
 // for forward compatibility
 type LiteKubeNCServiceServer interface {
 	HelloWorld(context.Context, *HelloWorldRequest) (*HelloWorldResponse, error)
+	HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	GetBootStrapToken(context.Context, *GetBootStrapTokenRequest) (*GetBootStrapTokenResponse, error)
 	CheckConnState(context.Context, *CheckConnStateRequest) (*CheckConnResponse, error)
 	UnRegister(context.Context, *UnRegisterRequest) (*UnRegisterResponse, error)
@@ -100,6 +111,9 @@ type UnimplementedLiteKubeNCServiceServer struct {
 
 func (UnimplementedLiteKubeNCServiceServer) HelloWorld(context.Context, *HelloWorldRequest) (*HelloWorldResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HelloWorld not implemented")
+}
+func (UnimplementedLiteKubeNCServiceServer) HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
 }
 func (UnimplementedLiteKubeNCServiceServer) GetBootStrapToken(context.Context, *GetBootStrapTokenRequest) (*GetBootStrapTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBootStrapToken not implemented")
@@ -140,6 +154,24 @@ func _LiteKubeNCService_HelloWorld_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LiteKubeNCServiceServer).HelloWorld(ctx, req.(*HelloWorldRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LiteKubeNCService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthCheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LiteKubeNCServiceServer).HealthCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.LiteKubeNCService/HealthCheck",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LiteKubeNCServiceServer).HealthCheck(ctx, req.(*HealthCheckRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -228,6 +260,10 @@ var LiteKubeNCService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _LiteKubeNCService_HelloWorld_Handler,
 		},
 		{
+			MethodName: "HealthCheck",
+			Handler:    _LiteKubeNCService_HealthCheck_Handler,
+		},
+		{
 			MethodName: "GetBootStrapToken",
 			Handler:    _LiteKubeNCService_GetBootStrapToken_Handler,
 		},
@@ -252,6 +288,7 @@ var LiteKubeNCService_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LiteKubeNCBootstrapServiceClient interface {
+	HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 	GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error)
 }
 
@@ -261,6 +298,15 @@ type liteKubeNCBootstrapServiceClient struct {
 
 func NewLiteKubeNCBootstrapServiceClient(cc grpc.ClientConnInterface) LiteKubeNCBootstrapServiceClient {
 	return &liteKubeNCBootstrapServiceClient{cc}
+}
+
+func (c *liteKubeNCBootstrapServiceClient) HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error) {
+	out := new(HealthCheckResponse)
+	err := c.cc.Invoke(ctx, "/pb.LiteKubeNCBootstrapService/HealthCheck", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *liteKubeNCBootstrapServiceClient) GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error) {
@@ -276,6 +322,7 @@ func (c *liteKubeNCBootstrapServiceClient) GetToken(ctx context.Context, in *Get
 // All implementations must embed UnimplementedLiteKubeNCBootstrapServiceServer
 // for forward compatibility
 type LiteKubeNCBootstrapServiceServer interface {
+	HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error)
 	mustEmbedUnimplementedLiteKubeNCBootstrapServiceServer()
 }
@@ -284,6 +331,9 @@ type LiteKubeNCBootstrapServiceServer interface {
 type UnimplementedLiteKubeNCBootstrapServiceServer struct {
 }
 
+func (UnimplementedLiteKubeNCBootstrapServiceServer) HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
+}
 func (UnimplementedLiteKubeNCBootstrapServiceServer) GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetToken not implemented")
 }
@@ -299,6 +349,24 @@ type UnsafeLiteKubeNCBootstrapServiceServer interface {
 
 func RegisterLiteKubeNCBootstrapServiceServer(s grpc.ServiceRegistrar, srv LiteKubeNCBootstrapServiceServer) {
 	s.RegisterService(&LiteKubeNCBootstrapService_ServiceDesc, srv)
+}
+
+func _LiteKubeNCBootstrapService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthCheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LiteKubeNCBootstrapServiceServer).HealthCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.LiteKubeNCBootstrapService/HealthCheck",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LiteKubeNCBootstrapServiceServer).HealthCheck(ctx, req.(*HealthCheckRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _LiteKubeNCBootstrapService_GetToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -326,6 +394,10 @@ var LiteKubeNCBootstrapService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.LiteKubeNCBootstrapService",
 	HandlerType: (*LiteKubeNCBootstrapServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "HealthCheck",
+			Handler:    _LiteKubeNCBootstrapService_HealthCheck_Handler,
+		},
 		{
 			MethodName: "GetToken",
 			Handler:    _LiteKubeNCBootstrapService_GetToken_Handler,

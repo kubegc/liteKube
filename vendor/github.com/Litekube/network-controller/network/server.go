@@ -280,7 +280,11 @@ func (server *NetworkServer) cleanUp() {
 
 	// update all connected state in sqlite
 	nm := sqlite.NetworkMgr{}
-	nm.UpdateAllState()
+	_, err := nm.UpdateAllState()
+	if err != nil {
+		logger.Error(err)
+	}
+	logger.Debug("update all connected state")
 
 	// close all client connection
 	for key, client := range server.clients {

@@ -78,6 +78,10 @@ github.com/Litekube/network-controller v0.0.0-20220429101502-083a2da777fc h1:9Gd
 github.com/Litekube/network-controller v0.0.0-20220429101502-083a2da777fc/go.mod h1:C37fFw5PrO3K2UAGwbxjzTzW5ZJJpvW5KD+64mUqNFo=
 github.com/Litekube/network-controller v0.0.0-20220429132214-c03035eeba42 h1:YUPnjF91z+QLLIPJNw6I8u1KFeXOMl504ct8ym/iN7s=
 github.com/Litekube/network-controller v0.0.0-20220429132214-c03035eeba42/go.mod h1:C37fFw5PrO3K2UAGwbxjzTzW5ZJJpvW5KD+64mUqNFo=
+github.com/Litekube/network-controller v0.0.0-20220430025047-d8b455488c11 h1:I/i9UeD7t2IG3bCiXZvQQj25SwrCnk4QZ/QoBqf2y8M=
+github.com/Litekube/network-controller v0.0.0-20220430025047-d8b455488c11/go.mod h1:C37fFw5PrO3K2UAGwbxjzTzW5ZJJpvW5KD+64mUqNFo=
+github.com/Litekube/network-controller v0.0.0-20220430060837-dcef77bde90a h1:fmYpgxj5WHX6bOIjNhATaGCtbXD0PHw3LL+CU/omuVs=
+github.com/Litekube/network-controller v0.0.0-20220430060837-dcef77bde90a/go.mod h1:C37fFw5PrO3K2UAGwbxjzTzW5ZJJpvW5KD+64mUqNFo=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd/go.mod h1:64YHyfSL2R96J44Nlwm39UHepQbyR5q10x7iYa1ks2E=
 github.com/Microsoft/go-winio v0.4.15/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=
 github.com/Microsoft/go-winio v0.4.17/go.mod h1:JPGBdM1cNvN/6ISo+n8V5iA4v8pBzdOpzfwIujj1a84=

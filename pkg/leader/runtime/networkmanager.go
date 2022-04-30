@@ -91,6 +91,8 @@ func (s *NetWorkManager) Run() error {
 			klog.Infof("network controller exited: %v", err)
 			panic(err)
 		}
+
+		s.ctx.Done()
 	}()
 
 	return nil

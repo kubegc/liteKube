@@ -111,7 +111,7 @@ func (client *Client) Run() error {
 	logger.Debugf("Connecting to %+v", u.String())
 
 	// continue to try to connect every 2s until success
-	// fix here, conenct immediately，then 2s
+	// fix here, conenct immediately，then 0.5s
 	// ticker := time.NewTicker(3 * time.Second)
 	var connection *websocket.Conn
 	logger.Infof("client try to connect %+v", u.String())
@@ -140,7 +140,7 @@ func (client *Client) Run() error {
 		if err != nil {
 			logger.Infof("Dial: %+v", err)
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 	client.ws = connection
 	defer connection.Close()

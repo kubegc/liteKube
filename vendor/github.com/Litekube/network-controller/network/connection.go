@@ -194,7 +194,7 @@ func (c *connection) write(mt int, message *Data) error {
 }
 
 func (c *connection) dispatcher(p []byte) {
-	logger.Debug("Dispatcher connection %+v state: ", c.ipAddress, c.state)
+	logger.Debugf("Dispatcher connection %+v state: %+v", c.ipAddress, c.state)
 	switch c.state {
 	case contant.STATE_INIT:
 		logger.Debug("STATE_INIT")
