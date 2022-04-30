@@ -105,10 +105,17 @@ func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error)
 		Token: nodeToken,
 	}
 
-	resp, err := c.NCClient.C.CheckConnState(c.ctx, req)
-	if err != nil {
-		return "", err
+	var resp *pb_gen.CheckConnResponse
+	for i := 0; i < 10; i++ {
+		resp, _ = c.NCClient.C.CheckConnState(c.ctx, req)
+		if resp.BindIp == "" {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		} else {
+			break
+		}
 	}
+
 	return resp.BindIp, nil
 }
 

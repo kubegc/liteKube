@@ -211,7 +211,7 @@ func (na *NetworkManagerClient) TLSBootStrap(address string, port int, bootstrap
 
 	// assign value address and port
 	grpcPort, _ := strconv.ParseUint(resp.GrpcServerPort, 10, 16)
-	networkPort, _ := strconv.ParseUint(resp.GrpcServerPort, 10, 16)
+	networkPort, _ := strconv.ParseUint(resp.NetworkServerPort, 10, 16)
 	*na.RegisterAddress = resp.GrpcServerIp
 	*na.RegisterPort = uint16(grpcPort)
 	*na.JoinAddress = resp.NetworkServerIp
