@@ -96,14 +96,6 @@ import (
 	"k8s.io/klog/v2/internal/severity"
 )
 
-// add for litekube to calculate caller function name, if BenchDepth=-1, will not give any change
-// if benchDepth>=0, header will record function-name of benchDepth+BenchOffset from process root
-var AddCallerName bool = false
-var BenchName string = ""
-var BenchDepth int = -1
-var BenchOffset int = 0
-var MaxDepth int = 30
-
 // severityValue identifies the sort of log: info, warning etc. It also implements
 // the flag.Value interface. The -stderrthreshold flag is of type severity and
 // should be modified only through the flag.Value interface. The values match
@@ -557,27 +549,6 @@ func (l *loggingT) header(s severity.Severity, depth int) (*buffer.Buffer, strin
 			if l.addDirHeader {
 				if dirsep := strings.LastIndex(path[:slash], "/"); dirsep >= 0 {
 					file = path[dirsep+1:]
-				}
-			}
-		}
-
-		if AddCallerName {
-			// add caller name
-			ptrs := make([]uintptr, MaxDepth) // max depth
-			if BenchDepth > 0 {
-				realDepth := BenchDepth - 1 + BenchOffset
-				bench := BenchDepth - 1
-				n := runtime.Callers(3+depth, ptrs)
-				if n >= realDepth && realDepth > 0 {
-					if BenchName != "" {
-						if n >= bench && bench > 0 {
-							if runtime.FuncForPC(ptrs[n-bench]).Name() == BenchName {
-								file = fmt.Sprintf("<%s> %s", runtime.FuncForPC(ptrs[n-realDepth]).Name(), file)
-							}
-						}
-					} else {
-						file = fmt.Sprintf("<%s> %s", runtime.FuncForPC(ptrs[n-realDepth]), file)
-					}
 				}
 			}
 		}
@@ -1106,9 +1077,9 @@ func (f *flushDaemon) isRunning() bool {
 	return f.stopC != nil
 }
 
-// StopFlushDaemon stops the flush daemon, if running, and flushes once.
+// StopFlushDaemon stops the flush daemon, if running.
 // This prevents klog from leaking goroutines on shutdown. After stopping
-// the daemon, you can still manually flush buffers again by calling Flush().
+// the daemon, you can still manually flush buffers by calling Flush().
 func StopFlushDaemon() {
 	logging.flushD.stop()
 }
