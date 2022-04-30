@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
@@ -175,12 +176,29 @@ func (na *NetworkManagerClient) TLSBootStrap(address string, port int, bootstrap
 	// *JoinAddress="127.0.0.1", *JoinPort=6441
 
 	bootClient := &grpc_client.GrpcBootStrapClient{
-		Ip:            address,
-		BootstrapPort: strconv.FormatUint(uint64(port), 10),
+		Ip: address,
+		//BootstrapPort: strconv.FormatUint(uint64(port), 10),
+		BootstrapPort: "6439",
 	}
 
-	if err := bootClient.InitGrpcBootstrapClientConn(); err != nil {
-		return err
+	if bootClient.BootstrapC != nil {
+		if err := bootClient.InitGrpcBootstrapClientConn(); err != nil {
+			panic(err)
+		}
+	}
+
+	// start in 5s
+	for i := 0; i < 10; i++ {
+		resp, err := bootClient.BootstrapC.HealthCheck(context.Background(), &pb_gen.HealthCheckRequest{})
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		} else if resp.Code == "200" {
+			break
+		}
+		if i == 9 {
+			panic(err)
+		}
 	}
 
 	req := &pb_gen.GetTokenRequest{

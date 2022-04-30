@@ -2,13 +2,20 @@ package grpc_server
 
 import (
 	"context"
+	"github.com/Litekube/network-controller/contant"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
 )
 
 func (s *GrpcServer) HelloWorld(ctx context.Context, req *pb_gen.HelloWorldRequest) (*pb_gen.HelloWorldResponse, error) {
 	logger.Infof("get HelloWorld request: %+v", req)
-	reply := &pb_gen.HelloWorldResponse{ThanksText: "hello,this wanna"}
-	return reply, nil
+	resp := &pb_gen.HelloWorldResponse{ThanksText: "hello,this wanna"}
+	return resp, nil
+}
+
+func (s *GrpcServer) HealthCheck(ctx context.Context, req *pb_gen.HealthCheckRequest) (*pb_gen.HealthCheckResponse, error) {
+	logger.Infof("get HealthCheck request: %+v", req)
+	resp := &pb_gen.HealthCheckResponse{Code: contant.STATUS_OK}
+	return resp, nil
 }
 
 func (s *GrpcServer) CheckConnState(ctx context.Context, req *pb_gen.CheckConnStateRequest) (*pb_gen.CheckConnResponse, error) {

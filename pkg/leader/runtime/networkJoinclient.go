@@ -34,6 +34,7 @@ func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions
 		CAPath:      opt.JoinOptions.CACert,
 		CertPath:    opt.JoinOptions.ClientCertFile,
 		KeyPath:     opt.JoinOptions.ClientkeyFile,
+		NodeToken:   opt.NodeToken,
 	}
 
 }
@@ -49,6 +50,7 @@ func (s *NetWorkJoinClient) Run() error {
 
 	klog.Info("run network manager client")
 
+	fmt.Printf("node-token here %s\n", s.NodeToken)
 	client := network.NewClient(config.ClientConfig{
 		CAFile:          s.CAPath,
 		ClientCertFile:  s.CertPath,

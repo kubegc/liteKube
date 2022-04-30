@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Litekube/network-controller/grpc/grpc_client"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
@@ -52,6 +53,20 @@ func NewNetWorkRegisterClient(ctx context.Context, opt *netmanager.NetManagerOpt
 		panic(err)
 	}
 
+	// start in 5s
+	for i := 0; i < 10; i++ {
+		resp, err := client.NCClient.C.HealthCheck(ctx, &pb_gen.HealthCheckRequest{})
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		} else if resp.Code == "200" {
+			break
+		}
+		if i == 9 {
+			panic(err)
+		}
+	}
+
 	return client
 }
 
@@ -66,9 +81,30 @@ func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error)
 		return "", fmt.Errorf("nil for NetWorkRegisterClient")
 	}
 
+	if c.NCClient.C == nil {
+		if err := c.NCClient.InitGrpcClientConn(); err != nil {
+			panic(err)
+		}
+	}
+
+	// start in 5s
+	for i := 0; i < 10; i++ {
+		resp, err := c.NCClient.C.HealthCheck(c.ctx, &pb_gen.HealthCheckRequest{})
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		} else if resp.Code == "200" {
+			break
+		}
+		if i == 9 {
+			panic(err)
+		}
+	}
+
 	req := &pb_gen.CheckConnStateRequest{
 		Token: nodeToken,
 	}
+
 	resp, err := c.NCClient.C.CheckConnState(c.ctx, req)
 	if err != nil {
 		return "", err
@@ -81,9 +117,30 @@ func (c *NetWorkRegisterClient) CreateBootStrapToken(life int64) (string, error)
 		return "", fmt.Errorf("nil for NetWorkRegisterClient")
 	}
 
-	req := &pb_gen.GetBootStrapTokenRequest{
-		ExpireTime: int64(life),
+	if c.NCClient.C == nil {
+		if err := c.NCClient.InitGrpcClientConn(); err != nil {
+			panic(err)
+		}
 	}
+
+	// start in 5s
+	for i := 0; i < 10; i++ {
+		resp, err := c.NCClient.C.HealthCheck(c.ctx, &pb_gen.HealthCheckRequest{})
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		} else if resp.Code == "200" {
+			break
+		}
+		if i == 9 {
+			panic(err)
+		}
+	}
+
+	req := &pb_gen.GetBootStrapTokenRequest{
+		ExpireTime: life,
+	}
+
 	resp, err := c.NCClient.C.GetBootStrapToken(c.ctx, req)
 	if err != nil {
 		return "", err
