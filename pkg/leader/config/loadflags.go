@@ -107,7 +107,7 @@ func (leaderRuntime *LeaderRuntime) LoadGloabl() error {
 		// }
 		flag.Set("log_file", "false")
 		flag.Set("logtostderr", "false")
-		klog.SetOutput(logger.NewDefaultLogger(leaderRuntime.RuntimeOption.GlobalOptions.LogToStd, leaderRuntime.RuntimeOption.GlobalOptions.LogToDir, filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")))
+		klog.SetOutput(logger.NewLogWriter(leaderRuntime.RuntimeOption.GlobalOptions.LogToStd, leaderRuntime.RuntimeOption.GlobalOptions.LogToDir, filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")).Logger())
 	}()
 
 	defer func() {
@@ -683,11 +683,3 @@ func (leaderRuntime *LeaderRuntime) LoadScheduler() error {
 
 	return nil
 }
-
-// func (leaderRuntime *LeaderRuntime) LoadWorker() error {
-// 	if !leaderRuntime.FlagsOption.GlobalOptions.EnableWorker {
-// 		return nil
-// 	}
-
-// 	return nil
-// }

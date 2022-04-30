@@ -3,12 +3,10 @@ package runtime
 import (
 	"context"
 	"fmt"
-	goruntime "runtime"
 
 	"github.com/Litekube/network-controller/config"
 	// link to github.com/Litekube/kine, we have make some addition
 	"github.com/Litekube/network-controller/network"
-	"github.com/litekube/LiteKube/pkg/logger"
 	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
 	"k8s.io/klog/v2"
 )
@@ -40,13 +38,6 @@ func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions
 
 // start run in routine and no wait
 func (s *NetWorkJoinClient) Run() error {
-	ptr, _, _, ok := goruntime.Caller(0)
-	if ok {
-		logger.DefaultLogger.SetLog(goruntime.FuncForPC(ptr).Name(), s.LogPath)
-	} else {
-		klog.Errorf("fail to init kine log")
-	}
-
 	klog.Info("run network manager client")
 
 	client := network.NewClient(config.ClientConfig{

@@ -1,3 +1,4 @@
+// deprecated code
 package logger
 
 import (

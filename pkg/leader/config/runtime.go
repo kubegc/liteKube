@@ -96,12 +96,11 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 	return nil
 }
 
-// run k8s
+// run k8s and litekube controller
 func (leaderRuntime *LeaderRuntime) Run() error {
 	defer leaderRuntime.Done()
 	leaderRuntime.Add()
 
-	// add to same depth with LeaderRuntime.RunForward()
 	leaderRuntime.KubernetesServer = runtime.NewKubernatesServer(leaderRuntime.control.ctx,
 		leaderRuntime.RuntimeOption.ApiserverOptions,
 		leaderRuntime.RuntimeOption.ControllerManagerOptions,

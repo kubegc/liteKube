@@ -76,27 +76,29 @@ func (workerRuntime *WorkerRuntime) LoadFlags() error {
 
 // load or generate args for litekube-global
 func (workerRuntime *WorkerRuntime) LoadGloabl() error {
-	defer func() {
-		// set log
-		// if workerRuntime.RuntimeOption.GlobalOptions.LogToDir {
-		// 	klog.MaxSize = 10240
-		// 	logfile := filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")
-		// 	flag.Set("log_file", logfile)
-		// 	flag.Set("logtostderr", "false")
+	if workerRuntime.FlagsOption.NetmamagerOptions.Token != "local" {
+		defer func() {
+			// set log
+			// if workerRuntime.RuntimeOption.GlobalOptions.LogToDir {
+			// 	klog.MaxSize = 10240
+			// 	logfile := filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")
+			// 	flag.Set("log_file", logfile)
+			// 	flag.Set("logtostderr", "false")
 
-		// 	if workerRuntime.RuntimeOption.GlobalOptions.LogToStd {
-		// 		flag.Set("alsologtostderr", "true")
-		// 	} else {
-		// 		flag.Set("alsologtostderr", "false")
-		// 	}
+			// 	if workerRuntime.RuntimeOption.GlobalOptions.LogToStd {
+			// 		flag.Set("alsologtostderr", "true")
+			// 	} else {
+			// 		flag.Set("alsologtostderr", "false")
+			// 	}
 
-		// } else {
-		// 	flag.Set("logtostderr", fmt.Sprintf("%t", workerRuntime.RuntimeOption.GlobalOptions.LogToStd))
-		// }
-		flag.Set("log_file", "false")
-		flag.Set("logtostderr", "false")
-		klog.SetOutput(logger.NewDefaultLogger(workerRuntime.RuntimeOption.GlobalOptions.LogToStd, workerRuntime.RuntimeOption.GlobalOptions.LogToDir, filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")))
-	}()
+			// } else {
+			// 	flag.Set("logtostderr", fmt.Sprintf("%t", workerRuntime.RuntimeOption.GlobalOptions.LogToStd))
+			// }
+			flag.Set("log_file", "false")
+			flag.Set("logtostderr", "false")
+			klog.SetOutput(logger.NewLogWriter(workerRuntime.RuntimeOption.GlobalOptions.LogToStd, workerRuntime.RuntimeOption.GlobalOptions.LogToDir, filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.LogDir, "litekube.log")).Logger())
+		}()
+	}
 
 	defer func() {
 		workerRuntime.RuntimeAuthentication = NewRuntimeAuthentication(filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/"))

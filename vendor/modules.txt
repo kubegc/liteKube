@@ -363,6 +363,14 @@ github.com/k3s-io/kine/pkg/logstructured
 github.com/k3s-io/kine/pkg/logstructured/sqllog
 github.com/k3s-io/kine/pkg/server
 github.com/k3s-io/kine/pkg/tls
+# github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+## explicit
+github.com/lestrrat-go/file-rotatelogs
+github.com/lestrrat-go/file-rotatelogs/internal/option
+# github.com/lestrrat-go/strftime v1.0.6
+## explicit; go 1.13
+github.com/lestrrat-go/strftime
+github.com/lestrrat-go/strftime/internal/errors
 # github.com/lib/pq v1.10.2
 ## explicit; go 1.13
 github.com/lib/pq

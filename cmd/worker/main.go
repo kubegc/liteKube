@@ -19,9 +19,6 @@ func main() {
 	klog.InitFlags(nil)
 	defer klog.Flush()
 
-	// add caller info
-	klog.AddCallerName = true
-
 	// Init Cobra command
 	cmd := app.NewWorkerCommand()
 	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
@@ -35,15 +32,3 @@ func main() {
 	}
 
 }
-
-// func setDefaultLog() {
-// 	klog.MaxSize = 10240
-// 	if err := os.MkdirAll("litekube-logs/lite-apiserver", os.ModePerm); err != nil {
-// 		panic(err)
-// 	}
-
-// 	flag.Set("logtostderr", "false")
-// 	year, month, day := time.Now().Date()
-// 	flag.Set("log_file", fmt.Sprintf("litekube-logs/lite-apiserver/log-%d-%d-%d_%d-%d.log", year, month, day, time.Now().Hour(), time.Now().Minute()))
-// 	flag.Set("alsologtostderr", "true")
-// }
