@@ -90,9 +90,7 @@ func (s *Apiserver) Run() error {
 
 		err := command.Execute()
 		if err != nil {
-			fmt.Printf("kube-apiserver exited: %v", err)
-			klog.Infof("kube-apiserver exited: %v", err)
-			panic(err)
+			klog.Fatalf("kube-apiserver exited: %v", err)
 		}
 	}()
 

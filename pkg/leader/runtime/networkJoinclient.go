@@ -56,7 +56,6 @@ func (s *NetWorkJoinClient) Run() error {
 	go func() {
 		err := client.Run()
 		if err != nil {
-			fmt.Printf("network controller client exited: %v", err)
 			klog.Infof("network controller client exited: %v", err)
 			panic(err)
 		}

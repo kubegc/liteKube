@@ -76,6 +76,7 @@ func (workerRuntime *WorkerRuntime) LoadFlags() error {
 
 // load or generate args for litekube-global
 func (workerRuntime *WorkerRuntime) LoadGloabl() error {
+	fmt.Printf("%#v", workerRuntime.FlagsOption.NetmamagerOptions)
 	if workerRuntime.FlagsOption.NetmamagerOptions.Token != "local" {
 		defer func() {
 			// set log

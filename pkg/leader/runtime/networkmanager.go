@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/network"
@@ -87,7 +86,6 @@ func (s *NetWorkManager) Run() error {
 	go func() {
 		err := server.Run()
 		if err != nil {
-			fmt.Printf("network controller exited: %v", err)
 			klog.Infof("network controller exited: %v", err)
 			panic(err)
 		}

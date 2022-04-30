@@ -4,9 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/Litekube/network-controller/grpc/grpc_client"
-	"github.com/Litekube/network-controller/grpc/pb_gen"
-	certutil "github.com/rancher/dynamiclistener/cert"
 	"io/ioutil"
 	"net"
 	"os"
@@ -14,6 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Litekube/network-controller/grpc/grpc_client"
+	"github.com/Litekube/network-controller/grpc/pb_gen"
+	certutil "github.com/rancher/dynamiclistener/cert"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
@@ -274,7 +275,7 @@ func (na *NetworkManagerClient) CreatelinkForClient() error {
 
 	// clear old link
 	if !global.Exists(registerCACert, registerClientCert, registerClientKey, joinCACert, joinClienCert, joinClienKey) {
-		return fmt.Errorf("bad token to TLS bootstrap for network-manager")
+		return fmt.Errorf("TLS bootstrap for network-manager set token='local' only by allowed while worker run in leader to ")
 	}
 
 	if err := os.RemoveAll(na.ManagerCertDir); err != nil {

@@ -70,9 +70,7 @@ func (s *ControllerManager) Run(kubeAdminPath string) error {
 	go func() {
 		err := command.Execute()
 		if err != nil {
-			fmt.Printf("kube-controller-manager exited: %v", err)
-			klog.Infof("kube-controller-manager exited: %v", err)
-			panic(err)
+			klog.Fatalf("kube-controller-manager exited: %v", err)
 		}
 	}()
 

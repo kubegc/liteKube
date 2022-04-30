@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -26,7 +25,8 @@ func main() {
 
 	// Run LiteKube
 	if err := cmd.Execute(); err != nil {
-		panic(fmt.Sprintf("LiteKube worker exit at %s, error info: %s", time.Now().Format("2006-01-02 15:04:05"), err.Error()))
+		klog.Errorf("LiteKube worker exit at %s, error info: %s", time.Now().Format("2006-01-02 15:04:05"), err.Error())
+		panic(err)
 	} else {
 		klog.Infof("LiteKube worker goodby at %s", time.Now().Format("2006-01-02 15:04:05"))
 	}
