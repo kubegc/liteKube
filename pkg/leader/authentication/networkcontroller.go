@@ -11,7 +11,7 @@ import (
 	"github.com/rancher/dynamiclistener/cert"
 )
 
-type NetworkAuthentication struct {
+type NetworkControllerAuthentication struct {
 	ManagerCertDir         string
 	RegisterManagerCertDir string
 	RegisterBindAddress    string
@@ -32,7 +32,7 @@ type NetworkAuthentication struct {
 	JoinClientkey      string
 }
 
-func NewNetworkAuthentication(rootCertPath string, registerBindAddress, joinBindAddress string) *NetworkAuthentication {
+func NewNetworkControllerAuthentication(rootCertPath string, registerBindAddress, joinBindAddress string) *NetworkControllerAuthentication {
 	if rootCertPath == "" {
 		rootCertPath = filepath.Join(globaloptions.DefaultGO.WorkDir, "tls/")
 	}
@@ -50,7 +50,7 @@ func NewNetworkAuthentication(rootCertPath string, registerBindAddress, joinBind
 		joinBindAddress = "0.0.0.0"
 	}
 
-	return &NetworkAuthentication{
+	return &NetworkControllerAuthentication{
 		ManagerCertDir:         managerCertDir,
 		RegisterManagerCertDir: registerManagerCertDir,
 		RegisterBindAddress:    registerBindAddress,
@@ -71,7 +71,7 @@ func NewNetworkAuthentication(rootCertPath string, registerBindAddress, joinBind
 }
 
 // generate X.509 certificate for network-manager
-func (na *NetworkAuthentication) GenerateOrSkip() error {
+func (na *NetworkControllerAuthentication) GenerateOrSkip() error {
 	if na == nil {
 		return fmt.Errorf("nil network authentication")
 	}
@@ -120,10 +120,10 @@ func (na *NetworkAuthentication) GenerateOrSkip() error {
 	return nil
 }
 
-func (na *NetworkAuthentication) QueryRemoteIps() []net.IP {
+func (na *NetworkControllerAuthentication) QueryRemoteIps() []net.IP {
 	return []net.IP{}
 }
 
-func (na *NetworkAuthentication) QueryRemoteDNSNames() []string {
+func (na *NetworkControllerAuthentication) QueryRemoteDNSNames() []string {
 	return []string{}
 }

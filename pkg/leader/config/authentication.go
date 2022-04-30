@@ -8,11 +8,11 @@ import (
 )
 
 type RuntimeAuthentications struct {
-	CertDir              string
-	NetWorkManagerClient *authentication.NetworkManagerClient  // nil if user provide certificate
-	NetWorkManager       *authentication.NetworkAuthentication // nil if network manager not run in leader
-	Kine                 *authentication.KineAuthentication    // nil if not run kine in leader or provide server certificate by user
-	Kubernetes           *authentication.KubernetesAuthentication
+	CertDir                 string
+	NetWorkControllerClient *authentication.NetworkControllerClientAuthentication // nil if user provide certificate
+	NetWorkController       *authentication.NetworkControllerAuthentication       // nil if network manager not run in leader
+	Kine                    *authentication.KineAuthentication                    // nil if not run kine in leader or provide server certificate by user
+	Kubernetes              *authentication.KubernetesAuthentication
 }
 
 func NewRuntimeAuthentication(rootCertPath string) *RuntimeAuthentications {
@@ -20,10 +20,10 @@ func NewRuntimeAuthentication(rootCertPath string) *RuntimeAuthentications {
 		rootCertPath = filepath.Join(globaloptions.DefaultGO.WorkDir, "tls/")
 	}
 	return &RuntimeAuthentications{
-		CertDir:              rootCertPath,
-		Kine:                 nil,
-		Kubernetes:           nil,
-		NetWorkManagerClient: nil,
-		NetWorkManager:       nil,
+		CertDir:                 rootCertPath,
+		Kine:                    nil,
+		Kubernetes:              nil,
+		NetWorkControllerClient: nil,
+		NetWorkController:       nil,
 	}
 }

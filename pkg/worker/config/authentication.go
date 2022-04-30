@@ -10,7 +10,7 @@ import (
 
 type RuntimeAuthentications struct {
 	CertDir              string
-	NetWorkManagerClient *leaderAuth.NetworkManagerClient // nil if user provide certificate
+	NetWorkManagerClient *leaderAuth.NetworkControllerClientAuthentication // nil if user provide certificate
 	KubernetesNode       *authentication.KubernetesNode
 }
 

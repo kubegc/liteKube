@@ -363,6 +363,14 @@ github.com/k3s-io/kine/pkg/logstructured
 github.com/k3s-io/kine/pkg/logstructured/sqllog
 github.com/k3s-io/kine/pkg/server
 github.com/k3s-io/kine/pkg/tls
+# github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+## explicit
+github.com/lestrrat-go/file-rotatelogs
+github.com/lestrrat-go/file-rotatelogs/internal/option
+# github.com/lestrrat-go/strftime v1.0.6
+## explicit; go 1.13
+github.com/lestrrat-go/strftime
+github.com/lestrrat-go/strftime/internal/errors
 # github.com/lib/pq v1.10.2
 ## explicit; go 1.13
 github.com/lib/pq
@@ -1676,7 +1684,7 @@ k8s.io/cri-api/pkg/apis/runtime/v1
 ## explicit; go 1.16
 k8s.io/csi-translation-lib
 k8s.io/csi-translation-lib/plugins
-# k8s.io/klog/v2 v2.60.1 => github.com/Litekube/klog/v2 v2.60.1-lk0.1.1
+# k8s.io/klog/v2 v2.60.1
 ## explicit; go 1.13
 k8s.io/klog/v2
 k8s.io/klog/v2/internal/buffer
@@ -2448,7 +2456,6 @@ sigs.k8s.io/yaml
 # k8s.io/controller-manager => github.com/k3s-io/kubernetes/staging/src/k8s.io/controller-manager v1.23.5-k3s1
 # k8s.io/cri-api => github.com/k3s-io/kubernetes/staging/src/k8s.io/cri-api v1.23.5-k3s1
 # k8s.io/csi-translation-lib => github.com/k3s-io/kubernetes/staging/src/k8s.io/csi-translation-lib v1.23.5-k3s1
-# k8s.io/klog/v2 => github.com/Litekube/klog/v2 v2.60.1-lk0.1.1
 # k8s.io/kube-aggregator => github.com/k3s-io/kubernetes/staging/src/k8s.io/kube-aggregator v1.23.5-k3s1
 # k8s.io/kube-controller-manager => github.com/k3s-io/kubernetes/staging/src/k8s.io/kube-controller-manager v1.23.5-k3s1
 # k8s.io/kube-proxy => github.com/k3s-io/kubernetes/staging/src/k8s.io/kube-proxy v1.23.5-k3s1

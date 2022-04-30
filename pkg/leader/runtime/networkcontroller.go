@@ -2,20 +2,17 @@ package runtime
 
 import (
 	"context"
-	"fmt"
-	goruntime "runtime"
 
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/network"
 
 	// link to github.com/Litekube/kine, we have make some addition
 	"github.com/litekube/LiteKube/pkg/leader/authentication"
-	"github.com/litekube/LiteKube/pkg/logger"
 	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
 	"k8s.io/klog/v2"
 )
 
-type NetWorkManager struct {
+type NetWorkControllerServer struct {
 	ctx     context.Context
 	LogPath string
 
@@ -36,9 +33,9 @@ type NetWorkManager struct {
 	JoinServerkey   string
 }
 
-func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentication, clientOpt *netmanager.NetManagerOptions, logPath string) *NetWorkManager {
+func NewNetWorkControllerServer(ctx context.Context, opt *authentication.NetworkControllerAuthentication, clientOpt *netmanager.NetManagerOptions, logPath string) *NetWorkControllerServer {
 
-	return &NetWorkManager{
+	return &NetWorkControllerServer{
 		ctx:     ctx,
 		LogPath: logPath,
 
@@ -61,14 +58,7 @@ func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentic
 }
 
 // start run in routine and no wait
-func (s *NetWorkManager) Run() error {
-	ptr, _, _, ok := goruntime.Caller(0)
-	if ok {
-		logger.DefaultLogger.SetLog(goruntime.FuncForPC(ptr).Name(), s.LogPath)
-	} else {
-		klog.Errorf("fail to init kine log")
-	}
-
+func (s *NetWorkControllerServer) Run() error {
 	klog.Info("run network manager")
 
 	server := network.NewServer(config.ServerConfig{
@@ -96,7 +86,6 @@ func (s *NetWorkManager) Run() error {
 	go func() {
 		err := server.Run()
 		if err != nil {
-			fmt.Printf("network controller exited: %v", err)
 			klog.Infof("network controller exited: %v", err)
 			panic(err)
 		}

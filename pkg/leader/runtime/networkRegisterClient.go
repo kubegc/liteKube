@@ -116,6 +116,10 @@ func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error)
 		}
 	}
 
+	if resp.BindIp == "" {
+		return "", fmt.Errorf("none remote ip get")
+	}
+
 	return resp.BindIp, nil
 }
 

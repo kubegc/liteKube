@@ -3,12 +3,10 @@ package runtime
 import (
 	"context"
 	"fmt"
-	goruntime "runtime"
 
 	"github.com/k3s-io/kine/pkg/drivers/generic"
 	"github.com/k3s-io/kine/pkg/endpoint" // link to github.com/Litekube/kine, we have make some addition
 	"github.com/k3s-io/kine/pkg/tls"
-	"github.com/litekube/LiteKube/pkg/logger"
 	"github.com/litekube/LiteKube/pkg/options/leader/kine"
 	"k8s.io/klog/v2"
 )
@@ -43,13 +41,6 @@ func NewKineServer(ctx context.Context, opt *kine.KineOptions, dbPath string, lo
 
 // start run in routine and no wait
 func (s *KineServer) Run() error {
-	ptr, _, _, ok := goruntime.Caller(0)
-	if ok {
-		logger.DefaultLogger.SetLog(goruntime.FuncForPC(ptr).Name(), s.LogPath)
-	} else {
-		klog.Errorf("fail to init kine log")
-	}
-
 	klog.Info("run network manager client")
 
 	config := endpoint.Config{

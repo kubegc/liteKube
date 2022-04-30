@@ -3,10 +3,9 @@ package runtime
 import (
 	"context"
 	"fmt"
-	goruntime "runtime"
 
 	// link to github.com/Litekube/kine, we have make some addition
-	"github.com/litekube/LiteKube/pkg/logger"
+
 	"github.com/litekube/LiteKube/pkg/options/leader/scheduler"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
@@ -28,13 +27,6 @@ func NewScheduler(ctx context.Context, opt *scheduler.SchedulerOptions, logPath 
 
 // start run in routine and no wait
 func (s *Scheduler) Run() error {
-	ptr, _, _, ok := goruntime.Caller(0)
-	if ok {
-		logger.DefaultLogger.SetLog(goruntime.FuncForPC(ptr).Name(), s.LogPath)
-	} else {
-		klog.Errorf("fail to init kine log")
-	}
-
 	klog.Info("run kube-scheduler:")
 
 	args, err := s.Options.ToMap()
