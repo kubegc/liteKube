@@ -19,18 +19,20 @@ type NetworkControllerService struct {
 	networkTlsConfig  config.TLSConfig
 	ip                string
 	bootstrapPort     string
+	grpcServerPort    string
 	networkServerPort string
 }
 
 var logger = utils.GetLogger()
 
-func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, ip, bootstrapPort, networkServerPort string) *NetworkControllerService {
+func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, ip, bootstrapPort, grpcServerPort, networkServerPort string) *NetworkControllerService {
 	return &NetworkControllerService{
 		unRegisterCh:      unRegisterCh,
 		grpcTlsConfig:     grpcTlsConfig,
 		networkTlsConfig:  networkTlsConfig,
 		ip:                ip,
 		bootstrapPort:     bootstrapPort,
+		grpcServerPort:    grpcServerPort,
 		networkServerPort: networkServerPort,
 	}
 }
@@ -181,8 +183,10 @@ func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_g
 			Code:              code,
 			Message:           message,
 			Token:             token,
-			CloudIp:           service.ip,
+			NetworkServerIp:   service.ip,
 			NetworkServerPort: service.networkServerPort,
+			GrpcServerIp:      service.ip,
+			GrpcServerPort:    service.grpcServerPort,
 			GrpcCaCert:        "",
 			GrpcClientKey:     "",
 			GrpcClientCert:    "",

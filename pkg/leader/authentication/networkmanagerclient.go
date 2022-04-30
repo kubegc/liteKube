@@ -1,7 +1,12 @@
 package authentication
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
+	"github.com/Litekube/network-controller/grpc/grpc_client"
+	"github.com/Litekube/network-controller/grpc/pb_gen"
+	certutil "github.com/rancher/dynamiclistener/cert"
 	"io/ioutil"
 	"net"
 	"os"
@@ -137,6 +142,7 @@ func (na *NetworkManagerClient) GenerateOrSkip() error {
 	if na.Token == "local" {
 		return na.CreatelinkForClient()
 	} else {
+		token := strings.SplitN(na.Token, "@", 2)[0]
 		Endpoint := strings.SplitN(strings.SplitN(na.Token, "@", 2)[1], ":", 2)
 		var port int
 		if p, err := strconv.Atoi(Endpoint[1]); err != nil {
@@ -148,12 +154,12 @@ func (na *NetworkManagerClient) GenerateOrSkip() error {
 		if ip := net.ParseIP(Endpoint[0]); ip == nil {
 			return fmt.Errorf("bad network-bootstrap ip")
 		}
-		return na.TLSBootStrap(Endpoint[0], port)
+		return na.TLSBootStrap(Endpoint[0], port, token)
 	}
 }
 
 // download certificates and get node-token from network manager
-func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
+func (na *NetworkManagerClient) TLSBootStrap(address string, port int, bootstrapToken string) error {
 	if address == "" || port < 1 || port > 65535 {
 		return fmt.Errorf("none tls bootstrap address and port for network-manager")
 	}
@@ -167,6 +173,62 @@ func (na *NetworkManagerClient) TLSBootStrap(address string, port int) error {
 	// need to value address and port here like:
 	// *RegisterAddress="127.0.0.1", *RegisterPort=6440
 	// *JoinAddress="127.0.0.1", *JoinPort=6441
+
+	bootClient := &grpc_client.GrpcBootStrapClient{
+		Ip:            address,
+		BootstrapPort: strconv.FormatUint(uint64(port), 10),
+	}
+
+	if err := bootClient.InitGrpcBootstrapClientConn(); err != nil {
+		return err
+	}
+
+	req := &pb_gen.GetTokenRequest{
+		BootStrapToken: bootstrapToken,
+	}
+	resp, err := bootClient.BootstrapC.GetToken(context.Background(), req)
+	if err != nil {
+		return err
+	}
+
+	// assign value address and port
+	grpcPort, _ := strconv.ParseUint(resp.GrpcServerPort, 10, 16)
+	networkPort, _ := strconv.ParseUint(resp.GrpcServerPort, 10, 16)
+	*na.RegisterAddress = resp.GrpcServerIp
+	*na.RegisterPort = uint16(grpcPort)
+	*na.JoinAddress = resp.NetworkServerIp
+	*na.JoinPort = uint16(networkPort)
+
+	if bytes, err := yaml.Marshal(RemoteHostInfo{
+		RegisterAddress: *na.RegisterAddress,
+		RegisterPort:    *na.RegisterPort,
+		JoinAddress:     *na.JoinAddress,
+		JoinPort:        *na.JoinPort,
+		NodeToken:       resp.Token,
+	}); err != nil {
+		return fmt.Errorf("fail to marshal host info")
+	} else {
+		if err := ioutil.WriteFile(na.InfoPath, bytes, os.FileMode(0644)); err != nil {
+			return fmt.Errorf("fail to create node token")
+		}
+	}
+
+	// register cert file
+	caBytes, _ := base64.StdEncoding.DecodeString(resp.GrpcCaCert)
+	certBytes, _ := base64.StdEncoding.DecodeString(resp.GrpcClientCert)
+	keyBytes, _ := base64.StdEncoding.DecodeString(resp.GrpcClientKey)
+	certutil.WriteCert(na.RegisterCACert, caBytes)
+	certutil.WriteCert(na.RegisterClientCert, certBytes)
+	certutil.WriteKey(na.RegisterClientkey, keyBytes)
+
+	// join cert file
+	caBytes, _ = base64.StdEncoding.DecodeString(resp.NetworkCaCert)
+	certBytes, _ = base64.StdEncoding.DecodeString(resp.NetworkClientCert)
+	keyBytes, _ = base64.StdEncoding.DecodeString(resp.NetworkClientKey)
+	certutil.WriteCert(na.JoinCACert, caBytes)
+	certutil.WriteCert(na.JoinClientCert, certBytes)
+	certutil.WriteKey(na.JoinClientkey, keyBytes)
+
 	return nil
 }
 
