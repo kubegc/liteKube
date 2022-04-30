@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/litekube/LiteKube/pkg/leader/runtime"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
@@ -12,17 +13,17 @@ import (
 )
 
 type LeaderRuntime struct {
-	control               *ControlSignal
-	FlagsOption           *options.LeaderOptions
-	RuntimeOption         *options.LeaderOptions
-	RuntimeAuthentication *RuntimeAuthentications
-	KineServer            *runtime.KineServer
-	NetworkManagerServer  *runtime.NetWorkManager
-	NetworkJoinClient     *runtime.NetWorkJoinClient
-	NetworkRegisterClient *runtime.NetWorkRegisterClient
-	KubernetesServer      *runtime.KubernatesServer
-	controlServer         *runtime.LiteKubeControl
-	OwnKineCert           bool
+	control                 *ControlSignal
+	FlagsOption             *options.LeaderOptions
+	RuntimeOption           *options.LeaderOptions
+	RuntimeAuthentication   *RuntimeAuthentications
+	KineServer              *runtime.KineServer
+	NetworkControllerServer *runtime.NetWorkControllerServer
+	NetworkJoinClient       *runtime.NetWorkJoinClient
+	NetworkRegisterClient   *runtime.NetWorkRegisterClient
+	KubernetesServer        *runtime.KubernatesServer
+	controlServer           *runtime.LiteKubeControl
+	OwnKineCert             bool
 }
 
 // control progress end
@@ -40,16 +41,16 @@ func NewLeaderRuntime(flags *options.LeaderOptions) *LeaderRuntime {
 			stop: stop,
 			wg:   &sync.WaitGroup{},
 		},
-		FlagsOption:           flags,
-		RuntimeOption:         options.NewLeaderOptions(),
-		RuntimeAuthentication: nil,
-		NetworkManagerServer:  nil,
-		NetworkJoinClient:     nil,
-		NetworkRegisterClient: nil,
-		KubernetesServer:      nil,
-		OwnKineCert:           false,
-		controlServer:         nil,
-		KineServer:            nil,
+		FlagsOption:             flags,
+		RuntimeOption:           options.NewLeaderOptions(),
+		RuntimeAuthentication:   nil,
+		NetworkControllerServer: nil,
+		NetworkJoinClient:       nil,
+		NetworkRegisterClient:   nil,
+		KubernetesServer:        nil,
+		OwnKineCert:             false,
+		controlServer:           nil,
+		KineServer:              nil,
 	}
 }
 
@@ -72,12 +73,12 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 	}
 
 	if leaderRuntime.RuntimeOption.GlobalOptions.RunNetManager {
-		leaderRuntime.NetworkManagerServer = runtime.NewNetWorkManager(leaderRuntime.control.ctx,
-			leaderRuntime.RuntimeAuthentication.NetWorkManager,
+		leaderRuntime.NetworkControllerServer = runtime.NewNetWorkControllerServer(leaderRuntime.control.ctx,
+			leaderRuntime.RuntimeAuthentication.NetWorkController,
 			leaderRuntime.RuntimeOption.NetmamagerOptions,
 			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-manager.log"),
 		)
-		if err := leaderRuntime.NetworkManagerServer.Run(); err != nil {
+		if err := leaderRuntime.NetworkControllerServer.Run(); err != nil {
 			klog.Errorf("bad args for network manager server")
 			return err
 		}
@@ -91,6 +92,8 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 		klog.Errorf("bad args for network manager client")
 		return err
 	}
+
+	time.Sleep(10 * time.Second) // only for debug, waiting for client to start
 
 	leaderRuntime.NetworkRegisterClient = runtime.NewNetWorkRegisterClient(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.NetmamagerOptions)
 	return nil

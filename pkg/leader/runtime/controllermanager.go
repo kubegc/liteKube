@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	goruntime "runtime"
 	"time"
 
 	// link to github.com/Litekube/kine, we have make some addition
 
-	"github.com/litekube/LiteKube/pkg/logger"
 	"github.com/litekube/LiteKube/pkg/options/leader/controllermanager"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -36,15 +34,6 @@ func NewControllerManager(ctx context.Context, opt *controllermanager.Controller
 
 // start run in routine and no wait
 func (s *ControllerManager) Run(kubeAdminPath string) error {
-	ptr, _, _, ok := goruntime.Caller(0)
-	if ok {
-		logger.DefaultLogger.SetLog(goruntime.FuncForPC(ptr).Name(), s.LogPath)
-	} else {
-		klog.Errorf("fail to init kine log")
-	}
-
-	klog.Info("run kube-controller-manager")
-
 	args, err := s.Options.ToMap()
 	if err != nil {
 		return err

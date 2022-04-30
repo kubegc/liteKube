@@ -43,6 +43,7 @@ func RemoveRepeatIps(ips []net.IP) []net.IP {
 		}
 
 		if !inIps(ip, new) {
+			fmt.Printf("===>> %s", ip.String())
 			new = append(new, ip)
 		}
 	}

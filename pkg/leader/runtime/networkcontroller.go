@@ -12,7 +12,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type NetWorkManager struct {
+type NetWorkControllerServer struct {
 	ctx     context.Context
 	LogPath string
 
@@ -33,9 +33,9 @@ type NetWorkManager struct {
 	JoinServerkey   string
 }
 
-func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentication, clientOpt *netmanager.NetManagerOptions, logPath string) *NetWorkManager {
+func NewNetWorkControllerServer(ctx context.Context, opt *authentication.NetworkControllerAuthentication, clientOpt *netmanager.NetManagerOptions, logPath string) *NetWorkControllerServer {
 
-	return &NetWorkManager{
+	return &NetWorkControllerServer{
 		ctx:     ctx,
 		LogPath: logPath,
 
@@ -58,7 +58,7 @@ func NewNetWorkManager(ctx context.Context, opt *authentication.NetworkAuthentic
 }
 
 // start run in routine and no wait
-func (s *NetWorkManager) Run() error {
+func (s *NetWorkControllerServer) Run() error {
 	klog.Info("run network manager")
 
 	server := network.NewServer(config.ServerConfig{
