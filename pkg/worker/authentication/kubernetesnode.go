@@ -1,16 +1,23 @@
 package authentication
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/litekube/LiteKube/pkg/global"
+	"github.com/litekube/LiteKube/pkg/grpcclient"
 	leaderruntime "github.com/litekube/LiteKube/pkg/leader/runtime"
+	"github.com/litekube/LiteKube/pkg/leader/runtime/control"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/worker/global"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 )
@@ -46,7 +53,7 @@ func NewKubernetesNode(rootCertPath string, leaderToken string, registerClient *
 	}
 
 	leaderIp, err := registerClient.QueryIpByToken(leaderNodeToken)
-	if err != nil {
+	if err != nil || leaderIp == "" {
 		klog.Errorf("fail to query ip of leader")
 		return nil
 	}
@@ -82,9 +89,55 @@ func (kn *KubernetesNode) TLSBootStrap() error {
 	if global.Exists(kn.KubeProxyKubeConfig, kn.BootStrapKubeConfig, kn.KubeProxyKubeConfig, kn.ValidateApiserverCAFile, kn.AdditionFile) {
 		return nil
 	} else {
-		// try to download certificates here
-		return nil
+		auth := &grpcclient.TokenAuthentication{
+			Token: kn.BootStrapToken,
+		}
+
+		conn, err := grpc.Dial(fmt.Sprintf("%s:%d", kn.LeaderIp, kn.LeaderPort), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithPerRPCCredentials(auth))
+		if err != nil {
+			return err
+		}
+
+		client := control.NewLeaderControlClient(conn)
+
+		for i := 0; i < 100; i++ {
+			if _, err := client.CheckHealth(context.Background(), &control.NoneValue{}); err != nil {
+				klog.Warningf("waiting for leader controller to start, try %d/100 times", i)
+				time.Sleep(1 * time.Second)
+				continue
+			} else {
+				break
+			}
+		}
+
+		// bootstrap for kube-proxy
+		if value, err := client.BootStrapKubeProxy(context.Background(), &control.BootStrapKubeProxyRequest{}); err != nil {
+			klog.Errorf("fail to bootstrap kube-proxy certificates")
+			return err
+		} else {
+			kn.WriteAddition(map[string]string{"cluster-cidr": value.GetClusterCIDR()})
+			if bytes, err := base64.StdEncoding.DecodeString(value.GetKubeconfig()); err != nil {
+				return err
+			} else {
+				ioutil.WriteFile(kn.KubeProxyKubeConfig, bytes, os.FileMode(0644))
+			}
+		}
+
+		// bootstrap for kubelet
+		if value, err := client.BootStrapKubelet(context.Background(), &control.BootStrapKubeletRequest{}); err != nil {
+			klog.Errorf("fail to bootstrap kubelet certificates")
+			return err
+		} else {
+			if bytes, err := base64.StdEncoding.DecodeString(value.GetKubeconfig()); err != nil {
+				return err
+			} else {
+				ioutil.WriteFile(kn.KubeletConfig, bytes, os.FileMode(0644))
+			}
+		}
+
 	}
+
+	return nil
 }
 
 func (kn *KubernetesNode) ReadAddition(key string) (string, error) {
