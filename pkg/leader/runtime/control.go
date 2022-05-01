@@ -279,6 +279,8 @@ func (s *LiteKubeControl) CreateToken(ctx context.Context, in *control.CreateTok
 		Token:      tokenDesc.Token,
 		CreateTime: tokenDesc.CreateTime,
 		Life:       tokenDesc.Life,
+		IsAdmin:    tokenDesc.IsAdmin,
+		Valid:      tokenDesc.IsValid,
 	}}, nil
 }
 
@@ -294,6 +296,8 @@ func (s *LiteKubeControl) QueryTokens(ctx context.Context, in *control.NoneValue
 			Token:      tokenDesc.Token,
 			CreateTime: tokenDesc.CreateTime,
 			Life:       tokenDesc.Life,
+			IsAdmin:    tokenDesc.IsAdmin,
+			Valid:      tokenDesc.IsValid,
 		})
 	}
 
@@ -436,42 +440,44 @@ func readTokens(authFile string) (map[string]*TokenDesc, error) {
 		if err := yaml.Unmarshal(bytes, &datas); err != nil {
 			return nil, err
 		}
-	}
 
-	for key, tokenDesc := range datas {
-		if len(tokenDesc.Token) != 32 {
-			delete(datas, key)
-			continue
-		}
-
-		// permanent account
-		if tokenDesc.Life < 0 {
-			continue
-		}
-
-		createTime, err := time.Parse("2006-01-02 15:04:05", tokenDesc.CreateTime)
-		if err != nil {
-			return nil, err
-		}
-
-		if time.Now().UTC().Unix()-createTime.Unix() > tokenDesc.Life*60 {
-			if !tokenDesc.IsAdmin {
+		for key, tokenDesc := range datas {
+			if len(tokenDesc.Token) != 32 {
 				delete(datas, key)
-			} else {
-				tokenDesc.IsValid = false
+				continue
+			}
+
+			// permanent account
+			if tokenDesc.Life < 0 {
+				continue
+			}
+
+			createTime, err := time.Parse("2006-01-02 15:04:05", tokenDesc.CreateTime)
+			if err != nil {
+				return nil, err
+			}
+
+			if time.Now().UTC().Unix()-createTime.UTC().Unix() > tokenDesc.Life*60 {
+				if !tokenDesc.IsAdmin {
+					delete(datas, key)
+				} else {
+					tokenDesc.IsValid = false
+				}
 			}
 		}
-	}
 
-	if bytes, err := yaml.Marshal(datas); err != nil {
-		return nil, err
-	} else {
-		if err := ioutil.WriteFile(authFile, bytes, fs.FileMode(0644)); err != nil {
+		if bytes, err := yaml.Marshal(datas); err != nil {
 			return nil, err
+		} else {
+			if err := ioutil.WriteFile(authFile, bytes, fs.FileMode(0644)); err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	return datas, nil
+		return datas, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func createToken(leaveTime int64, createBy string, authFile string, isAdmin bool) (*TokenDesc, error) {

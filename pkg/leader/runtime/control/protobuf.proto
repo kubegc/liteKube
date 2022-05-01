@@ -52,6 +52,8 @@ message TokenDescription{
     string token=1;
     string createTime=2;
     int64 life=4;
+    bool isAdmin=5;
+    bool valid=6;
 }
 
 message TokenValue{
