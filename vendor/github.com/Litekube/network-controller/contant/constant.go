@@ -24,6 +24,8 @@ import (
 const NodeTokenKey = "node-token"
 const NetTokenKey = "net-token"
 
+const ReservedToken = "reserverd"
+
 const (
 	IFACE_BUFSIZE = 2048
 )

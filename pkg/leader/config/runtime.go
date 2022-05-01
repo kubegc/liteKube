@@ -129,6 +129,7 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 		leaderRuntime.RuntimeOption.ControllerManagerOptions.ProfessionalOptions.ClusterSigningKubeletClientKeyFile,
 		leaderRuntime.RuntimeOption.ApiserverOptions.ProfessionalOptions.TokenAuthFile,
 		leaderRuntime.RuntimeOption.ControllerManagerOptions.Options.ClusterCidr,
+		leaderRuntime.RuntimeOption.ApiserverOptions.Options.ServiceClusterIpRange,
 	)
 
 	if err := leaderRuntime.controlServer.Run(); err != nil {

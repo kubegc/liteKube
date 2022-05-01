@@ -1,6 +1,7 @@
 package authentication
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/litekube/LiteKube/pkg/global"
@@ -21,6 +23,32 @@ import (
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 )
+
+var kubelet_config_template = template.Must(template.New("kubelet_config").Parse(`kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  x509:
+    clientCAFile: "{{.CaPath}}"
+  webhook:
+    enabled: true
+    cacheTTL: 2m0s
+  anonymous:
+    enabled: false
+authorization:
+  mode: Webhook
+  webhook:
+    cacheAuthorizedTTL: 5m0s
+    cacheUnauthorizedTTL: 30s
+address: "0.0.0.0"
+port: 10250
+readOnlyPort: 10255
+cgroupDriver: systemd
+hairpinMode: promiscuous-bridge
+serializeImagePulls: false
+clusterDomain: cluster.local.
+clusterDNS:
+- "{{.CluserDNS}}"
+`))
 
 type KubernetesNode struct {
 	CertDir                 string
@@ -35,6 +63,7 @@ type KubernetesNode struct {
 	ValidateApiserverCAFile string
 	AdditionFile            string
 	RegisterClient          *leaderruntime.NetWorkRegisterClient
+	CluserDNS               string
 }
 
 func NewKubernetesNode(rootCertPath string, leaderToken string, registerClient *leaderruntime.NetWorkRegisterClient) *KubernetesNode {
@@ -73,7 +102,7 @@ func NewKubernetesNode(rootCertPath string, leaderToken string, registerClient *
 	}
 }
 
-func (kn *KubernetesNode) GenerateOrSkip(address string, port int) error {
+func (kn *KubernetesNode) GenerateOrSkip() error {
 	if kn == nil {
 		return fmt.Errorf("nil kubernetes node")
 	}
@@ -86,7 +115,7 @@ func (kn *KubernetesNode) TLSBootStrap() error {
 		return fmt.Errorf("nil kubernetes node")
 	}
 
-	if global.Exists(kn.KubeProxyKubeConfig, kn.BootStrapKubeConfig, kn.KubeProxyKubeConfig, kn.ValidateApiserverCAFile, kn.AdditionFile) {
+	if global.Exists(kn.KubeProxyKubeConfig, kn.BootStrapKubeConfig, kn.KubeletConfig, kn.ValidateApiserverCAFile, kn.AdditionFile) {
 		return nil
 	} else {
 		auth := &grpcclient.TokenAuthentication{
@@ -128,11 +157,42 @@ func (kn *KubernetesNode) TLSBootStrap() error {
 			klog.Errorf("fail to bootstrap kubelet certificates")
 			return err
 		} else {
+			// write bootstrap-kubeconfig
 			if bytes, err := base64.StdEncoding.DecodeString(value.GetKubeconfig()); err != nil {
 				return err
 			} else {
-				ioutil.WriteFile(kn.KubeletConfig, bytes, os.FileMode(0644))
+				if err := ioutil.WriteFile(kn.KubeletConfig, bytes, os.FileMode(0644)); err != nil {
+					return err
+				}
 			}
+
+			// write validate-ca
+			if bytes, err := base64.StdEncoding.DecodeString(value.GetValidataCaCert()); err != nil {
+				return err
+			} else {
+				if err := ioutil.WriteFile(kn.ValidateApiserverCAFile, bytes, os.FileMode(0644)); err != nil {
+					return err
+				}
+			}
+
+			// write validate-ca
+			kn.CluserDNS = value.GetClusterDNS()
+
+			// write default-kubelet config
+			buf := &bytes.Buffer{}
+			data := struct {
+				CaPath    string
+				CluserDNS string
+			}{
+				CaPath:    kn.ValidateApiserverCAFile,
+				CluserDNS: kn.CluserDNS,
+			}
+
+			kubelet_config_template.Execute(buf, &data)
+			if err := ioutil.WriteFile(kn.KubeletConfig, buf.Bytes(), os.FileMode(0644)); err != nil {
+				return err
+			}
+			kn.WriteAddition(map[string]string{"cluster-dns": kn.CluserDNS})
 		}
 
 	}

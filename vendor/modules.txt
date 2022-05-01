@@ -48,7 +48,7 @@ github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud
 github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/filter
 github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta
 github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/mock
-# github.com/Litekube/network-controller v0.0.0-20220430060837-dcef77bde90a
+# github.com/Litekube/network-controller v0.0.0-20220501102615-c7b0aa635689
 ## explicit; go 1.17
 github.com/Litekube/network-controller/certs
 github.com/Litekube/network-controller/config

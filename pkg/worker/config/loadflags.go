@@ -76,7 +76,6 @@ func (workerRuntime *WorkerRuntime) LoadFlags() error {
 
 // load or generate args for litekube-global
 func (workerRuntime *WorkerRuntime) LoadGloabl() error {
-	fmt.Printf("%#v", workerRuntime.FlagsOption.NetmamagerOptions)
 	if workerRuntime.FlagsOption.NetmamagerOptions.Token != "local" {
 		defer func() {
 			// set log
@@ -139,6 +138,12 @@ func (workerRuntime *WorkerRuntime) LoadGloabl() error {
 func (workerRuntime *WorkerRuntime) LoadNetManager() error {
 	raw := workerRuntime.FlagsOption.NetmamagerOptions
 	new := workerRuntime.RuntimeOption.NetmamagerOptions
+
+	if raw.Token != "" {
+		new.Token = raw.Token
+	} else {
+		new.Token = netmanager.DefaultNMO.Token
+	}
 
 	// check bind-address
 	if ip := net.ParseIP(raw.RegisterOptions.Address); ip == nil {
@@ -314,6 +319,10 @@ func (workerRuntime *WorkerRuntime) LoadKubelet() error {
 			if workerRuntime.RuntimeAuthentication.KubernetesNode == nil {
 				return fmt.Errorf("fail to run TLS-bootstrap for worker")
 			}
+
+			if err := workerRuntime.RuntimeAuthentication.KubernetesNode.GenerateOrSkip(); err != nil {
+				return err
+			}
 		}
 
 		new.ProfessionalOptions.BootstrapKubeconfig = workerRuntime.RuntimeAuthentication.KubernetesNode.BootStrapKubeConfig
@@ -367,6 +376,10 @@ func (workerRuntime *WorkerRuntime) LoadKubeProxy() error {
 			)
 			if workerRuntime.RuntimeAuthentication.KubernetesNode == nil {
 				return fmt.Errorf("fail to run TLS-bootstrap for worker")
+			}
+
+			if err := workerRuntime.RuntimeAuthentication.KubernetesNode.GenerateOrSkip(); err != nil {
+				return err
 			}
 		}
 

@@ -27,6 +27,7 @@ type LeaderControlClient interface {
 	CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*TokenValue, error)
 	DeleteToken(ctx context.Context, in *TokenString, opts ...grpc.CallOption) (*NoneResponse, error)
 	QueryTokens(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*TokenValueList, error)
+	BootstrapValidateKubeApiserverClient(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*BootstrapValidateKubeApiserverClientResponse, error)
 	BootStrapKubelet(ctx context.Context, in *BootStrapKubeletRequest, opts ...grpc.CallOption) (*BootStrapKubeletResponse, error)
 	BootStrapNetwork(ctx context.Context, in *BootStrapNetworkRequest, opts ...grpc.CallOption) (*BootStrapNetworkResponse, error)
 	BootStrapKubeProxy(ctx context.Context, in *BootStrapKubeProxyRequest, opts ...grpc.CallOption) (*BootStrapKubeProxyResponse, error)
@@ -85,6 +86,15 @@ func (c *leaderControlClient) QueryTokens(ctx context.Context, in *NoneValue, op
 	return out, nil
 }
 
+func (c *leaderControlClient) BootstrapValidateKubeApiserverClient(ctx context.Context, in *NoneValue, opts ...grpc.CallOption) (*BootstrapValidateKubeApiserverClientResponse, error) {
+	out := new(BootstrapValidateKubeApiserverClientResponse)
+	err := c.cc.Invoke(ctx, "/control.LeaderControl/BootstrapValidateKubeApiserverClient", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *leaderControlClient) BootStrapKubelet(ctx context.Context, in *BootStrapKubeletRequest, opts ...grpc.CallOption) (*BootStrapKubeletResponse, error) {
 	out := new(BootStrapKubeletResponse)
 	err := c.cc.Invoke(ctx, "/control.LeaderControl/BootStrapKubelet", in, out, opts...)
@@ -121,6 +131,7 @@ type LeaderControlServer interface {
 	CreateToken(context.Context, *CreateTokenRequest) (*TokenValue, error)
 	DeleteToken(context.Context, *TokenString) (*NoneResponse, error)
 	QueryTokens(context.Context, *NoneValue) (*TokenValueList, error)
+	BootstrapValidateKubeApiserverClient(context.Context, *NoneValue) (*BootstrapValidateKubeApiserverClientResponse, error)
 	BootStrapKubelet(context.Context, *BootStrapKubeletRequest) (*BootStrapKubeletResponse, error)
 	BootStrapNetwork(context.Context, *BootStrapNetworkRequest) (*BootStrapNetworkResponse, error)
 	BootStrapKubeProxy(context.Context, *BootStrapKubeProxyRequest) (*BootStrapKubeProxyResponse, error)
@@ -144,6 +155,9 @@ func (UnimplementedLeaderControlServer) DeleteToken(context.Context, *TokenStrin
 }
 func (UnimplementedLeaderControlServer) QueryTokens(context.Context, *NoneValue) (*TokenValueList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryTokens not implemented")
+}
+func (UnimplementedLeaderControlServer) BootstrapValidateKubeApiserverClient(context.Context, *NoneValue) (*BootstrapValidateKubeApiserverClientResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BootstrapValidateKubeApiserverClient not implemented")
 }
 func (UnimplementedLeaderControlServer) BootStrapKubelet(context.Context, *BootStrapKubeletRequest) (*BootStrapKubeletResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BootStrapKubelet not implemented")
@@ -256,6 +270,24 @@ func _LeaderControl_QueryTokens_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LeaderControl_BootstrapValidateKubeApiserverClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NoneValue)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LeaderControlServer).BootstrapValidateKubeApiserverClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/control.LeaderControl/BootstrapValidateKubeApiserverClient",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LeaderControlServer).BootstrapValidateKubeApiserverClient(ctx, req.(*NoneValue))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _LeaderControl_BootStrapKubelet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BootStrapKubeletRequest)
 	if err := dec(in); err != nil {
@@ -336,6 +368,10 @@ var LeaderControl_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryTokens",
 			Handler:    _LeaderControl_QueryTokens_Handler,
+		},
+		{
+			MethodName: "BootstrapValidateKubeApiserverClient",
+			Handler:    _LeaderControl_BootstrapValidateKubeApiserverClient_Handler,
 		},
 		{
 			MethodName: "BootStrapKubelet",

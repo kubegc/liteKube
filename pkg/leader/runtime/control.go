@@ -91,6 +91,8 @@ type LiteKubeControl struct {
 	SignalApiserverClientKey  string
 	AuthTokenFile             string
 	ClusterCIDR               string
+	ServiceClusterIpRange     string
+	ClusterDNS                string
 
 	ValidateApiserverServerCABase64 string
 	ValidateApiserverClientCABase64 string
@@ -108,7 +110,7 @@ type TokenDesc struct {
 	IsValid    bool
 }
 
-func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClient, bufferPath string, nodeToken string, endpoint string, validateApiserverServerCA string, validateApiserverClientCA string, signalApiserverClientCert string, signalApiserverClientKey string, authTokenFile string, clusterCIDR string) *LiteKubeControl {
+func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClient, bufferPath string, nodeToken string, endpoint string, validateApiserverServerCA string, validateApiserverClientCA string, signalApiserverClientCert string, signalApiserverClientKey string, authTokenFile string, clusterCIDR string, serviceClusterIpRange string) *LiteKubeControl {
 	tmp := &LiteKubeControl{
 		ctx:                       ctx,
 		BindAddress:               "0.0.0.0",
@@ -123,6 +125,8 @@ func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClien
 		SignalApiserverClientKey:  signalApiserverClientKey,
 		AuthTokenFile:             authTokenFile,
 		ClusterCIDR:               clusterCIDR,
+		ServiceClusterIpRange:     serviceClusterIpRange,
+		ClusterDNS:                "",
 	}
 
 	if err := tmp.Init(); err != nil {
@@ -148,6 +152,13 @@ func (s *LiteKubeControl) Init() error {
 			s.Token = token
 		}
 	}
+
+	_, serviceClusterIpRange, err := net.ParseCIDR(s.ServiceClusterIpRange)
+	if err != nil {
+		return nil
+	}
+
+	s.ClusterDNS = global.GetDefaultClusterDNSIP(serviceClusterIpRange).String()
 
 	if data, err := certificate.LoadCertificateAsBase64(s.ValidateApiserverServerCA); err != nil {
 		return err
@@ -239,6 +250,15 @@ func (s *LiteKubeControl) TokenInterceptor() func(ctx context.Context, req inter
 	}
 }
 
+func (s *LiteKubeControl) BootstrapValidateKubeApiserverClient(ctx context.Context, in *control.NoneValue) (*control.BootstrapValidateKubeApiserverClientResponse, error) {
+	klog.Info("bootstrap ca info to validata kube-apiserver client")
+	if s.ValidateApiserverClientCABase64 != "" {
+		return &control.BootstrapValidateKubeApiserverClientResponse{StatusCode: int32(http.StatusOK), Message: "success", Certificate: s.ValidateApiserverClientCABase64}, nil
+	} else {
+		return &control.BootstrapValidateKubeApiserverClientResponse{StatusCode: int32(http.StatusInternalServerError), Message: "fail to get info"}, nil
+	}
+}
+
 func (s *LiteKubeControl) CheckHealth(ctx context.Context, in *control.NoneValue) (*control.HealthDescription, error) {
 	return &control.HealthDescription{Message: "ok"}, nil
 }
@@ -248,6 +268,7 @@ func (s *LiteKubeControl) NodeToken(ctx context.Context, in *control.NoneValue) 
 }
 
 func (s *LiteKubeControl) BootStrapNetwork(ctx context.Context, in *control.BootStrapNetworkRequest) (*control.BootStrapNetworkResponse, error) {
+	klog.Info("bootstrap network info")
 	if token, err := s.NetworkClient.CreateBootStrapToken(in.GetLife()); err != nil {
 		return &control.BootStrapNetworkResponse{StatusCode: int32(http.StatusInternalServerError), Message: "fail to create network bootstrap-token"}, nil
 	} else {
@@ -264,6 +285,7 @@ func (s *LiteKubeControl) BootStrapNetwork(ctx context.Context, in *control.Boot
 }
 
 func (s *LiteKubeControl) CreateToken(ctx context.Context, in *control.CreateTokenRequest) (*control.TokenValue, error) {
+	klog.Info("create litekube service token")
 	md, exist := metadata.FromIncomingContext(ctx)
 	createBy := "unknown"
 	if exist && md["token"] != nil {
@@ -305,6 +327,7 @@ func (s *LiteKubeControl) QueryTokens(ctx context.Context, in *control.NoneValue
 }
 
 func (s *LiteKubeControl) DeleteToken(ctx context.Context, in *control.TokenString) (*control.NoneResponse, error) {
+	klog.Info("delete litekube service token")
 	md, exist := metadata.FromIncomingContext(ctx)
 	if !exist {
 		return &control.NoneResponse{StatusCode: int32(http.StatusCreated), Message: "need token"}, nil
@@ -328,6 +351,7 @@ func (s *LiteKubeControl) DeleteToken(ctx context.Context, in *control.TokenStri
 }
 
 func (s *LiteKubeControl) BootStrapKubelet(ctx context.Context, request *control.BootStrapKubeletRequest) (*control.BootStrapKubeletResponse, error) {
+	klog.Info("bootstrap for kubelet")
 	var StatusCode int = http.StatusOK
 	var returnErr error = nil
 	buf := &bytes.Buffer{}
@@ -357,13 +381,21 @@ func (s *LiteKubeControl) BootStrapKubelet(ctx context.Context, request *control
 
 	kubelet_bootstrap_kubeconfig_template.Execute(buf, &data)
 
-	return &control.BootStrapKubeletResponse{StatusCode: int32(StatusCode), Message: "success", Kubeconfig: base64.StdEncoding.EncodeToString(buf.Bytes()), ValidataCaCert: s.ValidateApiserverClientCABase64}, nil
+	if s.ClusterDNS == "" || s.ValidateApiserverClientCABase64 == "" {
+		klog.Errorf("loss args cluster-dns or validata apiserver ca for kubelet")
+		returnErr = fmt.Errorf("loss args to finish bootstrap for kubelet-litekube")
+		StatusCode = http.StatusInternalServerError
+		goto ERROR
+	}
+
+	return &control.BootStrapKubeletResponse{StatusCode: int32(StatusCode), Message: "success", Kubeconfig: base64.StdEncoding.EncodeToString(buf.Bytes()), ValidataCaCert: s.ValidateApiserverClientCABase64, ClusterDNS: s.ClusterDNS}, nil
 
 ERROR:
 	return &control.BootStrapKubeletResponse{StatusCode: int32(StatusCode), Message: returnErr.Error()}, nil
 }
 
 func (s *LiteKubeControl) BootStrapKubeProxy(ctx context.Context, request *control.BootStrapKubeProxyRequest) (*control.BootStrapKubeProxyResponse, error) {
+	klog.Info("bootstrap for kube-proxy")
 	var StatusCode int = http.StatusOK
 	var returnErr error = nil
 	buf := &bytes.Buffer{}

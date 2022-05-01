@@ -7,7 +7,7 @@ import (
 )
 
 func QueryPublicIp() string {
-	resp, err := http.Get("http://ip.dhcp.cn/?ip") // 获取外网 IP
+	resp, err := http.Get("http://ip.dhcp.cn/?ip") // public ip
 	if err != nil {
 		logger.Errorf("fail to get public ip err:%+v", err)
 		return ""

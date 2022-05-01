@@ -315,7 +315,7 @@ func (server *NetworkServer) initSyncBindIpWithDb() error {
 	}
 	// ignore exsit err, guarantee for reserverd
 	nm.Insert(sqlite.NetworkMgr{
-		Token:  "reserverd",
+		Token:  contant.ReservedToken,
 		State:  -1,
 		BindIp: "",
 	})

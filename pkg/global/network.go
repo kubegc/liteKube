@@ -68,6 +68,14 @@ func GetDefaultServiceIp(clusterIpRange *net.IPNet) net.IP {
 	}
 }
 
+func GetDefaultClusterDNSIP(clusterIpRange *net.IPNet) net.IP {
+	if ip, err := GetIndexedIP(clusterIpRange, 2); err != nil {
+		return nil
+	} else {
+		return ip
+	}
+}
+
 func GetIndexedIP(subnet *net.IPNet, index int) (net.IP, error) {
 	ip := addIPOffset(bigForIP(subnet.IP), index)
 	if !subnet.Contains(ip) {
