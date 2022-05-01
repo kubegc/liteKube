@@ -62,7 +62,7 @@ func (s *NetWorkControllerServer) Run() error {
 	klog.Info("run network manager")
 
 	server := network.NewServer(config.ServerConfig{
-		Ip:   s.RegisterBindAddress,
+		Ip:   s.JoinBindAddress,
 		Port: int(s.JoinPort),
 		// todo config BootstrapPort
 		BootstrapPort: 6439,
