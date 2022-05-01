@@ -8,6 +8,7 @@ import (
 
 	"github.com/Litekube/network-controller/grpc/grpc_client"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
+	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
 )
 
@@ -79,6 +80,11 @@ func (c *NetWorkRegisterClient) QueryIp() (string, error) {
 func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error) {
 	if c == nil {
 		return "", fmt.Errorf("nil for NetWorkRegisterClient")
+	}
+
+	// wait to be delete and implement functionality in network-controller server
+	if nodeToken == global.ReservedNodeToken {
+		return "10.1.1.1", nil
 	}
 
 	if c.NCClient.C == nil {

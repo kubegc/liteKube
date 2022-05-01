@@ -82,18 +82,19 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 			klog.Errorf("bad args for network manager server")
 			return err
 		}
+	} else {
+		leaderRuntime.NetworkJoinClient = runtime.NewNetWorkJoinClient(leaderRuntime.control.ctx,
+			leaderRuntime.RuntimeOption.NetmamagerOptions,
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"),
+		)
+		if err := leaderRuntime.NetworkJoinClient.Run(); err != nil {
+			klog.Errorf("bad args for network manager client")
+			return err
+		}
 	}
 
-	leaderRuntime.NetworkJoinClient = runtime.NewNetWorkJoinClient(leaderRuntime.control.ctx,
-		leaderRuntime.RuntimeOption.NetmamagerOptions,
-		filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"),
-	)
-	if err := leaderRuntime.NetworkJoinClient.Run(); err != nil {
-		klog.Errorf("bad args for network manager client")
-		return err
-	}
-
-	time.Sleep(10 * time.Second) // only for debug, waiting for client to start
+	// wait to be enhance by network-controller
+	time.Sleep(10 * time.Second) // only for debug, waiting for network-controller to start
 
 	leaderRuntime.NetworkRegisterClient = runtime.NewNetWorkRegisterClient(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.NetmamagerOptions)
 	return nil

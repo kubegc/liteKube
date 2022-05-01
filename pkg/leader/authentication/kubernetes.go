@@ -346,7 +346,7 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}
 
 	// kube-controller-manager
-	newCert, err = apiseverSignFactory("system:kube-controller-manager", nil, na.ControllerClientCert, na.ControllerClientKey)
+	newCert, err = apiseverSignFactory("system:kube-controller-manager", []string{"system:kube-controller-manager"}, na.ControllerClientCert, na.ControllerClientKey)
 	if err != nil {
 		return err
 	}
@@ -357,7 +357,7 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}
 
 	// kube-scheduler
-	newCert, err = apiseverSignFactory("system:kube-scheduler", nil, na.SchedulerClientCert, na.SchedulerClientKey)
+	newCert, err = apiseverSignFactory("system:kube-scheduler", []string{"system:kube-scheduler"}, na.SchedulerClientCert, na.SchedulerClientKey)
 	if err != nil {
 		return err
 	}
@@ -368,12 +368,12 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}
 
 	// kube-proxy
-	if _, err = apiseverSignFactory("system:kube-proxy", nil, na.KubeProxyClientCert, na.KubeProxyClientKey); err != nil {
+	if _, err = apiseverSignFactory("system:kube-proxy", []string{"system:node-proxier"}, na.KubeProxyClientCert, na.KubeProxyClientKey); err != nil {
 		return err
 	}
 
 	// litekube
-	if _, err = apiseverSignFactory("system:litekube-controller", nil, na.LitekubeControllerClientCert, na.LitekubeControllerClientKey); err != nil {
+	if _, err = apiseverSignFactory("system:litekube-controller", []string{"system:masters"}, na.LitekubeControllerClientCert, na.LitekubeControllerClientKey); err != nil {
 		return err
 	}
 
@@ -384,7 +384,7 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}, na.ClusterValidateServerCA, na.ClusterValidateServerCAKey)
 
 	// kube-apiserver server
-	if _, err = clusterSignFactory("system:kube-apiserver", nil, na.ApiserverServerCert, na.ApiserverServerKey); err != nil {
+	if _, err = clusterSignFactory("system:kube-apiserver", []string{"system:k8s"}, na.ApiserverServerCert, na.ApiserverServerKey); err != nil {
 		return err
 	}
 	return nil

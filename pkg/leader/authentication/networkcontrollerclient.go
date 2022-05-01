@@ -171,11 +171,6 @@ func (na *NetworkControllerClientAuthentication) TLSBootStrap(address string, po
 		return err
 	}
 
-	fmt.Printf("%+v\n", na)
-	fmt.Printf("%+v\n", address)
-	fmt.Printf("%+v\n", port)
-	fmt.Printf("%+v\n", bootstrapToken)
-
 	// generate certificate and node-token here.
 	// need to value address and port here like:
 	// *RegisterAddress="127.0.0.1", *RegisterPort=6440
