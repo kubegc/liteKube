@@ -45,10 +45,10 @@ func (s *Scheduler) Run() error {
 	command := app.NewSchedulerCommand()
 	command.SetArgs(argsValue)
 
-	fmt.Println("====>scheduler:", argsValue)
+	klog.Infof("==>kube-scheduler: %s\n", argsValue)
 
 	go func() {
-		err := command.Execute()
+		err := command.ExecuteContext(s.ctx)
 		if err != nil {
 			fmt.Printf("kube-scheduler exited: %v", err)
 			klog.Infof("kube-scheduler: %v", err)

@@ -6,7 +6,7 @@ import (
 
 // Empirically assigned parameters are not recommended
 type KubeletProfessionalOptions struct {
-	NodeIp                   string `yaml:"node-ip"`
+	//NodeIp                   string `yaml:"node-ip"`
 	Kubeconfig               string `yaml:"kubeconfig"`
 	Config                   string `yaml:"config"`
 	CgroupDriver             string `yaml:"cgroup-driver"`
@@ -22,14 +22,14 @@ func NewKubeletProfessionalOptions() *KubeletProfessionalOptions {
 }
 
 var DefaultKPO KubeletProfessionalOptions = KubeletProfessionalOptions{
-	NodeIp:                   "127.0.0.1",
+	//NodeIp:                   "127.0.0.1",
 	CgroupDriver:             "systemd",
 	ContainerRuntime:         "remote",
 	ContainerRuntimeEndpoint: "unix:///run/containerd/containerd.sock",
 }
 
 func (opt *KubeletProfessionalOptions) AddTips(section *help.Section) {
-	section.AddTip("node-ip", "string", "IP address (or comma-separated dual-stack IP addresses) of the node.", DefaultKPO.NodeIp)
+	//section.AddTip("node-ip", "string", "IP address (or comma-separated dual-stack IP addresses) of the node.", DefaultKPO.NodeIp)
 	section.AddTip("kubeconfig", "string", "Path to a kubeconfig file, specifying how to connect to the API server.", DefaultKPO.Kubeconfig)
 	section.AddTip("config", "string", "The Kubelet will load its initial configuration from this file. ", DefaultKPO.Config)
 	section.AddTip("cgroup-driver", "string", "Driver that the kubelet uses to manipulate cgroups on the host. ", DefaultKPO.CgroupDriver)

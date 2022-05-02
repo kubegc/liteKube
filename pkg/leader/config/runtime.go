@@ -133,7 +133,7 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 	)
 
 	if err := leaderRuntime.controlServer.Run(); err != nil {
-		klog.Errorf("fail to start litekube control server. Error: %s", err.Error())
+		klog.Fatal("fail to start litekube control server. Error: %s", err.Error())
 		return err
 	}
 

@@ -255,15 +255,15 @@ func (workerRuntime *WorkerRuntime) LoadKubelet() error {
 
 	// load * ProfessionalOptions
 	// node-ip
-	if ip := net.ParseIP(raw.ProfessionalOptions.NodeIp); ip == nil {
-		if localIp, err := workerRuntime.NetworkRegisterClient.QueryIp(); err != nil {
-			return err
-		} else {
-			new.ProfessionalOptions.NodeIp = localIp
-		}
-	} else {
-		new.ProfessionalOptions.NodeIp = raw.ProfessionalOptions.NodeIp
-	}
+	// if ip := net.ParseIP(raw.ProfessionalOptions.NodeIp); ip == nil {
+	// 	if localIp, err := workerRuntime.NetworkRegisterClient.QueryIp(); err != nil {
+	// 		return err
+	// 	} else {
+	// 		new.ProfessionalOptions.NodeIp = localIp
+	// 	}
+	// } else {
+	// 	new.ProfessionalOptions.NodeIp = raw.ProfessionalOptions.NodeIp
+	// }
 
 	// kubeconfig
 	if raw.ProfessionalOptions.Kubeconfig != "" {

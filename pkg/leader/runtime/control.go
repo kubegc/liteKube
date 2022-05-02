@@ -54,23 +54,22 @@ users:
 	kubeproxy_bootstrap_kubeconfig_template = template.Must(template.New("kubeproxy_kubeconfig").Parse(`apiVersion: v1
 clusters:
 - cluster:
-	server: {{.URL}}
-	certificate-authority: {{.CACert}}
-	name: litekube
+    server: {{.URL}}
+    certificate-authority-data: {{.CACert}}
+  name: litekube
 contexts:
 - context:
-	cluster: litekube
-	namespace: default
-	user: kubeproxy
-	name: Default
-current-context: Default
+    cluster: litekube
+    user: kube-proxy
+  name: default
+current-context: default
 kind: Config
 preferences: {}
 users:
-- name: kubeproxy
-	user:
-	client-certificate: {{.ClientCert}}
-	client-key: {{.ClientKey}}
+- name: kube-proxy
+  user:
+    client-certificate-data: {{.ClientCert}}
+    client-key-data: {{.ClientKey}}
 `))
 )
 

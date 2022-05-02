@@ -8,6 +8,7 @@ import (
 	"github.com/litekube/LiteKube/pkg/leader/runtime"
 	leaderruntime "github.com/litekube/LiteKube/pkg/leader/runtime"
 	options "github.com/litekube/LiteKube/pkg/options/worker"
+	workerruntime "github.com/litekube/LiteKube/pkg/worker/runtime"
 	"k8s.io/klog/v2"
 )
 
@@ -18,6 +19,7 @@ type WorkerRuntime struct {
 	RuntimeAuthentication *RuntimeAuthentications
 	NetworkJoinClient     *leaderruntime.NetWorkJoinClient
 	NetworkRegisterClient *leaderruntime.NetWorkRegisterClient
+	KubernatesClient      *workerruntime.KubernatesClient
 }
 
 // control progress end
@@ -68,6 +70,17 @@ func (workerRuntime *WorkerRuntime) RunForward() error {
 func (workerRuntime *WorkerRuntime) Run() error {
 	defer workerRuntime.Done()
 	workerRuntime.Add()
+
+	workerRuntime.KubernatesClient = workerruntime.NewKubernatesClient(workerRuntime.control.ctx,
+		workerRuntime.RuntimeOption.KubeletOptions,
+		workerRuntime.RuntimeOption.KubeProxyOptions,
+		filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kubernetes/"),
+	)
+
+	if err := workerRuntime.KubernatesClient.Run(); err != nil {
+		klog.Fatal("fail to start kubernetes node. Error: %s", err.Error())
+		return err
+	}
 
 	return nil
 }

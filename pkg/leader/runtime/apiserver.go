@@ -86,9 +86,9 @@ func (s *Apiserver) Run() error {
 			}
 		}
 
-		fmt.Println("====>kube-apiserver:", argsValue)
+		klog.Infof("==>kube-apiserver: %s\n", argsValue)
 
-		err := command.Execute()
+		err := command.ExecuteContext(s.ctx)
 		if err != nil {
 			klog.Fatalf("kube-apiserver exited: %v", err)
 		}
