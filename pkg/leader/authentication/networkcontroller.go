@@ -3,6 +3,7 @@ package authentication
 import (
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
@@ -13,6 +14,7 @@ import (
 
 type NetworkControllerAuthentication struct {
 	ManagerCertDir         string
+	NetworkControllerDir   string
 	RegisterManagerCertDir string
 	RegisterBindAddress    string
 	RegisterCACert         string
@@ -32,14 +34,23 @@ type NetworkControllerAuthentication struct {
 	JoinClientkey      string
 }
 
-func NewNetworkControllerAuthentication(rootCertPath string, registerBindAddress, joinBindAddress string) *NetworkControllerAuthentication {
+func NewNetworkControllerAuthentication(workDir string, rootCertPath string, registerBindAddress, joinBindAddress string) *NetworkControllerAuthentication {
 	if rootCertPath == "" {
 		rootCertPath = filepath.Join(globaloptions.DefaultGO.WorkDir, "tls/")
 	}
 
-	managerCertDir := filepath.Join(rootCertPath, "network-manager")
+	if workDir == "" {
+		workDir = globaloptions.DefaultGO.WorkDir
+	}
+
+	networkControllerDir := filepath.Join(workDir, "network-controller")
+	managerCertDir := filepath.Join(rootCertPath, "network-controller")
 	registerManagerCertDir := filepath.Join(managerCertDir, "register")
 	joinManagerCertDir := filepath.Join(managerCertDir, "join")
+
+	if err := os.MkdirAll(networkControllerDir, os.FileMode(0644)); err != nil {
+		panic(err)
+	}
 
 	// check bind-address
 	if ip := net.ParseIP(registerBindAddress); ip == nil || registerBindAddress == "127.0.0.1" {
@@ -51,6 +62,7 @@ func NewNetworkControllerAuthentication(rootCertPath string, registerBindAddress
 	}
 
 	return &NetworkControllerAuthentication{
+		NetworkControllerDir:   networkControllerDir,
 		ManagerCertDir:         managerCertDir,
 		RegisterManagerCertDir: registerManagerCertDir,
 		RegisterBindAddress:    registerBindAddress,
@@ -121,6 +133,10 @@ func (na *NetworkControllerAuthentication) GenerateOrSkip() error {
 }
 
 func (na *NetworkControllerAuthentication) QueryRemoteIps() []net.IP {
+	networkControllerServerIp := global.GetDefaultServiceIp(global.NetworkControllerCIDR)
+	if networkControllerServerIp != nil {
+		return []net.IP{networkControllerServerIp}
+	}
 	return []net.IP{}
 }
 

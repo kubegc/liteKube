@@ -13,6 +13,8 @@ import (
 )
 
 func (s *GrpcServer) StartBootstrapServerTcp() error {
+	defer logger.Debug("StartBootstrapServerTcp done")
+
 	tcpAddr := fmt.Sprintf(":%d", s.bootstrapPort)
 	lis, err := net.Listen("tcp", tcpAddr)
 	if err != nil {
@@ -59,6 +61,17 @@ func (s *GrpcServer) StartBootstrapServerTcp() error {
 	// register service
 	pb_gen.RegisterLiteKubeNCBootstrapServiceServer(server, s)
 	logger.Infof("grpc server bootstrap ready to serve at %+v", tcpAddr)
+
+	go func() {
+		for {
+			select {
+			case <-s.stopCh:
+				server.GracefulStop()
+				return
+			}
+		}
+	}()
+
 	if err := server.Serve(lis); err != nil {
 		logger.Errorf("grpc server failed to serve: %v", err)
 		return err

@@ -37,6 +37,7 @@ const (
 )
 
 type connection struct {
+	stopCh    chan struct{}
 	id        int
 	ws        *websocket.Conn
 	server    *NetworkServer
@@ -78,7 +79,7 @@ func NewConnection(ws *websocket.Conn, server *NetworkServer, token string) (*co
 	// auto inc
 	maxId++
 	data := make(chan *Data)
-	c := &connection{maxId, ws, server, data, contant.STATE_INIT, nil, token, bindIp}
+	c := &connection{server.stopCh, maxId, ws, server, data, contant.STATE_INIT, nil, token, bindIp}
 
 	// fix server gen token, no need insert now
 	if len(bindIp) == 0 {
@@ -98,9 +99,13 @@ func NewConnection(ws *websocket.Conn, server *NetworkServer, token string) (*co
 }
 
 func (c *connection) readPump() {
+	flag := false
 	defer func() {
-		c.server.unregister <- c
-		c.ws.Close()
+		if !flag {
+			c.server.unregister <- c
+			c.ws.Close()
+		}
+		logger.Debug("readPump done")
 	}()
 
 	// If a message exceeds the limit, the connection sends a close message to the peer
@@ -117,6 +122,14 @@ func (c *connection) readPump() {
 		}
 		return nil
 	})
+
+	go func() {
+		select {
+		case <-c.stopCh:
+			flag = true
+			return
+		}
+	}()
 
 	// continue to read
 	for {
@@ -140,12 +153,15 @@ func (c *connection) writePump() {
 
 	defer func() {
 		c.ws.Close()
+		logger.Debug("writePump done")
 	}()
 
 	// continue to write
 	for {
 		if c != nil {
 			select {
+			case <-c.stopCh:
+				return
 			case message, ok := <-c.data:
 				// Thread can be still active after close connection
 				if message != nil {

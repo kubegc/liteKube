@@ -12,7 +12,8 @@ import (
 var LocalhostIP = net.ParseIP("127.0.0.1")
 var LocalHostDNSName = "localhost"
 var LocalIPs = QueryIps()
-var testUrl = "www.baidu.com"
+var testUrl = "www.baidu.com:80"
+var _, NetworkControllerCIDR, _ = net.ParseCIDR("10.1.1.0/24")
 
 const ReservedNodeToken = "reserverd"
 
@@ -97,7 +98,7 @@ func bigForIP(ip net.IP) *big.Int {
 }
 
 func ExternIp() string {
-	conn, err := net.Dial("udp", "www.baidu.com:80")
+	conn, err := net.Dial("udp", testUrl)
 	if err != nil {
 		return "127.0.0.1"
 	}

@@ -15,14 +15,14 @@ var db *sql.DB
 var logger = utils.GetLogger()
 
 func GetDb() *sql.DB {
-	if db == nil {
-		InitSqlite()
-	}
 	return db
 }
 
-func InitSqlite() (err error) {
-	db, err = sql.Open(dbDriverName, dbName)
+func InitSqlite(dbPath string) (err error) {
+	if dbPath == "" {
+		dbPath = dbName
+	}
+	db, err = sql.Open(dbDriverName, dbPath)
 	if err != nil {
 		logger.Infof("fail to open sqlite err: %+v", err)
 		return

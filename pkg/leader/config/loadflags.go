@@ -247,7 +247,7 @@ func (leaderRuntime *LeaderRuntime) LoadNetManager() error {
 		// generate certificate for network manager
 		klog.Info("certificates for built-in network manager server will be used")
 		new.Token = "local"
-		leaderRuntime.RuntimeAuthentication.NetWorkController = authentication.NewNetworkControllerAuthentication(leaderRuntime.RuntimeAuthentication.CertDir, new.RegisterOptions.Address, new.JoinOptions.Address)
+		leaderRuntime.RuntimeAuthentication.NetWorkController = authentication.NewNetworkControllerAuthentication(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, leaderRuntime.RuntimeAuthentication.CertDir, new.RegisterOptions.Address, new.JoinOptions.Address)
 		if err := leaderRuntime.RuntimeAuthentication.NetWorkController.GenerateOrSkip(); err != nil {
 			return err
 		}

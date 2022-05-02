@@ -145,6 +145,8 @@ func (workerRuntime *WorkerRuntime) LoadNetManager() error {
 		new.Token = netmanager.DefaultNMO.Token
 	}
 
+	fmt.Println("==>", new.Token)
+
 	// check bind-address
 	if ip := net.ParseIP(raw.RegisterOptions.Address); ip == nil {
 		new.RegisterOptions.Address = netmanager.DefaultRONO.Address

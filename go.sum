@@ -74,8 +74,8 @@ github.com/GoogleCloudPlatform/k8s-cloud-provider v1.16.1-0.20210702024009-ea616
 github.com/JeffAshton/win_pdh v0.0.0-20161109143554-76bb4ee9f0ab/go.mod h1:3VYc5hodBMJ5+l/7J4xAyMeuM2PNuepvHlGs8yilUCA=
 github.com/Litekube/kine v0.9.0-lk1 h1:eSW/8wjiAWh9AfPdgA9FQ5MoGDDER/1pkWJdbvd3TN8=
 github.com/Litekube/kine v0.9.0-lk1/go.mod h1:gaezUQ9c8iw8vxDV/DI8vc93h2rCpTvY37kMdYPMsyc=
-github.com/Litekube/network-controller v0.0.0-20220501102615-c7b0aa635689 h1:B0b4l6fhHM900DUxw8c+4D+WEJdov9seim/1SVlOH1Y=
-github.com/Litekube/network-controller v0.0.0-20220501102615-c7b0aa635689/go.mod h1:C37fFw5PrO3K2UAGwbxjzTzW5ZJJpvW5KD+64mUqNFo=
+github.com/Litekube/network-controller v0.0.0-20220501105021-4c9f2593b97d h1:7vHtzndtZ+WoByafa6Aq9l7zn+cK+5bFHEy4KYpUSTs=
+github.com/Litekube/network-controller v0.0.0-20220501105021-4c9f2593b97d/go.mod h1:C37fFw5PrO3K2UAGwbxjzTzW5ZJJpvW5KD+64mUqNFo=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd/go.mod h1:64YHyfSL2R96J44Nlwm39UHepQbyR5q10x7iYa1ks2E=
 github.com/Microsoft/go-winio v0.4.15/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=
 github.com/Microsoft/go-winio v0.4.17/go.mod h1:JPGBdM1cNvN/6ISo+n8V5iA4v8pBzdOpzfwIujj1a84=

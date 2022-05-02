@@ -38,6 +38,16 @@ type NetworkIpPool struct {
 
 var poolFull = errors.New("IP Pool Full")
 
+func GetNetworkServerIp(ip net.IP) string {
+	serverIp := &net.IPNet{
+		make([]byte, 4),
+		make([]byte, 4),
+	}
+	copy([]byte(serverIp.IP), []byte(ip))
+	serverIp.IP[3] = byte(1)
+	return serverIp.IP.String()
+}
+
 // bind existed ip or get an empty ip
 func (p *NetworkIpPool) next(bindIp string) (*net.IPNet, error) {
 

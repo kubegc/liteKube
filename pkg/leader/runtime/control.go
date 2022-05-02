@@ -236,15 +236,19 @@ func (s *LiteKubeControl) TokenInterceptor() func(ctx context.Context, req inter
 			}
 
 			if !tokenDesc.IsValid {
+				klog.Infof("litekube control=> get request by token=%s... but is not valid", tokens[0][:8])
 				return nil, status.Errorf(codes.Unauthenticated, "Your authentication information has expired")
 			}
 
 			if !tokenDesc.IsAdmin && info.FullMethod != "/control.LeaderControl/BootStrapKubeProxy" && info.FullMethod != "/control.LeaderControl/BootStrapKubelet" && info.FullMethod != "/control.LeaderControl/CheckHealth" {
+				klog.Infof("litekube control=> get request by token=%s... but permission denied ", tokens[0][:8])
 				return nil, status.Errorf(codes.Unauthenticated, "Insufficient permission, please contact the administrator")
 			}
 
+			klog.Infof("litekube control=> get request by token=%s..., permission ok", tokens[0][:8])
 			return handler(ctx, req)
 		} else {
+			klog.Infof("litekube control=> get request with loss token")
 			return nil, status.Errorf(codes.Unauthenticated, "need authentication info")
 		}
 	}

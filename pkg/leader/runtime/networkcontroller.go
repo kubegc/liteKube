@@ -77,7 +77,7 @@ func (s *NetWorkControllerServer) Run() error {
 		NetworkServerCertFile: s.JoinServerCert,
 		NetworkServerKeyFile:  s.JoinServerkey,
 
-		GrpcCAFile:         s.RegisterServerCert,
+		GrpcCAFile:         s.RegisterCACert,
 		GrpcCAKeyFile:      s.RegisterCAKey,
 		GrpcServerCertFile: s.RegisterServerCert,
 		GrpcServerKeyFile:  s.RegisterServerkey,

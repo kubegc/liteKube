@@ -19,6 +19,7 @@
 package network
 
 import (
+	"context"
 	"fmt"
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/contant"
@@ -41,6 +42,10 @@ import (
 )
 
 type NetworkServer struct {
+	// context
+	ctx    context.Context
+	cancel context.CancelFunc
+	stopCh chan struct{}
 	// config
 	cfg config.ServerConfig
 	// interface
@@ -77,7 +82,11 @@ func NewServer(cfg config.ServerConfig) *NetworkServer {
 		MTU = cfg.MTU
 	}
 
+	ctx, cancel := context.WithCancel(context.TODO())
 	networkServer = &NetworkServer{
+		ctx:            ctx,
+		cancel:         cancel,
+		stopCh:         make(chan struct{}),
 		cfg:            cfg,
 		iface:          nil,
 		ipnet:          nil,
@@ -102,10 +111,23 @@ func NewServer(cfg config.ServerConfig) *NetworkServer {
 }
 
 func (server *NetworkServer) Run() error {
+	defer logger.Debug("network server done")
+
+	// init db
+	sqlite.InitSqlite(server.cfg.DbPath)
+	// networkaddr = 10.1.1.1/24
+	ip, subnet, err := net.ParseCIDR(server.cfg.NetworkAddr)
+	if err != nil {
+		return err
+	}
+
+	serverIp := GetNetworkServerIp(subnet.IP)
+	go networkServer.initSyncBindIpWithDb(serverIp)
+	go networkServer.handleGrpcUnRegister()
 
 	unRegisterCh := make(chan string, 8)
 	networkServer.unRegisterCh = unRegisterCh
-	gServer := grpc_server.NewGrpcServer(server.cfg, unRegisterCh)
+	gServer := grpc_server.NewGrpcServer(server.cfg, server.ctx, server.stopCh, unRegisterCh, serverIp)
 	go gServer.StartGrpcServerTcp()
 	go gServer.StartBootstrapServerTcp()
 
@@ -117,8 +139,6 @@ func (server *NetworkServer) Run() error {
 	// sync cache with db
 	networkServer.wg = sync.WaitGroup{}
 	networkServer.wg.Add(1)
-	go networkServer.initSyncBindIpWithDb()
-	go networkServer.handleGrpcUnRegister()
 
 	iface, err := newTun("")
 	if err != nil {
@@ -126,8 +146,6 @@ func (server *NetworkServer) Run() error {
 	}
 	networkServer.iface = iface
 
-	// networkaddr = 10.1.1.1/24
-	ip, subnet, err := net.ParseCIDR(server.cfg.NetworkAddr)
 	err = setTunIP(iface, ip, subnet)
 	if err != nil {
 		return err
@@ -138,6 +156,7 @@ func (server *NetworkServer) Run() error {
 	go networkServer.cleanUp()
 	go networkServer.run()
 
+	// 2 goroutine
 	networkServer.handleInterface()
 
 	// http handle for client to connect
@@ -149,8 +168,27 @@ func (server *NetworkServer) Run() error {
 	networkServer.wg.Wait()
 	logger.Infof("server ready to ListenAndServe at %+v", addr)
 	//err = http.ListenAndServe(addr, router)
-	err = http.ListenAndServeTLS(addr, networkServer.networkTLSConfig.ServerCertFile, networkServer.networkTLSConfig.ServerKeyFile, router)
-	if err != nil {
+
+	httpServer := http.Server{
+		Addr:      addr,
+		Handler:   router,
+		TLSConfig: nil,
+	}
+
+	go func() {
+		for {
+			select {
+			case <-server.stopCh:
+				httpServer.Shutdown(server.ctx)
+				return
+			}
+		}
+	}()
+
+	err = httpServer.ListenAndServeTLS(networkServer.networkTLSConfig.ServerCertFile, networkServer.networkTLSConfig.ServerKeyFile)
+
+	//err = http.ListenAndServeTLS(addr, networkServer.networkTLSConfig.ServerCertFile, networkServer.networkTLSConfig.ServerKeyFile, router)
+	if err != nil && err != http.ErrServerClosed {
 		logger.Panicf("ListenAndServe: %+v", err.Error())
 	}
 	return nil
@@ -178,8 +216,11 @@ func (server *NetworkServer) serveWs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *NetworkServer) run() {
+	defer logger.Debug("run done")
 	for {
 		select {
+		case <-server.stopCh:
+			return
 		case c := <-server.register:
 			// add to clients
 			logger.Infof("Connection registered: %+v", c.ipAddress.IP.String())
@@ -187,11 +228,16 @@ func (server *NetworkServer) run() {
 			nm := sqlite.NetworkMgr{}
 			nm.UpdateStateByToken(contant.STATE_CONNECTED, c.token)
 			break
-
 		case c := <-server.unregister:
 			// remove from clients
 			// close connection data channel
 			// release client ip
+			select {
+			case <-server.stopCh:
+				return
+			default:
+			}
+
 			clientIP := c.ipAddress.IP.String()
 			_, ok := server.clients[clientIP]
 			if ok {
@@ -211,6 +257,15 @@ func (server *NetworkServer) run() {
 }
 
 func (server *NetworkServer) handleInterface() {
+
+	defer logger.Debug("handleInterface done")
+	go func() {
+		select {
+		case <-server.stopCh:
+			return
+		}
+	}()
+
 	// network packet to interface
 	go func() {
 		for {
@@ -221,7 +276,6 @@ func (server *NetworkServer) handleInterface() {
 				logger.Error(err.Error())
 				return
 			}
-
 		}
 	}()
 
@@ -272,6 +326,8 @@ func (server *NetworkServer) isConnectionBetweenClients(header *ipv4.Header) boo
 // server exit gracefully
 func (server *NetworkServer) cleanUp() {
 
+	defer logger.Debug("server cleanup done")
+
 	c := make(chan os.Signal, 1)
 	// watch ctrl+c or kill pid
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
@@ -291,14 +347,17 @@ func (server *NetworkServer) cleanUp() {
 		client.ws.Close()
 		delete(server.clients, key)
 	}
-	close(server.unregister)
+	//close(server.unregister)
 
+	//server.cancel()
+	close(server.stopCh)
 	// code zero indicates success
 	os.Exit(0)
 }
 
-func (server *NetworkServer) initSyncBindIpWithDb() error {
+func (server *NetworkServer) initSyncBindIpWithDb(serverIp string) error {
 	defer server.wg.Done()
+
 	nm := sqlite.NetworkMgr{}
 	ipList, err := nm.QueryAll()
 	if err != nil {
@@ -313,19 +372,28 @@ func (server *NetworkServer) initSyncBindIpWithDb() error {
 			networkServer.ippool.pool[tag] = 1
 		}
 	}
+
+	// pre-check: set init state = -1
+	nm.UpdateAllState()
+
 	// ignore exsit err, guarantee for reserverd
+	logger.Debugf("network server ip:%+v", serverIp)
 	nm.Insert(sqlite.NetworkMgr{
-		Token:  contant.ReservedToken,
-		State:  -1,
-		BindIp: "",
+		Token:  "reserverd",
+		State:  3,
+		BindIp: serverIp,
 	})
+	logger.Debug("initSyncBindIpWithDb done")
 	return nil
 }
 
 func (server *NetworkServer) handleGrpcUnRegister() error {
 	logger.Infof("start handle unregister ip channel")
+	defer logger.Debug("handleGrpcUnRegister done")
 	for {
 		select {
+		case <-server.stopCh:
+			return nil
 		case ip := <-server.unRegisterCh:
 			logger.Infof("receive ip: %+v", ip)
 			// close connection
