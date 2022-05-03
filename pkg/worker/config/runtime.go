@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/litekube/LiteKube/pkg/leader/runtime"
 	leaderruntime "github.com/litekube/LiteKube/pkg/leader/runtime"
 	options "github.com/litekube/LiteKube/pkg/options/worker"
 	workerruntime "github.com/litekube/LiteKube/pkg/worker/runtime"
@@ -51,7 +50,7 @@ func (workerRuntime *WorkerRuntime) RunForward() error {
 	workerRuntime.Add()
 
 	if workerRuntime.RuntimeOption.NetmamagerOptions.Token != "local" {
-		workerRuntime.NetworkJoinClient = runtime.NewNetWorkJoinClient(workerRuntime.control.ctx,
+		workerRuntime.NetworkJoinClient = leaderruntime.NewNetWorkJoinClient(workerRuntime.control.ctx,
 			workerRuntime.RuntimeOption.NetmamagerOptions,
 			filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"),
 		)
@@ -62,7 +61,7 @@ func (workerRuntime *WorkerRuntime) RunForward() error {
 		}
 	}
 
-	workerRuntime.NetworkRegisterClient = runtime.NewNetWorkRegisterClient(workerRuntime.control.ctx, workerRuntime.RuntimeOption.NetmamagerOptions)
+	workerRuntime.NetworkRegisterClient = leaderruntime.NewNetWorkRegisterClient(workerRuntime.control.ctx, workerRuntime.RuntimeOption.NetmamagerOptions)
 	return nil
 }
 
