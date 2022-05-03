@@ -145,8 +145,6 @@ func (workerRuntime *WorkerRuntime) LoadNetManager() error {
 		new.Token = netmanager.DefaultNMO.Token
 	}
 
-	fmt.Println("==>", new.Token)
-
 	// check bind-address
 	if ip := net.ParseIP(raw.RegisterOptions.Address); ip == nil {
 		new.RegisterOptions.Address = netmanager.DefaultRONO.Address
@@ -225,6 +223,12 @@ func (workerRuntime *WorkerRuntime) LoadNetManager() error {
 			workerRuntime.RuntimeAuthentication.NetWorkManagerClient = nil
 			klog.Infof("network manager client certificates specified ok, ignore --token")
 		} else {
+			raw.PrintFlags("error-tip", func() func(format string, a ...interface{}) error {
+				return func(format string, a ...interface{}) error {
+					klog.Errorf(format, a...)
+					return nil
+				}
+			}())
 			return fmt.Errorf("you have provide bad network manager client certificates or node-token for network manager")
 		}
 	}

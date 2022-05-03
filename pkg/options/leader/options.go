@@ -3,7 +3,6 @@ package leader
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	globalfunc "github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/help"
@@ -44,13 +43,14 @@ func (opt *LeaderOptions) LoadConfig() error {
 		return nil
 	}
 
-	// try to read config file
-	bytes, err := ioutil.ReadFile(ConfigFile)
-	if err == os.ErrNotExist {
+	if !globalfunc.Exists(ConfigFile) {
 		klog.Warningf("config file specify by --%s=%s is not exist, we will ignore this parameter. Use --help for more information", ConfigFileFlagName, ConfigFile)
 		return nil
-	} else if err != nil {
-		return fmt.Errorf("unexpected errors while reading config from file specify by --%s=%s. Use --help for more information", ConfigFileFlagName, ConfigFile)
+	}
+	// try to read config file
+	bytes, err := ioutil.ReadFile(ConfigFile)
+	if err != nil {
+		return fmt.Errorf("unexpected errors while reading config from file specify by --%s=%s. Use --help for more information. Err: %v", ConfigFileFlagName, ConfigFile, err)
 	}
 
 	// unmarshal yaml

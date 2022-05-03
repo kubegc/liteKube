@@ -9,10 +9,10 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"text/template"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
+	"github.com/litekube/LiteKube/pkg/likutemplate"
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/leader/global"
 	token "github.com/litekube/LiteKube/pkg/token"
@@ -20,30 +20,6 @@ import (
 )
 
 type signedCertFactory func(commonName string, organization []string, certFile, keyFile string) (bool, error)
-
-var (
-	KubeconfigTemplate = template.Must(template.New("kubeconfig").Parse(`apiVersion: v1
-clusters:
-- cluster:
-    server: {{.URL}}
-    certificate-authority: {{.CACert}}
-  name: local
-contexts:
-- context:
-    cluster: local
-    namespace: default
-    user: user
-  name: Default
-current-context: Default
-kind: Config
-preferences: {}
-users:
-- name: user
-  user:
-    client-certificate: {{.ClientCert}}
-    client-key: {{.ClientKey}}
-`))
-)
 
 type KubernetesAuthentication struct {
 	KubectlPath               string
@@ -439,5 +415,5 @@ func GenKubeConfig(filePath, url, caCert, clientCert, clientKey string) error {
 	}
 	defer output.Close()
 
-	return KubeconfigTemplate.Execute(output, &data)
+	return likutemplate.Kubeconfig_template.Execute(output, &data)
 }

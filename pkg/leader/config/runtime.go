@@ -7,8 +7,12 @@ import (
 	"sync"
 	"time"
 
+	workerapp "github.com/litekube/LiteKube/cmd/worker/app"
+	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/leader/runtime"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
+	"github.com/litekube/LiteKube/pkg/options/worker"
+	workeroptions "github.com/litekube/LiteKube/pkg/options/worker"
 	"k8s.io/klog/v2"
 )
 
@@ -135,6 +139,33 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 	if err := leaderRuntime.controlServer.Run(); err != nil {
 		klog.Fatal("fail to start litekube control server. Error: %s", err.Error())
 		return err
+	}
+
+	// run worker
+	if leaderRuntime.RuntimeOption.GlobalOptions.EnableWorker {
+		worker.ConfigFile = leaderRuntime.RuntimeOption.GlobalOptions.WorkerConfig
+		workerOpt := workeroptions.NewWorkerOptions()
+		if err := workerOpt.LoadConfig(); err != nil {
+			klog.Errorf("fail to run worker")
+			return err
+		}
+
+		workerOpt.GlobalOptions.WorkDir = leaderRuntime.RuntimeOption.GlobalOptions.WorkDir
+		workerOpt.GlobalOptions.LogDir = leaderRuntime.RuntimeOption.GlobalOptions.LogDir
+		workerOpt.GlobalOptions.LogToStd = leaderRuntime.RuntimeOption.GlobalOptions.LogToStd
+		workerOpt.GlobalOptions.LogToDir = leaderRuntime.RuntimeOption.GlobalOptions.LogToDir
+		workerOpt.NetmamagerOptions.Token = "local"
+		workerOpt.NetmamagerOptions.RegisterOptions.Address = leaderRuntime.RuntimeOption.NetmamagerOptions.RegisterOptions.Address
+		workerOpt.NetmamagerOptions.RegisterOptions.SecurePort = leaderRuntime.RuntimeOption.NetmamagerOptions.RegisterOptions.SecurePort
+		workerOpt.NetmamagerOptions.JoinOptions.Address = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.Address
+		workerOpt.NetmamagerOptions.JoinOptions.SecurePort = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.SecurePort
+		workerOpt.GlobalOptions.LeaderToken = fmt.Sprintf("%s@local", global.ReservedNodeToken)
+		go func() {
+			err := workerapp.Run(workerOpt, leaderRuntime.control.ctx.Done())
+			if err != nil {
+				klog.Errorf("==> worker exit: %v", err)
+			}
+		}()
 	}
 
 	return nil

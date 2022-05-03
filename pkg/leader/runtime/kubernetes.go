@@ -10,9 +10,29 @@ import (
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
 	"github.com/litekube/LiteKube/pkg/options/leader/controllermanager"
 	"github.com/litekube/LiteKube/pkg/options/leader/scheduler"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/authentication/authenticator"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/yaml"
 )
+
+// kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap
+var rolebindingYAML = `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubelet-bootstrap
+subjects:
+- kind: User
+  name: kubelet-bootstrap
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: system:node-bootstrapper
+  apiGroup: rbac.authorization.k8s.io
+`
 
 type KubernatesServer struct {
 	ctx               context.Context
@@ -54,6 +74,38 @@ func (s *KubernatesServer) Run() error {
 
 	if err := s.scheduler.Run(); err != nil {
 		return err
+	}
+
+	if err := s.RunAfter(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *KubernatesServer) RunAfter() error {
+	// add kubelet-bootstrap role-binding
+	kubeconfig, err := clientcmd.BuildConfigFromFlags("", s.KubeAdminPath)
+	if err != nil {
+		return err
+	}
+
+	k8sClient, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		return err
+	}
+
+	if _, err := k8sClient.RbacV1().ClusterRoleBindings().Get(s.ctx, "kubelet-bootstrap", metav1.GetOptions{}); err != nil {
+		clusterRoleBindings := &rbacv1.ClusterRoleBinding{}
+		if err := yaml.Unmarshal([]byte(rolebindingYAML), clusterRoleBindings); err != nil {
+			klog.Errorf("fail to unmarshal ClusterRoleBinding yaml, maybe version is not valid, you can run: kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap instead")
+			return nil
+		}
+
+		if _, err := k8sClient.RbacV1().ClusterRoleBindings().Create(s.ctx, clusterRoleBindings, metav1.CreateOptions{}); err != nil {
+			klog.Errorf("fail to create clusterrolebinding for kubelet-bootstrap")
+			return err
+		}
 	}
 
 	return nil

@@ -12,12 +12,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/leader/runtime/control"
+	"github.com/litekube/LiteKube/pkg/likutemplate"
 	"github.com/litekube/LiteKube/pkg/token"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -29,48 +29,9 @@ import (
 )
 
 var (
-	globalFold                            = filepath.Join(global.HomePath, ".litekube")
-	globalToken                           = filepath.Join(globalFold, "token")
-	kubelet_bootstrap_kubeconfig_template = template.Must(template.New("kubelet_bootstrap_kubeconfig").Parse(`apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: {{.CACert}}
-    server: {{.URL}}
-  name: litekube
-contexts:
-- context:
-    cluster: litekube
-    user: kubelet-bootstrap
-  name: default
-current-context: default
-kind: Config
-preferences: {}
-users:
-- name: kubelet-bootstrap
-  user:
-    token: {{.Token}}
-`))
-
-	kubeproxy_bootstrap_kubeconfig_template = template.Must(template.New("kubeproxy_kubeconfig").Parse(`apiVersion: v1
-clusters:
-- cluster:
-    server: {{.URL}}
-    certificate-authority-data: {{.CACert}}
-  name: litekube
-contexts:
-- context:
-    cluster: litekube
-    user: kube-proxy
-  name: default
-current-context: default
-kind: Config
-preferences: {}
-users:
-- name: kube-proxy
-  user:
-    client-certificate-data: {{.ClientCert}}
-    client-key-data: {{.ClientKey}}
-`))
+	globalFold           = filepath.Join(global.HomePath, ".litekube")
+	globalToken          = filepath.Join(globalFold, "token")
+	globalBootstrapToken = filepath.Join(globalFold, "bootstrap-token")
 )
 
 type LiteKubeControl struct {
@@ -382,7 +343,7 @@ func (s *LiteKubeControl) BootStrapKubelet(ctx context.Context, request *control
 		Token:  s.Token,
 	}
 
-	kubelet_bootstrap_kubeconfig_template.Execute(buf, &data)
+	likutemplate.Kubelet_bootstrap_kubeconfig_template.Execute(buf, &data)
 
 	if s.ClusterDNS == "" || s.ValidateApiserverClientCABase64 == "" {
 		klog.Errorf("loss args cluster-dns or validata apiserver ca for kubelet")
@@ -451,7 +412,7 @@ func (s *LiteKubeControl) BootStrapKubeProxy(ctx context.Context, request *contr
 		ClientKey:  key,
 	}
 
-	kubeproxy_bootstrap_kubeconfig_template.Execute(buf, &data)
+	likutemplate.Kubeproxy_bootstrap_kubeconfig_template.Execute(buf, &data)
 
 	return &control.BootStrapKubeProxyResponse{StatusCode: int32(StatusCode), Message: "success", Kubeconfig: base64.StdEncoding.EncodeToString(buf.Bytes()), ClusterCIDR: s.ClusterCIDR}, nil
 
@@ -509,10 +470,9 @@ func readTokens(authFile string) (map[string]*TokenDesc, error) {
 			}
 		}
 
-		return datas, nil
-	} else {
-		return nil, nil
 	}
+
+	return datas, nil
 }
 
 func createToken(leaveTime int64, createBy string, authFile string, isAdmin bool) (*TokenDesc, error) {
@@ -575,17 +535,65 @@ func ensureToken(authFile string) error {
 		return err
 	}
 
-	bytes, err := ioutil.ReadFile(globalToken)
+	adminBytes, err := ioutil.ReadFile(globalToken)
 
-	if err != nil || len(string(bytes)) != 32 {
+	if err != nil || !adminTokenOk(string(adminBytes), authFile) {
 		tokenDesc, err := createToken(-1, "litekube", authFile, true)
 		if err != nil {
 			return err
 		}
-		return ioutil.WriteFile(globalToken, []byte(tokenDesc.Token), fs.FileMode(0644))
+		if err := ioutil.WriteFile(globalToken, []byte(tokenDesc.Token), fs.FileMode(0644)); err != nil {
+			return err
+		}
+	}
+
+	bootstrapTokenBytes, err := ioutil.ReadFile(globalBootstrapToken)
+
+	if err != nil || !bootstrapTokenOk(string(bootstrapTokenBytes), authFile) {
+		tokenDesc, err := createToken(-1, "litekube", authFile, false)
+		if err != nil {
+			return err
+		}
+		if err := ioutil.WriteFile(globalBootstrapToken, []byte(tokenDesc.Token), fs.FileMode(0644)); err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func adminTokenOk(token string, authFile string) bool {
+	tokenDesc := queryToken(token, authFile)
+	if tokenDesc == nil {
+		return false
+	}
+
+	if !tokenDesc.IsValid || tokenDesc.Life >= 0 {
+		return false
+	}
+
+	if !tokenDesc.IsAdmin {
+		return false
+	}
+
+	return true
+}
+
+func bootstrapTokenOk(token string, authFile string) bool {
+	tokenDesc := queryToken(token, authFile)
+	if tokenDesc == nil {
+		return false
+	}
+
+	if !tokenDesc.IsValid || tokenDesc.Life >= 0 {
+		return false
+	}
+
+	if tokenDesc.IsAdmin {
+		return false
+	}
+
+	return true
 }
 
 func deleteToken(authFile string, token string, deleteBy string) (*TokenDesc, error) {

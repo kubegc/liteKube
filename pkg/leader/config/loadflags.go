@@ -151,6 +151,8 @@ func (leaderRuntime *LeaderRuntime) LoadGloabl() error {
 
 	if !new.EnableWorker {
 		new.WorkerConfig = ""
+	} else {
+		new.WorkerConfig = filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "startup/worker.yaml")
 	}
 	return nil
 }
