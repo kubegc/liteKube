@@ -50,8 +50,11 @@ var DefaultNMO NetManagerOptions = NetManagerOptions{
 }
 
 func NewNetManagerOptions() *NetManagerOptions {
-	options := DefaultNMO
-	return &options
+	return &NetManagerOptions{
+		Token:           DefaultNMO.Token,
+		RegisterOptions: NewRegisterOptions(),
+		JoinOptions:     NewJoinOptions(),
+	}
 }
 
 func (opt *NetManagerOptions) HelpSection() *help.Section {

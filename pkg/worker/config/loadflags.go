@@ -76,7 +76,6 @@ func (workerRuntime *WorkerRuntime) LoadFlags() error {
 
 // load or generate args for litekube-global
 func (workerRuntime *WorkerRuntime) LoadGloabl() error {
-	fmt.Printf("%#v", workerRuntime.FlagsOption.NetmamagerOptions)
 	if workerRuntime.FlagsOption.NetmamagerOptions.Token != "local" {
 		defer func() {
 			// set log
@@ -139,6 +138,12 @@ func (workerRuntime *WorkerRuntime) LoadGloabl() error {
 func (workerRuntime *WorkerRuntime) LoadNetManager() error {
 	raw := workerRuntime.FlagsOption.NetmamagerOptions
 	new := workerRuntime.RuntimeOption.NetmamagerOptions
+
+	if raw.Token != "" {
+		new.Token = raw.Token
+	} else {
+		new.Token = netmanager.DefaultNMO.Token
+	}
 
 	// check bind-address
 	if ip := net.ParseIP(raw.RegisterOptions.Address); ip == nil {
@@ -218,6 +223,12 @@ func (workerRuntime *WorkerRuntime) LoadNetManager() error {
 			workerRuntime.RuntimeAuthentication.NetWorkManagerClient = nil
 			klog.Infof("network manager client certificates specified ok, ignore --token")
 		} else {
+			raw.PrintFlags("error-tip", func() func(format string, a ...interface{}) error {
+				return func(format string, a ...interface{}) error {
+					klog.Errorf(format, a...)
+					return nil
+				}
+			}())
 			return fmt.Errorf("you have provide bad network manager client certificates or node-token for network manager")
 		}
 	}
@@ -248,15 +259,15 @@ func (workerRuntime *WorkerRuntime) LoadKubelet() error {
 
 	// load * ProfessionalOptions
 	// node-ip
-	if ip := net.ParseIP(raw.ProfessionalOptions.NodeIp); ip == nil {
-		if localIp, err := workerRuntime.NetworkRegisterClient.QueryIp(); err != nil {
-			return err
-		} else {
-			new.ProfessionalOptions.NodeIp = localIp
-		}
-	} else {
-		new.ProfessionalOptions.NodeIp = raw.ProfessionalOptions.NodeIp
-	}
+	// if ip := net.ParseIP(raw.ProfessionalOptions.NodeIp); ip == nil {
+	// 	if localIp, err := workerRuntime.NetworkRegisterClient.QueryIp(); err != nil {
+	// 		return err
+	// 	} else {
+	// 		new.ProfessionalOptions.NodeIp = localIp
+	// 	}
+	// } else {
+	// 	new.ProfessionalOptions.NodeIp = raw.ProfessionalOptions.NodeIp
+	// }
 
 	// kubeconfig
 	if raw.ProfessionalOptions.Kubeconfig != "" {
@@ -314,6 +325,10 @@ func (workerRuntime *WorkerRuntime) LoadKubelet() error {
 			if workerRuntime.RuntimeAuthentication.KubernetesNode == nil {
 				return fmt.Errorf("fail to run TLS-bootstrap for worker")
 			}
+
+			if err := workerRuntime.RuntimeAuthentication.KubernetesNode.GenerateOrSkip(); err != nil {
+				return err
+			}
 		}
 
 		new.ProfessionalOptions.BootstrapKubeconfig = workerRuntime.RuntimeAuthentication.KubernetesNode.BootStrapKubeConfig
@@ -367,6 +382,10 @@ func (workerRuntime *WorkerRuntime) LoadKubeProxy() error {
 			)
 			if workerRuntime.RuntimeAuthentication.KubernetesNode == nil {
 				return fmt.Errorf("fail to run TLS-bootstrap for worker")
+			}
+
+			if err := workerRuntime.RuntimeAuthentication.KubernetesNode.GenerateOrSkip(); err != nil {
+				return err
 			}
 		}
 

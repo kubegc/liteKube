@@ -15,9 +15,10 @@ type ControllerManagerLitekubeOptions struct {
 }
 
 var DefaultCMLO ControllerManagerLitekubeOptions = ControllerManagerLitekubeOptions{
-	AllocateNodeCidrs: false,
-	ClusterCidr:       "172.17.0.0/16",
-	Profiling:         false,
+	AllocateNodeCidrs:            false,
+	ClusterCidr:                  "172.17.0.0/16",
+	Profiling:                    false,
+	UseServiceAccountCredentials: true,
 }
 
 func NewControllerManagerLitekubeOptions() *ControllerManagerLitekubeOptions {

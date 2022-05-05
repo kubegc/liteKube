@@ -26,6 +26,8 @@ import (
 type GrpcServer struct {
 	*pb_gen.UnimplementedLiteKubeNCServiceServer
 	*pb_gen.UnimplementedLiteKubeNCBootstrapServiceServer
+	ctx               context.Context
+	stopCh            chan struct{}
 	port              int
 	bootstrapPort     int
 	networkServerPort int
@@ -42,8 +44,10 @@ func GetGServer() *GrpcServer {
 	return gServer
 }
 
-func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServer {
+func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan struct{}, unRegisterCh chan string, serverIp string) *GrpcServer {
 	s := &GrpcServer{
+		ctx:               ctx,
+		stopCh:            stopCh,
 		port:              cfg.GrpcPort,
 		bootstrapPort:     cfg.BootstrapPort,
 		networkServerPort: cfg.Port,
@@ -65,25 +69,30 @@ func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
 		},
 	}
-	ip := utils.QueryPublicIp()
+
+	ip := cfg.Ip
 	if ip == "" {
-		ip = cfg.Ip
+		//backup
+		ip = utils.QueryPublicIp()
 	}
-	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.GrpcPort), strconv.Itoa(cfg.Port))
+
+	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, serverIp, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.GrpcPort), strconv.Itoa(cfg.Port))
 	return s
 }
 
-func StartGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) {
-	//utils.CreateDir(cfg.GrpcCertDir)
-	//err := certs.CheckGrpcCertConfig(gServer.grpcTlsConfig)
-	//if err != nil {
-	//	logger.Error(err)
-	//}
-	go gServer.StartGrpcServerTcp()
-	go gServer.StartBootstrapServerTcp()
-}
+//func StartGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) {
+//	//utils.CreateDir(cfg.GrpcCertDir)
+//	//err := certs.CheckGrpcCertConfig(gServer.grpcTlsConfig)
+//	//if err != nil {
+//	//	logger.Error(err)
+//	//}
+//	go gServer.StartGrpcServerTcp()
+//	go gServer.StartBootstrapServerTcp()
+//}
 
 func (s *GrpcServer) StartGrpcServerTcp() error {
+	defer logger.Debug("StartGrpcServerTcp done")
+
 	tcpAddr := fmt.Sprintf(":%d", s.port)
 	lis, err := net.Listen("tcp", tcpAddr)
 	if err != nil {
@@ -134,6 +143,17 @@ func (s *GrpcServer) StartGrpcServerTcp() error {
 	// register service
 	pb_gen.RegisterLiteKubeNCServiceServer(server, s)
 	logger.Infof("grpc server ready to serve at %+v", tcpAddr)
+
+	go func() {
+		for {
+			select {
+			case <-s.stopCh:
+				server.GracefulStop()
+				return
+			}
+		}
+	}()
+
 	if err := server.Serve(lis); err != nil {
 		logger.Errorf("grpc server failed to serve: %v", err)
 		return err

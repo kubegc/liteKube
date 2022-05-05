@@ -1,6 +1,7 @@
 package authentication
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/litekube/LiteKube/pkg/grpcclient"
 	leaderruntime "github.com/litekube/LiteKube/pkg/leader/runtime"
 	"github.com/litekube/LiteKube/pkg/leader/runtime/control"
+	"github.com/litekube/LiteKube/pkg/likutemplate"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/worker/global"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -23,7 +25,10 @@ import (
 )
 
 type KubernetesNode struct {
+	RootCertDir             string
 	CertDir                 string
+	KubeletDir              string
+	KubeproxyDir            string
 	KubeProxyKubeConfig     string
 	BootStrapKubeConfig     string
 	KubeletConfig           string
@@ -35,6 +40,7 @@ type KubernetesNode struct {
 	ValidateApiserverCAFile string
 	AdditionFile            string
 	RegisterClient          *leaderruntime.NetWorkRegisterClient
+	ClusterDNS              string
 }
 
 func NewKubernetesNode(rootCertPath string, leaderToken string, registerClient *leaderruntime.NetWorkRegisterClient) *KubernetesNode {
@@ -47,10 +53,10 @@ func NewKubernetesNode(rootCertPath string, leaderToken string, registerClient *
 	leaderNodeToken := tokens[0]
 	bootstrapToken := tokens[1]
 
-	certDir := filepath.Join(rootCertPath, leaderToken)
 	if rootCertPath == "" {
-		certDir = filepath.Join(globaloptions.DefaultGO.WorkDir, "tls", leaderToken)
+		rootCertPath = filepath.Join(globaloptions.DefaultGO.WorkDir, "tls")
 	}
+	certDir := filepath.Join(rootCertPath, leaderToken)
 
 	leaderIp, err := registerClient.QueryIpByToken(leaderNodeToken)
 	if err != nil || leaderIp == "" {
@@ -58,27 +64,53 @@ func NewKubernetesNode(rootCertPath string, leaderToken string, registerClient *
 		return nil
 	}
 
+	kubeletDir := filepath.Join(certDir, "kubelet")
+	kubeproxyDir := filepath.Join(certDir, "kube-proxy")
+	if err := os.MkdirAll(kubeletDir, os.FileMode(0644)); err != nil {
+		klog.Errorf("fail to create directory: %s", kubeletDir)
+		return nil
+	}
+	if err := os.MkdirAll(kubeproxyDir, os.FileMode(0644)); err != nil {
+		klog.Errorf("fail to create directory: %s", kubeproxyDir)
+		return nil
+	}
+
 	return &KubernetesNode{
+		RootCertDir:             rootCertPath,
 		CertDir:                 certDir,
-		KubeProxyKubeConfig:     filepath.Join(certDir, "kube-proxy", "kube-proxy.kubeconfig"),
-		BootStrapKubeConfig:     filepath.Join(certDir, "kubelet", "bootstrap.kubeconfig"),
-		KubeletConfig:           filepath.Join(certDir, "kubelet", "kubelet.config"),
-		ValidateApiserverCAFile: filepath.Join(certDir, "kubelet", "validate-ca.cert"),
+		KubeletDir:              kubeletDir,
+		KubeproxyDir:            kubeproxyDir,
+		KubeProxyKubeConfig:     filepath.Join(kubeproxyDir, "kube-proxy.kubeconfig"),
+		BootStrapKubeConfig:     filepath.Join(kubeletDir, "bootstrap.kubeconfig"),
+		KubeletConfig:           filepath.Join(kubeletDir, "kubelet.config"),
+		ValidateApiserverCAFile: filepath.Join(kubeletDir, "validate-ca.cert"),
 		AdditionFile:            filepath.Join(certDir, "addition.map"),
 		LeaderIp:                leaderIp,
-		LeaderPort:              6440,
+		LeaderPort:              6442,
 		BootStrapToken:          bootstrapToken,
 		LeaderNodeToken:         leaderNodeToken,
 		RegisterClient:          registerClient,
 	}
 }
 
-func (kn *KubernetesNode) GenerateOrSkip(address string, port int) error {
+func (kn *KubernetesNode) GenerateOrSkip() error {
 	if kn == nil {
 		return fmt.Errorf("nil kubernetes node")
 	}
 
+	if kn.BootStrapToken == "" || kn.LeaderNodeToken == "" {
+		return fmt.Errorf("bad token to bootstrap for worker-kubernetes")
+	}
+
+	if kn.Check() {
+		return nil
+	}
+
 	return kn.TLSBootStrap()
+}
+
+func (kn *KubernetesNode) Check() bool {
+	return global.Exists(kn.KubeProxyKubeConfig, kn.BootStrapKubeConfig, kn.KubeletConfig, kn.ValidateApiserverCAFile, kn.AdditionFile)
 }
 
 func (kn *KubernetesNode) TLSBootStrap() error {
@@ -86,55 +118,103 @@ func (kn *KubernetesNode) TLSBootStrap() error {
 		return fmt.Errorf("nil kubernetes node")
 	}
 
-	if global.Exists(kn.KubeProxyKubeConfig, kn.BootStrapKubeConfig, kn.KubeProxyKubeConfig, kn.ValidateApiserverCAFile, kn.AdditionFile) {
-		return nil
-	} else {
-		auth := &grpcclient.TokenAuthentication{
-			Token: kn.BootStrapToken,
-		}
-
-		conn, err := grpc.Dial(fmt.Sprintf("%s:%d", kn.LeaderIp, kn.LeaderPort), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithPerRPCCredentials(auth))
+	bootstrapToken := kn.BootStrapToken
+	if bootstrapToken == "local" {
+		bytes, err := ioutil.ReadFile(filepath.Join(global.HomePath, ".litekube/bootstrap-token"))
 		if err != nil {
-			return err
+			return fmt.Errorf("leader-token=%s@local is only allow while running with leader in same node", global.ReservedNodeToken)
+		}
+		bootstrapToken = string(bytes)
+	}
+	auth := &grpcclient.TokenAuthentication{
+		Token: bootstrapToken,
+	}
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", kn.LeaderIp, kn.LeaderPort), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithPerRPCCredentials(auth))
+	if err != nil {
+		return err
+	}
+
+	client := control.NewLeaderControlClient(conn)
+
+	for i := 0; i < 100; i++ {
+		if _, err := client.CheckHealth(context.Background(), &control.NoneValue{}); err != nil {
+			klog.Warningf("waiting for leader controller to start, try %d/100 times", i)
+			time.Sleep(1 * time.Second)
+			continue
+		} else {
+			break
+		}
+	}
+
+	// bootstrap for kube-proxy
+	if value, err := client.BootStrapKubeProxy(context.Background(), &control.BootStrapKubeProxyRequest{}); err != nil {
+		klog.Errorf("fail to bootstrap kube-proxy certificates")
+		return err
+	} else {
+		if value.GetStatusCode() < 200 || value.GetStatusCode() > 299 {
+			klog.Errorf("fail to bootstrap for kube-proxy, err: %s", value.GetMessage())
+			return fmt.Errorf("fail to bootstrap for kube-proxy, err: %s", value.GetMessage())
 		}
 
-		client := control.NewLeaderControlClient(conn)
-
-		for i := 0; i < 100; i++ {
-			if _, err := client.CheckHealth(context.Background(), &control.NoneValue{}); err != nil {
-				klog.Warningf("waiting for leader controller to start, try %d/100 times", i)
-				time.Sleep(1 * time.Second)
-				continue
-			} else {
-				break
-			}
-		}
-
-		// bootstrap for kube-proxy
-		if value, err := client.BootStrapKubeProxy(context.Background(), &control.BootStrapKubeProxyRequest{}); err != nil {
-			klog.Errorf("fail to bootstrap kube-proxy certificates")
+		kn.WriteAddition(map[string]string{"cluster-cidr": value.GetClusterCIDR()})
+		if bytes, err := base64.StdEncoding.DecodeString(value.GetKubeconfig()); err != nil {
 			return err
 		} else {
-			kn.WriteAddition(map[string]string{"cluster-cidr": value.GetClusterCIDR()})
-			if bytes, err := base64.StdEncoding.DecodeString(value.GetKubeconfig()); err != nil {
-				return err
-			} else {
-				ioutil.WriteFile(kn.KubeProxyKubeConfig, bytes, os.FileMode(0644))
-			}
+			ioutil.WriteFile(kn.KubeProxyKubeConfig, bytes, os.FileMode(0644))
+		}
+	}
+
+	// bootstrap for kubelet
+	if value, err := client.BootStrapKubelet(context.Background(), &control.BootStrapKubeletRequest{}); err != nil {
+		klog.Errorf("fail to bootstrap kubelet certificates")
+		return err
+	} else {
+		if value.GetStatusCode() < 200 || value.GetStatusCode() > 299 {
+			klog.Errorf("fail to bootstrap for kubelet, err: %s", value.GetMessage())
+			return fmt.Errorf("fail to bootstrap for kubelet, err: %s", value.GetMessage())
 		}
 
-		// bootstrap for kubelet
-		if value, err := client.BootStrapKubelet(context.Background(), &control.BootStrapKubeletRequest{}); err != nil {
-			klog.Errorf("fail to bootstrap kubelet certificates")
+		// write bootstrap-kubeconfig
+		if bytes, err := base64.StdEncoding.DecodeString(value.GetKubeconfig()); err != nil {
 			return err
 		} else {
-			if bytes, err := base64.StdEncoding.DecodeString(value.GetKubeconfig()); err != nil {
+			if err := ioutil.WriteFile(kn.BootStrapKubeConfig, bytes, os.FileMode(0644)); err != nil {
 				return err
-			} else {
-				ioutil.WriteFile(kn.KubeletConfig, bytes, os.FileMode(0644))
 			}
 		}
 
+		// write validate-ca
+		if bytes, err := base64.StdEncoding.DecodeString(value.GetValidataCaCert()); err != nil {
+			return err
+		} else {
+			if err := ioutil.WriteFile(kn.ValidateApiserverCAFile, bytes, os.FileMode(0644)); err != nil {
+				return err
+			}
+		}
+
+		// write validate-ca
+		kn.ClusterDNS = value.GetClusterDNS()
+
+		// write default-kubelet config
+		buf := &bytes.Buffer{}
+		data := struct {
+			CaPath    string
+			CluserDNS string
+		}{
+			CaPath:    kn.ValidateApiserverCAFile,
+			CluserDNS: kn.ClusterDNS,
+		}
+
+		likutemplate.Kubelet_config_template.Execute(buf, &data)
+		if err := ioutil.WriteFile(kn.KubeletConfig, buf.Bytes(), os.FileMode(0644)); err != nil {
+			return err
+		}
+		kn.WriteAddition(map[string]string{"cluster-dns": kn.ClusterDNS})
+	}
+
+	if !kn.Check() {
+		return fmt.Errorf("bootstrap for worker meet unknow error")
 	}
 
 	return nil
@@ -162,13 +242,48 @@ func (kn *KubernetesNode) ReadAddition(key string) (string, error) {
 	}
 }
 
-func (kn *KubernetesNode) WriteAddition(data map[string]string) error {
-	if data == nil {
+func (kn *KubernetesNode) ReadAllAddition() (map[string]string, error) {
+	if !global.Exists(kn.AdditionFile) {
+		return make(map[string]string), nil
+	}
+
+	bytes, err := ioutil.ReadFile(kn.AdditionFile)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make(map[string]string)
+	if err := yaml.Unmarshal(bytes, &data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (kn *KubernetesNode) ClearAddition() error {
+	if global.Exists(kn.AdditionFile) {
+		return os.Remove(kn.AdditionFile)
+	}
+
+	return nil
+}
+
+func (kn *KubernetesNode) WriteAddition(new_data map[string]string) error {
+	if new_data == nil {
 		return nil
 	}
 
 	if err := os.MkdirAll(kn.CertDir, os.FileMode(0644)); err != nil {
 		return err
+	}
+
+	data, err := kn.ReadAllAddition()
+	if err != nil {
+		return err
+	}
+
+	for key, value := range new_data {
+		data[key] = value
 	}
 
 	bytes, err := yaml.Marshal(data)

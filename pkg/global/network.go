@@ -12,7 +12,8 @@ import (
 var LocalhostIP = net.ParseIP("127.0.0.1")
 var LocalHostDNSName = "localhost"
 var LocalIPs = QueryIps()
-var testUrl = "www.baidu.com"
+var testUrl = "www.baidu.com:80"
+var _, NetworkControllerCIDR, _ = net.ParseCIDR("10.1.1.0/24")
 
 const ReservedNodeToken = "reserverd"
 
@@ -43,7 +44,6 @@ func RemoveRepeatIps(ips []net.IP) []net.IP {
 		}
 
 		if !inIps(ip, new) {
-			fmt.Printf("===>> %s", ip.String())
 			new = append(new, ip)
 		}
 	}
@@ -63,6 +63,14 @@ func inIps(ip net.IP, ips []net.IP) bool {
 
 func GetDefaultServiceIp(clusterIpRange *net.IPNet) net.IP {
 	if ip, err := GetIndexedIP(clusterIpRange, 1); err != nil {
+		return nil
+	} else {
+		return ip
+	}
+}
+
+func GetDefaultClusterDNSIP(clusterIpRange *net.IPNet) net.IP {
+	if ip, err := GetIndexedIP(clusterIpRange, 2); err != nil {
 		return nil
 	} else {
 		return ip
@@ -90,7 +98,7 @@ func bigForIP(ip net.IP) *big.Int {
 }
 
 func ExternIp() string {
-	conn, err := net.Dial("udp", "www.baidu.com:80")
+	conn, err := net.Dial("udp", testUrl)
 	if err != nil {
 		return "127.0.0.1"
 	}

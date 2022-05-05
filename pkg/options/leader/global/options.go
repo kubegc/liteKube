@@ -44,7 +44,7 @@ func (opt *GlobalOptions) HelpSection() *help.Section {
 	section.AddTip("run-kine", "bool", "run kine in leader process or not", fmt.Sprintf("%t", DefaultGO.RunKine))
 	section.AddTip("run-network-manager", "bool", "run network manager in leader process or not", fmt.Sprintf("%t", DefaultGO.RunNetManager))
 	section.AddTip("enable-worker", "bool", "run worker together or not", fmt.Sprintf("%t", DefaultGO.EnableWorker))
-	//section.AddTip("worker-config", "string", "worker config, --enable-work=true is recommanded", DefaultGO.WorkerConfig)
+	//section.AddTip("worker-config", "string", "worker config, --enable-work=true is recommanded, config-file path to start worker, config for network-controller will not take effect", DefaultGO.WorkerConfig)
 	return section
 }
 

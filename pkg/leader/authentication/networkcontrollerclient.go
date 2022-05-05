@@ -60,7 +60,7 @@ func NewControllerClientAuthentication(rootCertPath string, token string, regist
 		rootCertPath = filepath.Join(globaloptions.DefaultGO.WorkDir, "tls/")
 	}
 
-	managerRootCertPath := filepath.Join(rootCertPath, "network-manager/")
+	managerRootCertPath := filepath.Join(rootCertPath, "network-controller/")
 	managerCertDir := filepath.Join(managerRootCertPath, strings.SplitN(token, "@", 2)[0])
 	registerManagerCertDir := filepath.Join(managerCertDir, "register")
 	joinManagerCertDir := filepath.Join(managerCertDir, "join")
@@ -171,11 +171,6 @@ func (na *NetworkControllerClientAuthentication) TLSBootStrap(address string, po
 		return err
 	}
 
-	fmt.Printf("%+v\n", na)
-	fmt.Printf("%+v\n", address)
-	fmt.Printf("%+v\n", port)
-	fmt.Printf("%+v\n", bootstrapToken)
-
 	// generate certificate and node-token here.
 	// need to value address and port here like:
 	// *RegisterAddress="127.0.0.1", *RegisterPort=6440
@@ -215,6 +210,15 @@ func (na *NetworkControllerClientAuthentication) TLSBootStrap(address string, po
 		return err
 	}
 
+	statusCode, _ := strconv.ParseUint(resp.GetCode(), 10, 16)
+	if statusCode > 299 || statusCode < 200 {
+		return fmt.Errorf("fail to grpc network-controller: %s", resp.GetMessage())
+	}
+
+	if resp.GetToken() == "" {
+		return fmt.Errorf("grpc remote get none node-token")
+	}
+
 	// assign value address and port
 	grpcPort, _ := strconv.ParseUint(resp.GrpcServerPort, 10, 16)
 	networkPort, _ := strconv.ParseUint(resp.NetworkServerPort, 10, 16)
@@ -228,7 +232,7 @@ func (na *NetworkControllerClientAuthentication) TLSBootStrap(address string, po
 		RegisterPort:    *na.RegisterPort,
 		JoinAddress:     *na.JoinAddress,
 		JoinPort:        *na.JoinPort,
-		NodeToken:       resp.Token,
+		NodeToken:       resp.GetToken(),
 	}); err != nil {
 		return fmt.Errorf("fail to marshal host info")
 	} else {

@@ -81,6 +81,11 @@ func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error)
 		return "", fmt.Errorf("nil for NetWorkRegisterClient")
 	}
 
+	// // wait to be delete and implement functionality in network-controller server
+	// if nodeToken == global.ReservedNodeToken {
+	// 	return "10.1.1.1", nil
+	// }
+
 	if c.NCClient.C == nil {
 		if err := c.NCClient.InitGrpcClientConn(); err != nil {
 			panic(err)
@@ -114,6 +119,11 @@ func (c *NetWorkRegisterClient) QueryIpByToken(nodeToken string) (string, error)
 		} else {
 			break
 		}
+	}
+
+	statusCode, _ := strconv.ParseUint(resp.GetCode(), 10, 16)
+	if statusCode > 299 || statusCode < 200 {
+		return "", fmt.Errorf("fail to grpc network-controller: %s", resp.GetMessage())
 	}
 
 	if resp.BindIp == "" {
@@ -155,6 +165,11 @@ func (c *NetWorkRegisterClient) CreateBootStrapToken(life int64) (string, error)
 	resp, err := c.NCClient.C.GetBootStrapToken(c.ctx, req)
 	if err != nil {
 		return "", err
+	}
+
+	statusCode, _ := strconv.ParseUint(resp.GetCode(), 10, 16)
+	if statusCode > 299 || statusCode < 200 {
+		return "", fmt.Errorf("fail to grpc network-controller: %s", resp.GetMessage())
 	}
 
 	c.BootstrapClient.BootstrapPort = resp.Port

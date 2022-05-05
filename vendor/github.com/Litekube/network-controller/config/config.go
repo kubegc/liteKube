@@ -38,6 +38,7 @@ type ServerConfig struct {
 	GrpcCertDir    string `yaml:"grpcCertDir"`
 
 	NetworkAddr     string `yaml:"networkAddr"`
+	DbPath          string `yaml:"dbPath"`
 	MTU             int    `yaml:"mtu"`
 	Interconnection bool   `yaml:"interconnection"`
 

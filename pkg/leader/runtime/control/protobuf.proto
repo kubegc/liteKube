@@ -11,6 +11,7 @@ service LeaderControl {
     rpc CreateToken(CreateTokenRequest) returns (TokenValue){}
     rpc DeleteToken(TokenString) returns (NoneResponse){}
     rpc QueryTokens(NoneValue) returns (TokenValueList){}
+    rpc BootstrapValidateKubeApiserverClient(NoneValue) returns (BootstrapValidateKubeApiserverClientResponse){}
     rpc BootStrapKubelet(BootStrapKubeletRequest) returns (BootStrapKubeletResponse){}
     rpc BootStrapNetwork(BootStrapNetworkRequest) returns (BootStrapNetworkResponse){}
     rpc BootStrapKubeProxy(BootStrapKubeProxyRequest) returns (BootStrapKubeProxyResponse){}
@@ -20,6 +21,12 @@ message NoneValue{}
 
 message TokenString{
     string token=1;
+}
+
+message BootstrapValidateKubeApiserverClientResponse{
+    int32 statusCode=1;
+    string message=2;
+    string certificate=3;
 }
 
 message BootStrapNetworkRequest{
@@ -52,6 +59,8 @@ message TokenDescription{
     string token=1;
     string createTime=2;
     int64 life=4;
+    bool isAdmin=5;
+    bool valid=6;
 }
 
 message TokenValue{
@@ -73,6 +82,7 @@ message BootStrapKubeletResponse{
     string message=2;
     string kubeconfig=3;
     string validataCaCert=4;
+    string clusterDNS=5;
 }
 
 message BootStrapKubeProxyRequest{}

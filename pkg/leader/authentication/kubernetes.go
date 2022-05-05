@@ -9,10 +9,10 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"text/template"
 
 	"github.com/litekube/LiteKube/pkg/certificate"
 	"github.com/litekube/LiteKube/pkg/global"
+	"github.com/litekube/LiteKube/pkg/likutemplate"
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
 	globaloptions "github.com/litekube/LiteKube/pkg/options/leader/global"
 	token "github.com/litekube/LiteKube/pkg/token"
@@ -20,30 +20,6 @@ import (
 )
 
 type signedCertFactory func(commonName string, organization []string, certFile, keyFile string) (bool, error)
-
-var (
-	KubeconfigTemplate = template.Must(template.New("kubeconfig").Parse(`apiVersion: v1
-clusters:
-- cluster:
-    server: {{.URL}}
-    certificate-authority: {{.CACert}}
-  name: local
-contexts:
-- context:
-    cluster: local
-    namespace: default
-    user: user
-  name: Default
-current-context: Default
-kind: Config
-preferences: {}
-users:
-- name: user
-  user:
-    client-certificate: {{.ClientCert}}
-    client-key: {{.ClientKey}}
-`))
-)
 
 type KubernetesAuthentication struct {
 	KubectlPath               string
@@ -346,7 +322,7 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}
 
 	// kube-controller-manager
-	newCert, err = apiseverSignFactory("system:kube-controller-manager", nil, na.ControllerClientCert, na.ControllerClientKey)
+	newCert, err = apiseverSignFactory("system:kube-controller-manager", []string{"system:kube-controller-manager"}, na.ControllerClientCert, na.ControllerClientKey)
 	if err != nil {
 		return err
 	}
@@ -357,7 +333,7 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}
 
 	// kube-scheduler
-	newCert, err = apiseverSignFactory("system:kube-scheduler", nil, na.SchedulerClientCert, na.SchedulerClientKey)
+	newCert, err = apiseverSignFactory("system:kube-scheduler", []string{"system:kube-scheduler"}, na.SchedulerClientCert, na.SchedulerClientKey)
 	if err != nil {
 		return err
 	}
@@ -368,12 +344,12 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}
 
 	// kube-proxy
-	if _, err = apiseverSignFactory("system:kube-proxy", nil, na.KubeProxyClientCert, na.KubeProxyClientKey); err != nil {
+	if _, err = apiseverSignFactory("system:kube-proxy", []string{"system:node-proxier"}, na.KubeProxyClientCert, na.KubeProxyClientKey); err != nil {
 		return err
 	}
 
 	// litekube
-	if _, err = apiseverSignFactory("system:litekube-controller", nil, na.LitekubeControllerClientCert, na.LitekubeControllerClientKey); err != nil {
+	if _, err = apiseverSignFactory("system:litekube-controller", []string{"system:masters"}, na.LitekubeControllerClientCert, na.LitekubeControllerClientKey); err != nil {
 		return err
 	}
 
@@ -384,7 +360,7 @@ func (na *KubernetesAuthentication) generateApiserverServingCerts() error {
 	}, na.ClusterValidateServerCA, na.ClusterValidateServerCAKey)
 
 	// kube-apiserver server
-	if _, err = clusterSignFactory("system:kube-apiserver", nil, na.ApiserverServerCert, na.ApiserverServerKey); err != nil {
+	if _, err = clusterSignFactory("system:kube-apiserver", []string{"system:k8s"}, na.ApiserverServerCert, na.ApiserverServerKey); err != nil {
 		return err
 	}
 	return nil
@@ -439,5 +415,5 @@ func GenKubeConfig(filePath, url, caCert, clientCert, clientKey string) error {
 	}
 	defer output.Close()
 
-	return KubeconfigTemplate.Execute(output, &data)
+	return likutemplate.Kubeconfig_template.Execute(output, &data)
 }

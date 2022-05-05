@@ -40,6 +40,7 @@ import (
 )
 
 type Client struct {
+	stopCh chan struct{}
 	// config
 	cfg config.ClientConfig
 	// interface
