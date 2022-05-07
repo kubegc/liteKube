@@ -30,6 +30,10 @@ Tips:
 4. In fact, the overall memory requirements of the program are greatly reduced compared to the native k8s, and a minimal single node cluster will have less than 500MB of memory.
 5. With only one publicly accessible machine, litekube can add all nodes under the network to the cluster without interrupting operations even if the network switches.
 
+## Architecture
+
+![architecture](docs/architecture/architecture.svg)
+
 ## Quick Start
 
 at this time, you may need install containerd by yourself with systemctl. We will simplify this part of the operation as soon as possible. Once this work are ok, you can run by:
