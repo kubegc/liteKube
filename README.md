@@ -34,14 +34,53 @@ Tips:
 
 at this time, you may need install containerd by yourself with systemctl. We will simplify this part of the operation as soon as possible. Once this work are ok, you can run by:
 
-1. start a cluster with only one node
+1. start a cluster with only one node:
 
-```shell
-# create ./leader.yaml:
-cat >./leader <<EOF
-global:
-  enable-worker: true
-EOF
+    ```shell
+    # create ./leader.yaml:
+    cat >./leader <<EOF
+    global:
+      enable-worker: true
+    EOF
+    
+    ./leader --config-file=./leader.yaml	# leader will not enable worker for default
+    ```
 
-./leader --config-file=./leader.yaml	# leader will not enable worker for default
-```
+​		use `kubectl get csr` to check request now.
+
+2. to run a cluster but leader-node disable worker-function:
+    * run in leader-node  (**this node is no need for container-runtime, you can run directly**)
+    
+        ```shell
+        ./leader
+        ```
+    
+        get worker add-in token:
+    
+        ```shell
+        ./likuadm create-token
+        
+        ## assum get follow:
+        _________________________________________________________________
+        global:
+            leader-token: reserverd@884d6c0e9427aa028d033996043975ad
+        network-manager:
+            token: 04a62af77ec44311@192.168.154.21:6439
+        _________________________________________________________________
+        ```
+    
+    * run in worker-node (`systemctl` to enable `containerd` is necessary)
+    
+        ```shell
+        # create ./worker.yaml:
+        cat >./worker <<EOF
+        global:
+            leader-token: reserverd@884d6c0e9427aa028d033996043975ad
+        network-manager:
+            token: 04a62af77ec44311@192.168.154.21:6439
+        EOF
+        
+        ./leader --config-file=./worker.yaml
+        ```
+    
+        use `kubectl get csr` to check request in leader-node now.
