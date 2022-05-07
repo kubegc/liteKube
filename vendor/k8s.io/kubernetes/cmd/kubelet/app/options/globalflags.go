@@ -27,6 +27,10 @@ import (
 	// libs that provide registration functions
 	"k8s.io/component-base/logs"
 	"k8s.io/component-base/version/verflag"
+
+	// ensure libs have a chance to globally register their flags
+	_ "k8s.io/kubernetes/pkg/credentialprovider/azure"
+	_ "k8s.io/kubernetes/pkg/credentialprovider/gcp"
 )
 
 // AddGlobalFlags explicitly registers flags that libraries (glog, verflag, etc.) register
@@ -34,6 +38,7 @@ import (
 // We do this in order to prevent unwanted flags from leaking into the Kubelet's flagset.
 func AddGlobalFlags(fs *pflag.FlagSet) {
 	addCadvisorFlags(fs)
+	addCredentialProviderFlags(fs)
 	verflag.AddFlags(fs)
 	logs.AddFlags(fs, logs.SkipLoggingConfigurationFlags())
 }

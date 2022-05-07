@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"net/http"
 	"path/filepath"
 
 	// link to github.com/Litekube/kine, we have make some addition
@@ -12,7 +11,6 @@ import (
 	"github.com/litekube/LiteKube/pkg/options/leader/scheduler"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apiserver/pkg/authentication/authenticator"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
@@ -20,7 +18,7 @@ import (
 )
 
 // kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap
-var rolebindingYAML = `apiVersion: rbac.authorization.k8s.io/v1
+var rolebindingBootstrapYAML = `apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: kubelet-bootstrap
@@ -31,6 +29,20 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: system:node-bootstrapper
+  apiGroup: rbac.authorization.k8s.io
+`
+
+var rolebindingAccessKubeletYAML = `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-apiserver:kubelet-apis
+subjects:
+- kind: User
+  name: system:kube-apiserver
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: system:kubelet-api-admin
   apiGroup: rbac.authorization.k8s.io
 `
 
@@ -97,7 +109,7 @@ func (s *KubernatesServer) RunAfter() error {
 
 	if _, err := k8sClient.RbacV1().ClusterRoleBindings().Get(s.ctx, "kubelet-bootstrap", metav1.GetOptions{}); err != nil {
 		clusterRoleBindings := &rbacv1.ClusterRoleBinding{}
-		if err := yaml.Unmarshal([]byte(rolebindingYAML), clusterRoleBindings); err != nil {
+		if err := yaml.Unmarshal([]byte(rolebindingBootstrapYAML), clusterRoleBindings); err != nil {
 			klog.Errorf("fail to unmarshal ClusterRoleBinding yaml, maybe version is not valid, you can run: kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap instead")
 			return nil
 		}
@@ -108,9 +120,23 @@ func (s *KubernatesServer) RunAfter() error {
 		}
 	}
 
+	// add kube-apiserver access to kubelet-server role-binding
+	if _, err := k8sClient.RbacV1().ClusterRoleBindings().Get(s.ctx, "kube-apiserver:kubelet-apis", metav1.GetOptions{}); err != nil {
+		clusterRoleBindings := &rbacv1.ClusterRoleBinding{}
+		if err := yaml.Unmarshal([]byte(rolebindingAccessKubeletYAML), clusterRoleBindings); err != nil {
+			klog.Errorf("fail to unmarshal ClusterRoleBinding yaml, maybe version is not valid, you can run: kubectl create clusterrolebinding kube-apiserver:kubelet-apis --clusterrole=system:kubelet-api-admin --user system:kube-apiserver instead")
+			return nil
+		}
+
+		if _, err := k8sClient.RbacV1().ClusterRoleBindings().Create(s.ctx, clusterRoleBindings, metav1.CreateOptions{}); err != nil {
+			klog.Errorf("fail to create clusterrolebinding for kube-apiserver")
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (s *KubernatesServer) StartUpConfig() (*http.Handler, *authenticator.Request) {
-	return s.apiserver.StartUpConfig()
-}
+// func (s *KubernatesServer) StartUpConfig() (*http.Handler, *authenticator.Request) {
+// 	return s.apiserver.StartUpConfig()
+// }

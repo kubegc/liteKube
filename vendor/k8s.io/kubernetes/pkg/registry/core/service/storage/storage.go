@@ -166,6 +166,12 @@ func (r *StatusREST) New() runtime.Object {
 	return &api.Service{}
 }
 
+// Destroy cleans up resources on shutdown.
+func (r *StatusREST) Destroy() {
+	// Given that underlying store is shared with REST,
+	// we don't destroy it here explicitly.
+}
+
 // Get retrieves the object from the storage. It is required to support Patch.
 func (r *StatusREST) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
 	return r.store.Get(ctx, name, options)
@@ -176,6 +182,10 @@ func (r *StatusREST) Update(ctx context.Context, name string, objInfo rest.Updat
 	// We are explicitly setting forceAllowCreate to false in the call to the underlying storage because
 	// subresources should never allow create on update.
 	return r.store.Update(ctx, name, objInfo, createValidation, updateValidation, false, options)
+}
+
+func (r *StatusREST) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
+	return r.store.ConvertToTable(ctx, object, tableOptions)
 }
 
 // GetResetFields implements rest.ResetFieldsStrategy
@@ -242,6 +252,17 @@ func (r *REST) defaultOnReadService(service *api.Service) {
 
 	// Set ipFamilies and ipFamilyPolicy if needed.
 	r.defaultOnReadIPFamilies(service)
+
+	// We unintentionally defaulted internalTrafficPolicy when it's not needed
+	// for the ExternalName type. It's too late to change the field in storage,
+	// but we can drop the field when read.
+	defaultOnReadInternalTrafficPolicy(service)
+}
+
+func defaultOnReadInternalTrafficPolicy(service *api.Service) {
+	if service.Spec.Type == api.ServiceTypeExternalName {
+		service.Spec.InternalTrafficPolicy = nil
+	}
 }
 
 func (r *REST) defaultOnReadIPFamilies(service *api.Service) {

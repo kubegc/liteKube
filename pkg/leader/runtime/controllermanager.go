@@ -114,7 +114,9 @@ func waitForAPIServerReady(ctx context.Context, client kubernetes.Interface, tim
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error: %s and %s", err.Error(), lastErr.Error())
+		klog.Errorf("%v", err)
+		klog.Errorf("%v", lastErr)
+		return lastErr
 	}
 
 	return nil

@@ -75,14 +75,18 @@ message TokenValueList{
     repeated TokenDescription tokenList=3;
 }
 
-message BootStrapKubeletRequest{}
+message BootStrapKubeletRequest{
+    string nodeToken=1;
+}
 
 message BootStrapKubeletResponse{
     int32 statusCode=1;
     string message=2;
     string kubeconfig=3;
     string validataCaCert=4;
-    string clusterDNS=5;
+    string serverCert=5;
+    string serverKey=6;
+    string clusterDNS=7;
 }
 
 message BootStrapKubeProxyRequest{}

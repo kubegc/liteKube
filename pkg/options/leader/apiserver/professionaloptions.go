@@ -14,8 +14,8 @@ type ApiserverProfessionalOptions struct {
 
 	BindAddress      string `yaml:"bind-address"`
 	AdvertiseAddress string `yaml:"advertise-address"`
-	InsecurePort     uint16 `yaml:"insecure-port"`
-	FeatureGates     string `yaml:"feature-gates"`
+	//InsecurePort     uint16 `yaml:"insecure-port"`
+	FeatureGates string `yaml:"feature-gates"`
 }
 
 // server security
@@ -63,7 +63,9 @@ var DefaultEO ECTDOptions = ECTDOptions{
 	StorageBackend: "etcd3",
 	EtcdServers:    "https://127.0.0.1:2379",
 }
-var DefaultKCCO KubeletClientCertOptions = KubeletClientCertOptions{}
+var DefaultKCCO KubeletClientCertOptions = KubeletClientCertOptions{
+	KubeletCertificateAuthority: "-",
+}
 var DefaultSCO ServerCertOptions = ServerCertOptions{
 	ApiAudiences:             "unknown",
 	EnableBootstrapTokenAuth: true,
@@ -81,8 +83,8 @@ var DefaultAPO ApiserverProfessionalOptions = ApiserverProfessionalOptions{
 	ServerCertOptions:        *NewServerCertOptions(),
 	KubeletClientCertOptions: *NewKubeletClientCertOptions(),
 	BindAddress:              "0.0.0.0",
-	InsecurePort:             0,
-	FeatureGates:             "JobTrackingWithFinalizers=true",
+	//InsecurePort:             0,
+	FeatureGates: "JobTrackingWithFinalizers=true",
 }
 
 func NewKubeletClientCertOptions() *KubeletClientCertOptions {
@@ -143,7 +145,7 @@ func (opt *KubeletClientCertOptions) AddTips(section *help.Section) {
 func (opt *ApiserverProfessionalOptions) AddTips(section *help.Section) {
 	section.AddTip("bind-address", "string", "The IP address on which to listen for the --secure-port port.", DefaultAPO.BindAddress)
 	section.AddTip("advertise-address", "string", "The IP address on which to advertise the apiserver to members of the cluster.", DefaultAPO.AdvertiseAddress)
-	section.AddTip("insecure-port", "uint16", "Disabled, HTTP Apiserver port", fmt.Sprintf("%d", DefaultAPO.InsecurePort))
+	//section.AddTip("insecure-port", "uint16", "Disabled, HTTP Apiserver port", fmt.Sprintf("%d", DefaultAPO.InsecurePort))
 	section.AddTip("feature-gates", "string", "A set of key=value pairs that describe feature gates for alpha/experimental features.", DefaultAPO.FeatureGates)
 
 	opt.ECTDOptions.AddTips(section)

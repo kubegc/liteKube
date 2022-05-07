@@ -18,7 +18,7 @@ package app
 
 import (
 	"errors"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -81,10 +81,7 @@ func (rct realConntracker) SetMax(max int) error {
 	}
 	// TODO: generify this and sysctl to a new sysfs.WriteInt()
 	klog.InfoS("Setting conntrack hashsize", "conntrack hashsize", max/4)
-	if err := writeIntStringFile("/sys/module/nf_conntrack/parameters/hashsize", max/4); err != nil {
-		klog.ErrorS(err, "failed to set conntrack hashsize", "conntrack hashsize", max/4)
-	}
-	return nil
+	return writeIntStringFile("/sys/module/nf_conntrack/parameters/hashsize", max/4)
 }
 
 func (rct realConntracker) SetTCPEstablishedTimeout(seconds int) error {
@@ -135,7 +132,7 @@ func isSysFSWritable() (bool, error) {
 }
 
 func readIntStringFile(filename string) (int, error) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return -1, err
 	}
@@ -143,5 +140,5 @@ func readIntStringFile(filename string) (int, error) {
 }
 
 func writeIntStringFile(filename string, value int) error {
-	return ioutil.WriteFile(filename, []byte(strconv.Itoa(value)), 0640)
+	return os.WriteFile(filename, []byte(strconv.Itoa(value)), 0640)
 }

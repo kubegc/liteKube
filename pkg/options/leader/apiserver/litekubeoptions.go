@@ -10,10 +10,10 @@ import (
 
 // options for Litekube to start kube-apiserver
 type ApiserverLitekubeOptions struct {
-	AllowPrivileged          bool   `yaml:"allow-privileged"`
-	AuthorizationMode        string `yaml:"authorization-mode"`
-	AnonymousAuth            bool   `yaml:"anonymous-auth"`
-	EnableSwaggerUI          bool   `yaml:"enable-swagger-ui"`
+	AllowPrivileged   bool   `yaml:"allow-privileged"`
+	AuthorizationMode string `yaml:"authorization-mode"`
+	AnonymousAuth     bool   `yaml:"anonymous-auth"`
+	//EnableSwaggerUI          bool   `yaml:"enable-swagger-ui"`
 	EnableAdmissionPlugins   string `yaml:"enable-admission-plugins"`
 	EncryptionProviderConfig string `yaml:"encryption-provider-config"`
 	Profiling                bool   `yaml:"profiling"`
@@ -23,10 +23,10 @@ type ApiserverLitekubeOptions struct {
 }
 
 var DefaultALO ApiserverLitekubeOptions = ApiserverLitekubeOptions{
-	AllowPrivileged:        true,
-	AuthorizationMode:      strings.Join([]string{modes.ModeNode, modes.ModeRBAC}, ","),
-	AnonymousAuth:          false,
-	EnableSwaggerUI:        false,
+	AllowPrivileged:   true,
+	AuthorizationMode: strings.Join([]string{modes.ModeNode, modes.ModeRBAC}, ","),
+	AnonymousAuth:     false,
+	//EnableSwaggerUI:        false,
 	EnableAdmissionPlugins: "NodeRestriction",
 	Profiling:              false,
 	ServiceClusterIpRange:  "10.0.0.0/16",
@@ -43,7 +43,7 @@ func (opt *ApiserverLitekubeOptions) AddTips(section *help.Section) {
 	section.AddTip("allow-privileged", "bool", "If true, allow privileged containers. ", fmt.Sprintf("%t", DefaultALO.AllowPrivileged))
 	section.AddTip("authorization-mode", "string", "File with authorization policy in json line by line format", DefaultALO.AuthorizationMode)
 	section.AddTip("anonymous-auth", "bool", "Enables anonymous requests to the secure port of the API server.", fmt.Sprintf("%t", DefaultALO.AnonymousAuth))
-	section.AddTip("enable-swagger-ui", "bool", "Disabled, enable swagger ui.", fmt.Sprintf("%t", DefaultALO.EnableSwaggerUI))
+	//section.AddTip("enable-swagger-ui", "bool", "Disabled, enable swagger ui.", fmt.Sprintf("%t", DefaultALO.EnableSwaggerUI))
 	section.AddTip("enable-admission-plugins", "string", "admission plugins that should be enabled in addition to default enabled ones", DefaultALO.EnableAdmissionPlugins)
 	section.AddTip("encryption-provider-config", "string", "The file containing configuration for encryption providers to be used for storing secrets in etcd", DefaultALO.EncryptionProviderConfig)
 	section.AddTip("profiling", "bool", "Enable profiling via web interface host:port/debug/pprof/", fmt.Sprintf("%t", DefaultALO.Profiling))

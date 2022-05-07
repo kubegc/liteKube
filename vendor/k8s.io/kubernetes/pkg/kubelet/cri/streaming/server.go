@@ -240,10 +240,8 @@ func (s *server) Start(stayUp bool) error {
 	if err != nil {
 		return err
 	}
-	if _, port, err := net.SplitHostPort(s.config.Addr); err != nil || port == "0" {
-		// Use the actual address as baseURL host. This handles the "0" port case.
-		s.config.BaseURL.Host = listener.Addr().String()
-	}
+	// Use the actual address as baseURL host. This handles the "0" port case.
+	s.config.BaseURL.Host = listener.Addr().String()
 	if s.config.TLSConfig != nil {
 		return s.server.ServeTLS(listener, "", "") // Use certs from TLSConfig.
 	}

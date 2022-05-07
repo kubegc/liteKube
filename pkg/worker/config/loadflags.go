@@ -268,12 +268,52 @@ func (workerRuntime *WorkerRuntime) LoadKubelet() error {
 	// } else {
 	// 	new.ProfessionalOptions.NodeIp = raw.ProfessionalOptions.NodeIp
 	// }
+	// ips := []string{}
+	// nodeIp := ""
+	// addNodeIp := true
+	// addLocalIp := true
+	// if localIp, err := workerRuntime.NetworkRegisterClient.QueryIp(); err != nil {
+	// 	return err
+	// } else {
+	// 	nodeIp = localIp
+	// }
+	// for _, ipStr := range strings.Split(raw.ProfessionalOptions.NodeIp, ",") {
+	// 	ipStr = strings.TrimSpace(ipStr)
+	// 	if ip := net.ParseIP(ipStr); ip == nil {
+	// 		if ipStr == nodeIp {
+	// 			addNodeIp = false
+	// 		}
+
+	// 		if ipStr == global.LocalhostIP.String() {
+	// 			addLocalIp = false
+	// 		}
+
+	// 		ips = append(ips, ipStr)
+	// 	}
+	// }
+
+	// if addLocalIp {
+	// 	ips = append(ips, global.LocalhostIP.String())
+	// }
+
+	// if addNodeIp {
+	// 	ips = append(ips, nodeIp)
+	// }
+
+	// new.ProfessionalOptions.NodeIp = strings.Join(ips, ",")
 
 	// kubeconfig
 	if raw.ProfessionalOptions.Kubeconfig != "" {
 		new.ProfessionalOptions.Kubeconfig = raw.ProfessionalOptions.Kubeconfig
 	} else {
 		new.ProfessionalOptions.Kubeconfig = filepath.Join(workerRuntime.RuntimeAuthentication.CertDir, workerRuntime.RuntimeOption.GlobalOptions.LeaderToken, "kubelet.kubeconfig")
+	}
+
+	// runtime-cgroup
+	if raw.ProfessionalOptions.RuntimeCgroups != "" {
+		new.ProfessionalOptions.RuntimeCgroups = raw.ProfessionalOptions.RuntimeCgroups
+	} else {
+		new.ProfessionalOptions.RuntimeCgroups = kubelet.DefaultKPO.RuntimeCgroups
 	}
 
 	// cgroup-driver
