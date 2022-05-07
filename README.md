@@ -20,12 +20,12 @@ Great For:
 
 ## What is this?
 
-Litekube is a portable kubernetes version designed to run on dynamically changing or hierarchical networks , as out of the box as possible. We are close to a lot of good works, such as [Kubeadm](https://github.com/kubernetes/kubeadm) and [k3s](https://github.com/k3s-io/k3s), to try to package the application components into single binary, but avoid excessive merging to meet different needs.
+Litekube is a portable kubernetes version designed to run on dynamically changing or hierarchical networks , as out of the box as possible. We are close to a lot of good works, such as [Kubeadm](https://github.com/kubernetes/kubeadm) and [k3s](https://github.com/k3s-io/k3s), to try to package the application components into single binary, but avoid excessive merging to meet different needs. 
 
 Tips:
 
 1. At present, we have not done any function reduction for kubernetes, but we may do similar work with k3s in the future to meet the resource reduction requirement of edge devices.
-2. We exposed as many entrances as possible so that people familiar how to use or maintenance native k8s could easily switch to Litekube
+2. We exposed as many entrances as possible so that people familiar how to use or maintenance native k8s could easily switch to Litekube.
 3. We automatically set the parameters well, and support automatic merging and correction for most of user active input, so that anyone who wants to use native k8s can also use Litekube directly.
 4. In fact, the overall memory requirements of the program are greatly reduced compared to the native k8s, and a minimal single node cluster will have less than 500MB of memory.
 5. With only one publicly accessible machine, litekube can add all nodes under the network to the cluster without interrupting operations even if the network switches.
