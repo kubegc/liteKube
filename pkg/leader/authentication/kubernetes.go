@@ -244,9 +244,14 @@ func (na *KubernetesAuthentication) GenerateOrSkip() error {
 		return err
 	}
 
-	if global.Exists(na.KubectlPath) {
-		os.Remove(na.KubectlPath)
+	if global.Exists(na.KubernetesKubeDir) {
+		os.RemoveAll(na.KubernetesKubeDir)
 	}
+
+	if err := os.MkdirAll(na.KubernetesKubeDir, os.FileMode(0644)); err != nil {
+		return err
+	}
+
 	if err := os.Symlink(na.KubeConfigAdmin, na.KubectlPath); err != nil {
 		return err
 	}

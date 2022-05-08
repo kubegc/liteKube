@@ -36,8 +36,11 @@ type KubernetesNode struct {
 	LeaderPort              uint16
 	BootStrapToken          string
 	LeaderNodeToken         string
+	CurrentNodeToken        string
 	RawToken                string
 	ValidateApiserverCAFile string
+	kubeletServerCert       string
+	kubeletServerKey        string
 	AdditionFile            string
 	RegisterClient          *leaderruntime.NetWorkRegisterClient
 	ClusterDNS              string
@@ -83,12 +86,15 @@ func NewKubernetesNode(rootCertPath string, leaderToken string, registerClient *
 		KubeProxyKubeConfig:     filepath.Join(kubeproxyDir, "kube-proxy.kubeconfig"),
 		BootStrapKubeConfig:     filepath.Join(kubeletDir, "bootstrap.kubeconfig"),
 		KubeletConfig:           filepath.Join(kubeletDir, "kubelet.config"),
-		ValidateApiserverCAFile: filepath.Join(kubeletDir, "validate-ca.cert"),
+		ValidateApiserverCAFile: filepath.Join(kubeletDir, "validate-ca.crt"),
+		kubeletServerCert:       filepath.Join(kubeletDir, "kubelet-server.crt"),
+		kubeletServerKey:        filepath.Join(kubeletDir, "kubelet-server.key"),
 		AdditionFile:            filepath.Join(certDir, "addition.map"),
 		LeaderIp:                leaderIp,
 		LeaderPort:              6442,
 		BootStrapToken:          bootstrapToken,
 		LeaderNodeToken:         leaderNodeToken,
+		CurrentNodeToken:        registerClient.NodeToken,
 		RegisterClient:          registerClient,
 	}
 }
@@ -166,7 +172,7 @@ func (kn *KubernetesNode) TLSBootStrap() error {
 	}
 
 	// bootstrap for kubelet
-	if value, err := client.BootStrapKubelet(context.Background(), &control.BootStrapKubeletRequest{}); err != nil {
+	if value, err := client.BootStrapKubelet(context.Background(), &control.BootStrapKubeletRequest{NodeToken: kn.CurrentNodeToken}); err != nil {
 		klog.Errorf("fail to bootstrap kubelet certificates")
 		return err
 	} else {
@@ -193,17 +199,46 @@ func (kn *KubernetesNode) TLSBootStrap() error {
 			}
 		}
 
+		// write server-cert
+		if bytes, err := base64.StdEncoding.DecodeString(value.GetServerCert()); err != nil {
+			return err
+		} else {
+			if err := ioutil.WriteFile(kn.kubeletServerCert, bytes, os.FileMode(0644)); err != nil {
+				return err
+			}
+		}
+
+		// write server-key
+		if bytes, err := base64.StdEncoding.DecodeString(value.GetServerKey()); err != nil {
+			return err
+		} else {
+			if err := ioutil.WriteFile(kn.kubeletServerKey, bytes, os.FileMode(0644)); err != nil {
+				return err
+			}
+		}
+
 		// write validate-ca
 		kn.ClusterDNS = value.GetClusterDNS()
+
+		nodeIp, err := kn.RegisterClient.QueryIp()
+		if err != nil {
+			nodeIp = "0.0.0.0"
+		}
 
 		// write default-kubelet config
 		buf := &bytes.Buffer{}
 		data := struct {
-			CaPath    string
-			CluserDNS string
+			CaPath          string
+			KubeletServerIp string
+			ServerCertPath  string
+			ServerKeyPath   string
+			CluserDNS       string
 		}{
-			CaPath:    kn.ValidateApiserverCAFile,
-			CluserDNS: kn.ClusterDNS,
+			CaPath:          kn.ValidateApiserverCAFile,
+			KubeletServerIp: nodeIp,
+			ServerCertPath:  kn.kubeletServerCert,
+			ServerKeyPath:   kn.kubeletServerKey,
+			CluserDNS:       kn.ClusterDNS,
 		}
 
 		likutemplate.Kubelet_config_template.Execute(buf, &data)

@@ -11,26 +11,25 @@ import (
 	// link to github.com/Litekube/kine, we have make some addition
 
 	"github.com/litekube/LiteKube/pkg/options/leader/apiserver"
-	"k8s.io/apiserver/pkg/authentication/authenticator"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/cmd/kube-apiserver/app"
 )
 
 type Apiserver struct {
-	ctx           context.Context
-	LogPath       string
-	Options       *apiserver.ApiserverOptions
-	Handler       *http.Handler
-	Authenticator *authenticator.Request
+	ctx     context.Context
+	LogPath string
+	Options *apiserver.ApiserverOptions
+	// Handler       *http.Handler
+	// Authenticator *authenticator.Request
 }
 
 func NewApiserver(ctx context.Context, opt *apiserver.ApiserverOptions, logPath string) *Apiserver {
 	return &Apiserver{
-		ctx:           ctx,
-		Options:       opt,
-		LogPath:       logPath,
-		Handler:       nil,
-		Authenticator: nil,
+		ctx:     ctx,
+		Options: opt,
+		LogPath: logPath,
+		// Handler:       nil,
+		// Authenticator: nil,
 	}
 }
 
@@ -94,14 +93,14 @@ func (s *Apiserver) Run() error {
 		}
 	}()
 
-	startupConfig := <-app.StartupConfig
+	// startupConfig := <-app.StartupConfig
 
-	s.Handler = &startupConfig.Handler
-	s.Authenticator = &startupConfig.Authenticator
+	// s.Handler = &startupConfig.Handler
+	// s.Authenticator = &startupConfig.Authenticator
 
 	return nil
 }
 
-func (s *Apiserver) StartUpConfig() (*http.Handler, *authenticator.Request) {
-	return s.Handler, s.Authenticator
-}
+// func (s *Apiserver) StartUpConfig() (*http.Handler, *authenticator.Request) {
+// 	return s.Handler, s.Authenticator
+// }

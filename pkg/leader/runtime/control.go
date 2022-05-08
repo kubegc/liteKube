@@ -19,6 +19,7 @@ import (
 	"github.com/litekube/LiteKube/pkg/leader/runtime/control"
 	"github.com/litekube/LiteKube/pkg/likutemplate"
 	"github.com/litekube/LiteKube/pkg/token"
+	certutil "github.com/rancher/dynamiclistener/cert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -47,6 +48,8 @@ type LiteKubeControl struct {
 	EndPoint                  string
 	ValidateApiserverServerCA string
 	ValidateApiserverClientCA string
+	SignalKubeletServerCert   string
+	SignalKubeletServerKey    string
 	SignalApiserverClientCert string
 	SignalApiserverClientKey  string
 	AuthTokenFile             string
@@ -56,8 +59,10 @@ type LiteKubeControl struct {
 
 	ValidateApiserverServerCABase64 string
 	ValidateApiserverClientCABase64 string
-	CacheCertPath                   string
-	CacheKeyPath                    string
+	CacheClientCertPath             string
+	CacheClientKeyPath              string
+	CacheServerCertPath             string
+	CacheServerKeyPath              string
 	Token                           string
 }
 
@@ -70,7 +75,7 @@ type TokenDesc struct {
 	IsValid    bool
 }
 
-func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClient, bufferPath string, nodeToken string, endpoint string, validateApiserverServerCA string, validateApiserverClientCA string, signalApiserverClientCert string, signalApiserverClientKey string, authTokenFile string, clusterCIDR string, serviceClusterIpRange string) *LiteKubeControl {
+func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClient, bufferPath string, nodeToken string, endpoint string, validateApiserverServerCA string, validateApiserverClientCA string, signalKubeletServerCert string, signalKubeletServerKey string, signalApiserverClientCert string, signalApiserverClientKey string, authTokenFile string, clusterCIDR string, serviceClusterIpRange string) *LiteKubeControl {
 	tmp := &LiteKubeControl{
 		ctx:                       ctx,
 		BindAddress:               "0.0.0.0",
@@ -81,6 +86,8 @@ func NewLiteKubeControl(ctx context.Context, networkClient *NetWorkRegisterClien
 		NetworkClient:             networkClient,
 		ValidateApiserverServerCA: validateApiserverServerCA,
 		ValidateApiserverClientCA: validateApiserverClientCA,
+		SignalKubeletServerCert:   signalKubeletServerCert,
+		SignalKubeletServerKey:    signalKubeletServerKey,
 		SignalApiserverClientCert: signalApiserverClientCert,
 		SignalApiserverClientKey:  signalApiserverClientKey,
 		AuthTokenFile:             authTokenFile,
@@ -138,9 +145,10 @@ func (s *LiteKubeControl) Init() error {
 	}
 
 	s.AuthFile = filepath.Join(globalFold, ".auth.yaml")
-	s.CacheCertPath = filepath.Join(s.BufferPath, "kube-proxy.crt")
-	s.CacheKeyPath = filepath.Join(s.BufferPath, "kube-proxy.key")
-
+	s.CacheClientCertPath = filepath.Join(s.BufferPath, "kube-proxy.crt")
+	s.CacheClientKeyPath = filepath.Join(s.BufferPath, "kube-proxy.key")
+	s.CacheServerCertPath = filepath.Join(s.BufferPath, "kubelet-server.crt")
+	s.CacheServerKeyPath = filepath.Join(s.BufferPath, "kubelet-server.key")
 	return ensureToken(s.AuthFile)
 }
 
@@ -314,12 +322,14 @@ func (s *LiteKubeControl) DeleteToken(ctx context.Context, in *control.TokenStri
 
 }
 
-func (s *LiteKubeControl) BootStrapKubelet(ctx context.Context, request *control.BootStrapKubeletRequest) (*control.BootStrapKubeletResponse, error) {
+func (s *LiteKubeControl) BootStrapKubelet(ctx context.Context, in *control.BootStrapKubeletRequest) (*control.BootStrapKubeletResponse, error) {
 	klog.Info("bootstrap for kubelet")
 	var StatusCode int = http.StatusOK
 	var returnErr error = nil
 	buf := &bytes.Buffer{}
 	var data interface{}
+	var nodeIp string
+	var certBase64, keyBase64 string
 
 	// if !global.Exists(s.AuthTokenFile, s.ValidateApiserverCA) {
 	// 	return nil, fmt.Errorf("loss info")
@@ -352,7 +362,37 @@ func (s *LiteKubeControl) BootStrapKubelet(ctx context.Context, request *control
 		goto ERROR
 	}
 
-	return &control.BootStrapKubeletResponse{StatusCode: int32(StatusCode), Message: "success", Kubeconfig: base64.StdEncoding.EncodeToString(buf.Bytes()), ValidataCaCert: s.ValidateApiserverClientCABase64, ClusterDNS: s.ClusterDNS}, nil
+	nodeIp, returnErr = s.NetworkClient.QueryIpByToken(in.GetNodeToken())
+	if returnErr != nil || nodeIp == "" {
+		klog.Errorf("worker give an bad node-token to bootstrap-kubelet")
+		returnErr = fmt.Errorf("bad node-token to request")
+		StatusCode = http.StatusBadRequest
+		goto ERROR
+	}
+
+	if _, err := certificate.GenerateServerCertKey(true, "system:kubelet", nil, &certutil.AltNames{IPs: []net.IP{global.LocalhostIP, net.ParseIP(nodeIp)}}, s.SignalKubeletServerCert, s.SignalKubeletServerKey, s.CacheServerCertPath, s.CacheServerKeyPath); err != nil {
+		returnErr = fmt.Errorf("fail to write certificates cache for kubelet-server")
+		StatusCode = http.StatusInternalServerError
+		goto ERROR
+	}
+
+	if certStr, err := certificate.LoadCertificateAsBase64(s.SignalKubeletServerCert); err != nil {
+		returnErr = fmt.Errorf("fail to read certificates cache")
+		StatusCode = http.StatusInternalServerError
+		goto ERROR
+	} else {
+		certBase64 = certStr
+	}
+
+	if keyStr, err := certificate.LoadFileAsBase64(s.SignalKubeletServerKey); err != nil {
+		returnErr = fmt.Errorf("fail to read certificates key cache")
+		StatusCode = http.StatusInternalServerError
+		goto ERROR
+	} else {
+		keyBase64 = keyStr
+	}
+
+	return &control.BootStrapKubeletResponse{StatusCode: int32(StatusCode), Message: "success", Kubeconfig: base64.StdEncoding.EncodeToString(buf.Bytes()), ValidataCaCert: s.ValidateApiserverClientCABase64, ClusterDNS: s.ClusterDNS, ServerCert: certBase64, ServerKey: keyBase64}, nil
 
 ERROR:
 	return &control.BootStrapKubeletResponse{StatusCode: int32(StatusCode), Message: returnErr.Error()}, nil
@@ -378,13 +418,13 @@ func (s *LiteKubeControl) BootStrapKubeProxy(ctx context.Context, request *contr
 
 	klog.Infof("=>Get request for kube-proxy certificate bootstrap, latest will be recode to %s", s.BufferPath)
 
-	if _, err := certificate.GenerateClientCertKey(true, "system:kube-proxy", nil, s.SignalApiserverClientCert, s.SignalApiserverClientKey, s.CacheCertPath, s.CacheKeyPath); err != nil {
+	if _, err := certificate.GenerateClientCertKey(true, "system:kube-proxy", nil, s.SignalApiserverClientCert, s.SignalApiserverClientKey, s.CacheClientCertPath, s.CacheClientKeyPath); err != nil {
 		returnErr = fmt.Errorf("fail to write certificates cache")
 		StatusCode = http.StatusInternalServerError
 		goto ERROR
 	}
 
-	if certStr, err := certificate.LoadCertificateAsBase64(s.CacheCertPath); err != nil {
+	if certStr, err := certificate.LoadCertificateAsBase64(s.CacheClientCertPath); err != nil {
 		returnErr = fmt.Errorf("fail to read certificates cache")
 		StatusCode = http.StatusInternalServerError
 		goto ERROR
@@ -392,7 +432,7 @@ func (s *LiteKubeControl) BootStrapKubeProxy(ctx context.Context, request *contr
 		cert = certStr
 	}
 
-	if keyStr, err := certificate.LoadFileAsBase64(s.CacheKeyPath); err != nil {
+	if keyStr, err := certificate.LoadFileAsBase64(s.CacheClientKeyPath); err != nil {
 		returnErr = fmt.Errorf("fail to read certificates key cache")
 		StatusCode = http.StatusInternalServerError
 		goto ERROR

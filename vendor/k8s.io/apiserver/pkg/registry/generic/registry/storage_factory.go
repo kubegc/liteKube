@@ -49,8 +49,9 @@ func StorageWithCacher() generic.StorageDecorator {
 		if err != nil {
 			return s, d, err
 		}
-		if klog.V(5).Enabled() {
-			klog.InfoS("Storage caching is enabled", objectTypeToArgs(newFunc())...)
+		if klogV := klog.V(5); klogV.Enabled() {
+			//nolint:logcheck // It complains about the key/value pairs because it cannot check them.
+			klogV.InfoS("Storage caching is enabled", objectTypeToArgs(newFunc())...)
 		}
 
 		cacherConfig := cacherstorage.Config{
@@ -69,9 +70,12 @@ func StorageWithCacher() generic.StorageDecorator {
 		if err != nil {
 			return nil, func() {}, err
 		}
+		var once sync.Once
 		destroyFunc := func() {
-			cacher.Stop()
-			d()
+			once.Do(func() {
+				cacher.Stop()
+				d()
+			})
 		}
 
 		// TODO : Remove RegisterStorageCleanup below when PR

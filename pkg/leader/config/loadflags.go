@@ -329,7 +329,7 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	new.Options.AllowPrivileged = raw.Options.AllowPrivileged
 	new.Options.AuthorizationMode = raw.Options.AuthorizationMode
 	new.Options.AnonymousAuth = raw.Options.AnonymousAuth
-	new.Options.EnableSwaggerUI = raw.Options.EnableSwaggerUI
+	// new.Options.EnableSwaggerUI = raw.Options.EnableSwaggerUI
 	new.Options.EnableAdmissionPlugins = raw.Options.EnableAdmissionPlugins
 	new.Options.EncryptionProviderConfig = raw.Options.EncryptionProviderConfig
 	new.Options.Profiling = raw.Options.Profiling
@@ -391,12 +391,12 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 		new.ProfessionalOptions.AdvertiseAddress = raw.ProfessionalOptions.AdvertiseAddress
 	}
 
-	// InsecurePort
-	if raw.ProfessionalOptions.InsecurePort < 1 || raw.ProfessionalOptions.InsecurePort > 65535 {
-		new.ProfessionalOptions.InsecurePort = apiserver.DefaultAPO.InsecurePort
-	} else {
-		new.ProfessionalOptions.InsecurePort = raw.ProfessionalOptions.InsecurePort
-	}
+	// // InsecurePort
+	// if raw.ProfessionalOptions.InsecurePort < 1 || raw.ProfessionalOptions.InsecurePort > 65535 {
+	// 	new.ProfessionalOptions.InsecurePort = apiserver.DefaultAPO.InsecurePort
+	// } else {
+	// 	new.ProfessionalOptions.InsecurePort = raw.ProfessionalOptions.InsecurePort
+	// }
 
 	// FeatureGates
 	new.ProfessionalOptions.FeatureGates = raw.ProfessionalOptions.FeatureGates
@@ -509,9 +509,9 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	if raw.ProfessionalOptions.ProxyClientKeyFile != "" {
 		ka.ApiserverClientAuthProxyKey = raw.ProfessionalOptions.ProxyClientKeyFile
 	}
-	if raw.ProfessionalOptions.KubeletCertificateAuthority != "" {
-		ka.ApiserverValidateKubeletServerCA = raw.ProfessionalOptions.KubeletCertificateAuthority
-	}
+	// if raw.ProfessionalOptions.KubeletCertificateAuthority != "" {
+	// 	ka.ApiserverValidateKubeletServerCA = raw.ProfessionalOptions.KubeletCertificateAuthority
+	// }
 	if raw.ProfessionalOptions.KubeletClientCertificate != "" {
 		ka.ApiserverClientKubeletCert = raw.ProfessionalOptions.KubeletClientCertificate
 	}
@@ -528,7 +528,12 @@ func (leaderRuntime *LeaderRuntime) LoadApiserver() error {
 	new.ProfessionalOptions.RequestheaderClientCAFile = ka.ApiserverRequestHeaderCA
 	new.ProfessionalOptions.ProxyClientCertFile = ka.ApiserverClientAuthProxyCert
 	new.ProfessionalOptions.ProxyClientKeyFile = ka.ApiserverClientAuthProxyKey
-	new.ProfessionalOptions.KubeletCertificateAuthority = ka.ApiserverValidateKubeletServerCA
+	// new.ProfessionalOptions.KubeletCertificateAuthority = ka.ApiserverValidateKubeletServerCA
+	if raw.ProfessionalOptions.KubeletCertificateAuthority == "" {
+		new.ProfessionalOptions.KubeletCertificateAuthority = ka.ApiserverValidateKubeletServerCA
+	} else {
+		new.ProfessionalOptions.KubeletCertificateAuthority = raw.ProfessionalOptions.KubeletCertificateAuthority
+	}
 	new.ProfessionalOptions.KubeletClientCertificate = ka.ApiserverClientKubeletCert
 	new.ProfessionalOptions.KubeletClientKey = ka.ApiserverClientKubeletKey
 

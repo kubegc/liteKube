@@ -18,13 +18,16 @@ authorization:
   webhook:
     cacheAuthorizedTTL: 5m0s
     cacheUnauthorizedTTL: 30s
-address: "0.0.0.0"
+address: "{{.KubeletServerIp}}"
 port: 10250
 readOnlyPort: 10255
 cgroupDriver: systemd
 hairpinMode: promiscuous-bridge
 serializeImagePulls: false
 clusterDomain: cluster.local.
+kubeletCgroups: /litekube
+tlsCertFile: {{.ServerCertPath}}
+tlsPrivateKeyFile: {{.ServerKeyPath}}
 clusterDNS:
 - "{{.CluserDNS}}"
 `))
