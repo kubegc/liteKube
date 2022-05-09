@@ -93,7 +93,7 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 			leaderRuntime.RuntimeOption.NetmamagerOptions,
 			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "network-controller/client/"),
 			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/network-control/"),
-			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/network-controller/server/"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/network-controller/client/"),
 		)
 		if err := leaderRuntime.NetworkJoinClient.Run(); err != nil {
 			klog.Errorf("bad args for network manager client")
