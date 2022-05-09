@@ -67,8 +67,8 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 		// run kine and network-manager
 		leaderRuntime.KineServer = runtime.NewKineServer(leaderRuntime.control.ctx,
 			leaderRuntime.RuntimeOption.KineOptions,
-			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/kine/"),
-			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/kine.log"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "kine/"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/kine.log"),
 		)
 		if err := leaderRuntime.KineServer.Run(); err != nil {
 			klog.Errorf("bad args for kine server")
@@ -80,7 +80,9 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 		leaderRuntime.NetworkControllerServer = runtime.NewNetWorkControllerServer(leaderRuntime.control.ctx,
 			leaderRuntime.RuntimeAuthentication.NetWorkController,
 			leaderRuntime.RuntimeOption.NetmamagerOptions,
-			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-manager.log"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "network-controller/server/"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/network-control/"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/network-controller/server/"),
 		)
 		if err := leaderRuntime.NetworkControllerServer.Run(); err != nil {
 			klog.Errorf("bad args for network manager server")
@@ -89,7 +91,9 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 	} else {
 		leaderRuntime.NetworkJoinClient = runtime.NewNetWorkJoinClient(leaderRuntime.control.ctx,
 			leaderRuntime.RuntimeOption.NetmamagerOptions,
-			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "network-controller/client/"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/network-control/"),
+			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/network-controller/server/"),
 		)
 		if err := leaderRuntime.NetworkJoinClient.Run(); err != nil {
 			klog.Errorf("bad args for network manager client")

@@ -18,8 +18,8 @@
 .vscode
 build
 
-cmd/leader/leader
-cmd/worker/worker
+cmd/leader/leader*
+cmd/worker/worker*
 leader.yaml
 worker.yaml
 test
