@@ -52,7 +52,9 @@ func (workerRuntime *WorkerRuntime) RunForward() error {
 	if workerRuntime.RuntimeOption.NetmamagerOptions.Token != "local" {
 		workerRuntime.NetworkJoinClient = leaderruntime.NewNetWorkJoinClient(workerRuntime.control.ctx,
 			workerRuntime.RuntimeOption.NetmamagerOptions,
-			filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.WorkDir, "/logs/network-client.log"),
+			filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.WorkDir, "network-controller/client/"),
+			filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.WorkDir, "tls/network-control/"),
+			filepath.Join(workerRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/network-controller/client/"),
 		)
 
 		if err := workerRuntime.NetworkJoinClient.Run(); err != nil {

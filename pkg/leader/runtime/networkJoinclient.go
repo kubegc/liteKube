@@ -13,7 +13,9 @@ import (
 
 type NetWorkJoinClient struct {
 	ctx         context.Context
-	LogPath     string
+	WorkDir     string
+	TLSDir      string
+	LogDir      string
 	BindAddress string
 	Port        uint16
 	CAPath      string
@@ -22,11 +24,13 @@ type NetWorkJoinClient struct {
 	NodeToken   string
 }
 
-func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions, logPath string) *NetWorkJoinClient {
+func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions, workDir string, tlsDir string, logDir string) *NetWorkJoinClient {
 
 	return &NetWorkJoinClient{
 		ctx:         ctx,
-		LogPath:     logPath,
+		WorkDir:     workDir,
+		TLSDir:      tlsDir,
+		LogDir:      logDir,
 		BindAddress: opt.JoinOptions.Address,
 		Port:        opt.JoinOptions.SecurePort,
 		CAPath:      opt.JoinOptions.CACert,

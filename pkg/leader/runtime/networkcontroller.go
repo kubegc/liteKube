@@ -14,7 +14,9 @@ import (
 
 type NetWorkControllerServer struct {
 	ctx     context.Context
-	LogPath string
+	LogDir  string
+	TLSDir  string
+	WorkDir string
 
 	// register
 	RegisterBindAddress string
@@ -33,11 +35,13 @@ type NetWorkControllerServer struct {
 	JoinServerkey   string
 }
 
-func NewNetWorkControllerServer(ctx context.Context, opt *authentication.NetworkControllerAuthentication, clientOpt *netmanager.NetManagerOptions, logPath string) *NetWorkControllerServer {
+func NewNetWorkControllerServer(ctx context.Context, opt *authentication.NetworkControllerAuthentication, clientOpt *netmanager.NetManagerOptions, workDir string, tlsDir string, logDir string) *NetWorkControllerServer {
 
 	return &NetWorkControllerServer{
 		ctx:     ctx,
-		LogPath: logPath,
+		LogDir:  logDir,
+		TLSDir:  tlsDir,
+		WorkDir: workDir,
 
 		// register
 		RegisterBindAddress: opt.RegisterBindAddress,
