@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"database/sql"
-	"github.com/Litekube/network-controller/utils"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -12,7 +11,6 @@ const (
 )
 
 var db *sql.DB
-var logger = utils.GetLogger()
 
 func GetDb() *sql.DB {
 	return db
@@ -24,12 +22,10 @@ func InitSqlite(dbPath string) (err error) {
 	}
 	db, err = sql.Open(dbDriverName, dbPath)
 	if err != nil {
-		logger.Infof("fail to open sqlite err: %+v", err)
 		return
 	}
 	err = createTable()
 	if err != nil {
-		logger.Infof("fail to create table: %+v", err)
 		return
 	}
 	return

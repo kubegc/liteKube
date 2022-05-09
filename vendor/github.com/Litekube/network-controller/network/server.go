@@ -25,8 +25,10 @@ import (
 	"github.com/Litekube/network-controller/contant"
 	"github.com/Litekube/network-controller/grpc/grpc_server"
 	"github.com/Litekube/network-controller/sqlite"
+	"github.com/Litekube/network-controller/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/op/go-logging"
 	"github.com/songgao/water"
 	"golang.org/x/net/ipv4"
 	"net"
@@ -65,9 +67,11 @@ type NetworkServer struct {
 	//inData         chan *Data
 	toIface          chan []byte
 	wg               sync.WaitGroup
+	externalWg       sync.WaitGroup
 	unRegisterCh     chan string
 	idleCheckTimer   *time.Ticker
 	networkTLSConfig config.TLSConfig
+	Logger           *logging.Logger
 }
 
 var networkServer *NetworkServer
@@ -96,6 +100,7 @@ func NewServer(cfg config.ServerConfig) *NetworkServer {
 		unregister:     make(chan *connection),
 		toIface:        make(chan []byte, 100),
 		wg:             sync.WaitGroup{},
+		externalWg:     sync.WaitGroup{},
 		unRegisterCh:   nil,
 		idleCheckTimer: time.NewTicker(contant.IdleTokenCheckDuration),
 		networkTLSConfig: config.TLSConfig{
@@ -107,14 +112,29 @@ func NewServer(cfg config.ServerConfig) *NetworkServer {
 			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
 		},
 	}
+	// init log
+	utils.InitLogger(cfg.LogDir, contant.ServerLogName, cfg.Debug)
+	networkServer.Logger = utils.GetLogger()
+	logger = networkServer.Logger
+
 	return networkServer
 }
 
 func (server *NetworkServer) Run() error {
-	defer logger.Debug("network server done")
+	defer func() {
+		logger.Debug("network server done")
+		networkServer.externalWg.Done()
+	}()
+
+	networkServer.externalWg.Add(1)
+	networkServer.wg.Add(1)
 
 	// init db
-	sqlite.InitSqlite(server.cfg.DbPath)
+	err := sqlite.InitSqlite(server.cfg.DbPath)
+	if err != nil {
+		return err
+	}
+
 	// networkaddr = 10.1.1.1/24
 	ip, subnet, err := net.ParseCIDR(server.cfg.NetworkAddr)
 	if err != nil {
@@ -127,7 +147,7 @@ func (server *NetworkServer) Run() error {
 
 	unRegisterCh := make(chan string, 8)
 	networkServer.unRegisterCh = unRegisterCh
-	gServer := grpc_server.NewGrpcServer(server.cfg, server.ctx, server.stopCh, unRegisterCh, serverIp)
+	gServer := grpc_server.NewGrpcServer(server.cfg, server.ctx, server.stopCh, server.Logger, unRegisterCh, serverIp)
 	go gServer.StartGrpcServerTcp()
 	go gServer.StartBootstrapServerTcp()
 
@@ -136,9 +156,6 @@ func (server *NetworkServer) Run() error {
 	//if err != nil {
 	//	return err
 	//}
-	// sync cache with db
-	networkServer.wg = sync.WaitGroup{}
-	networkServer.wg.Add(1)
 
 	iface, err := newTun("")
 	if err != nil {
@@ -191,6 +208,8 @@ func (server *NetworkServer) Run() error {
 	if err != nil && err != http.ErrServerClosed {
 		logger.Panicf("ListenAndServe: %+v", err.Error())
 	}
+
+	time.Sleep(200 * time.Millisecond)
 	return nil
 }
 
@@ -239,7 +258,7 @@ func (server *NetworkServer) run() {
 			}
 
 			clientIP := c.ipAddress.IP.String()
-			_, ok := server.clients[clientIP]
+			conn, ok := server.clients[clientIP]
 			if ok {
 				delete(server.clients, clientIP)
 				close(c.data)
@@ -249,6 +268,8 @@ func (server *NetworkServer) run() {
 					nm := sqlite.NetworkMgr{}
 					nm.UpdateStateByToken(contant.STATE_IDLE, c.token)
 				}
+				// add ctx canctl to sync write/read pump
+				conn.cancel()
 				logger.Infof("unregister Connection: %+v, current active clients number: %+v", c.ipAddress.IP, len(server.clients))
 			}
 			break
@@ -257,14 +278,6 @@ func (server *NetworkServer) run() {
 }
 
 func (server *NetworkServer) handleInterface() {
-
-	defer logger.Debug("handleInterface done")
-	go func() {
-		select {
-		case <-server.stopCh:
-			return
-		}
-	}()
 
 	// network packet to interface
 	go func() {
@@ -323,38 +336,6 @@ func (server *NetworkServer) isConnectionBetweenClients(header *ipv4.Header) boo
 	return false
 }
 
-// server exit gracefully
-func (server *NetworkServer) cleanUp() {
-
-	defer logger.Debug("server cleanup done")
-
-	c := make(chan os.Signal, 1)
-	// watch ctrl+c or kill pid
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-	<-c
-	logger.Debug("clean up")
-
-	// update all connected state in sqlite
-	nm := sqlite.NetworkMgr{}
-	_, err := nm.UpdateAllState()
-	if err != nil {
-		logger.Error(err)
-	}
-	logger.Debug("update all connected state")
-
-	// close all client connection
-	for key, client := range server.clients {
-		client.ws.Close()
-		delete(server.clients, key)
-	}
-	//close(server.unregister)
-
-	//server.cancel()
-	close(server.stopCh)
-	// code zero indicates success
-	os.Exit(0)
-}
-
 func (server *NetworkServer) initSyncBindIpWithDb(serverIp string) error {
 	defer server.wg.Done()
 
@@ -379,7 +360,7 @@ func (server *NetworkServer) initSyncBindIpWithDb(serverIp string) error {
 	// ignore exsit err, guarantee for reserverd
 	logger.Debugf("network server ip:%+v", serverIp)
 	nm.Insert(sqlite.NetworkMgr{
-		Token:  "reserverd",
+		Token:  contant.ReservedToken,
 		State:  3,
 		BindIp: serverIp,
 	})
@@ -412,4 +393,41 @@ func (server *NetworkServer) handleGrpcUnRegister() error {
 			tm.DeleteExpireToken()
 		}
 	}
+}
+
+// server exit gracefully
+func (server *NetworkServer) cleanUp() {
+
+	defer logger.Debug("server cleanup done")
+
+	c := make(chan os.Signal, 1)
+	// watch ctrl+c or kill pid
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+	<-c
+	logger.Debug("clean up")
+
+	// update all connected state in sqlite
+	nm := sqlite.NetworkMgr{}
+	_, err := nm.UpdateAllState()
+	if err != nil {
+		logger.Error(err)
+	}
+	logger.Debug("update all connected state")
+
+	// close all client connection
+	for key, client := range server.clients {
+		client.ws.Close()
+		delete(server.clients, key)
+	}
+	//close(server.unregister)
+	close(server.stopCh)
+	// code zero indicates success
+	//os.Exit(0)
+}
+
+func (server *NetworkServer) Stop() {
+	defer func() {
+		server.externalWg.Wait()
+	}()
+	<-server.stopCh
 }

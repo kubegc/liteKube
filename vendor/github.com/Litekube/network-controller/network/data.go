@@ -17,9 +17,11 @@
  */
 package network
 
-import "github.com/Litekube/network-controller/utils"
+import (
+	"github.com/op/go-logging"
+)
 
-var logger = utils.GetLogger()
+var logger *logging.Logger
 var MTU = 1400
 
 type Data struct {

@@ -10,6 +10,7 @@ import (
 	"github.com/Litekube/network-controller/grpc/pb_gen"
 	"github.com/Litekube/network-controller/sqlite"
 	"github.com/Litekube/network-controller/utils"
+	"github.com/op/go-logging"
 	certutil "github.com/rancher/dynamiclistener/cert"
 )
 
@@ -24,9 +25,10 @@ type NetworkControllerService struct {
 	networkServerPort string
 }
 
-var logger = utils.GetLogger()
+var logger *logging.Logger
 
-func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, ip, serverIp, bootstrapPort, grpcServerPort, networkServerPort string) *NetworkControllerService {
+func NewLiteNCService(Logger *logging.Logger, unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, ip, serverIp, bootstrapPort, grpcServerPort, networkServerPort string) *NetworkControllerService {
+	logger = Logger
 	return &NetworkControllerService{
 		unRegisterCh:      unRegisterCh,
 		grpcTlsConfig:     grpcTlsConfig,
@@ -99,7 +101,7 @@ func (service *NetworkControllerService) CheckConnState(ctx context.Context, req
 	nm := sqlite.NetworkMgr{}
 	item, err := nm.QueryByToken(req.Token)
 	if item == nil {
-		return wrappedResp(contant.STATUS_OK, err.Error(), "", -1)
+		return wrappedResp(contant.STATUS_BADREQUEST, err.Error(), "", -1)
 	} else if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "", -1)
 	}
@@ -130,7 +132,7 @@ func (service *NetworkControllerService) UnRegister(ctx context.Context, req *pb
 	nm := sqlite.NetworkMgr{}
 	item, err := nm.QueryByToken(req.Token)
 	if item == nil {
-		return wrappedResp(contant.STATUS_OK, err.Error(), false)
+		return wrappedResp(contant.STATUS_BADREQUEST, err.Error(), false)
 	} else if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), false)
 	}
@@ -167,7 +169,7 @@ func (service *NetworkControllerService) GetRegistedIp(ctx context.Context, req 
 	nm := sqlite.NetworkMgr{}
 	item, err := nm.QueryByToken(req.Token)
 	if item == nil {
-		return wrappedResp(contant.STATUS_OK, err.Error(), "")
+		return wrappedResp(contant.STATUS_BADREQUEST, err.Error(), "")
 	} else if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
@@ -179,6 +181,10 @@ func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_g
 
 	wrappedResp := func(code, message, token string) (resp *pb_gen.GetTokenResponse, err error) {
 		if code != contant.STATUS_OK {
+			err = errors.New(message)
+		} else if token == "" {
+			code = contant.STATUS_ERR
+			message = "nil node-token"
 			err = errors.New(message)
 		}
 		resp = &pb_gen.GetTokenResponse{
@@ -207,7 +213,7 @@ func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_g
 	tm := sqlite.TokenMgr{}
 	item, err := tm.QueryByToken(req.BootStrapToken)
 	if item == nil {
-		return wrappedResp(contant.STATUS_OK, err.Error(), "")
+		return wrappedResp(contant.STATUS_BADREQUEST, err.Error(), "")
 	} else if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
@@ -225,7 +231,7 @@ func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_g
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
 
-	keyBytes, certBytes, _, err := certs.GenerateClientCertKey(true, "network-controller-grpc-client", []string{"network-controller-grpc"}, service.grpcTlsConfig.CAFile, service.grpcTlsConfig.CAKeyFile, service.grpcTlsConfig.ClientCertFile, service.grpcTlsConfig.ClientKeyFile)
+	keyBytes, certBytes, _, err := certs.GenerateClientCertKey(true, false, "network-controller-grpc-client", []string{"lknm:register"}, service.grpcTlsConfig.CAFile, service.grpcTlsConfig.CAKeyFile, service.grpcTlsConfig.ClientCertFile, service.grpcTlsConfig.ClientKeyFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
@@ -241,7 +247,7 @@ func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_g
 	resp.GrpcClientKey = base64.StdEncoding.EncodeToString(keyBytes)
 	resp.GrpcClientCert = base64.StdEncoding.EncodeToString(certBytes)
 
-	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, "network-controller-client", []string{"network-controller"}, service.networkTlsConfig.CAFile, service.networkTlsConfig.CAKeyFile, service.networkTlsConfig.ClientCertFile, service.networkTlsConfig.ClientKeyFile)
+	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, false, "network-controller-client", []string{"lknm:join"}, service.networkTlsConfig.CAFile, service.networkTlsConfig.CAKeyFile, service.networkTlsConfig.ClientCertFile, service.networkTlsConfig.ClientKeyFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}

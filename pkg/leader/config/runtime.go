@@ -3,10 +3,6 @@ package config
 import (
 	"context"
 	"fmt"
-	"path/filepath"
-	"sync"
-	"time"
-
 	workerapp "github.com/litekube/LiteKube/cmd/worker/app"
 	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/leader/runtime"
@@ -14,6 +10,8 @@ import (
 	"github.com/litekube/LiteKube/pkg/options/worker"
 	workeroptions "github.com/litekube/LiteKube/pkg/options/worker"
 	"k8s.io/klog/v2"
+	"path/filepath"
+	"sync"
 )
 
 type LeaderRuntime struct {
@@ -97,8 +95,8 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 		}
 	}
 
-	// wait to be enhance by network-controller
-	time.Sleep(10 * time.Second) // only for debug, waiting for network-controller to start
+	// todo wait to be enhance by network-controller
+	//time.Sleep(10 * time.Second) // only for debug, waiting for network-controller to start
 
 	leaderRuntime.NetworkRegisterClient = runtime.NewNetWorkRegisterClient(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.NetmamagerOptions)
 	return nil

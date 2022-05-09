@@ -20,11 +20,12 @@ package network
 import (
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"github.com/Litekube/network-controller/certs"
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/contant"
+	"github.com/Litekube/network-controller/utils"
 	"github.com/gorilla/websocket"
+	"github.com/op/go-logging"
 	"github.com/songgao/water"
 	"net"
 	"net/http"
@@ -32,6 +33,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 
 	"time"
@@ -40,7 +42,8 @@ import (
 )
 
 type Client struct {
-	stopCh chan struct{}
+	stopCh     chan struct{}
+	externalWg sync.WaitGroup
 	// config
 	cfg config.ClientConfig
 	// interface
@@ -54,6 +57,7 @@ type Client struct {
 	// store route des ip
 	routes          []string
 	ClientTLSConfig config.TLSConfig
+	Logger          *logging.Logger
 }
 
 var net_gateway, net_nic string
@@ -65,14 +69,16 @@ func NewClient(cfg config.ClientConfig) *Client {
 	}
 
 	client := &Client{
-		cfg:     cfg,
-		iface:   nil,
-		ip:      nil,
-		toIface: make(chan []byte, 100),
-		ws:      nil,
-		data:    make(chan *Data, 100),
-		state:   0,
-		routes:  make([]string, 0, 1024),
+		stopCh:     make(chan struct{}),
+		externalWg: sync.WaitGroup{},
+		cfg:        cfg,
+		iface:      nil,
+		ip:         nil,
+		toIface:    make(chan []byte, 100),
+		ws:         nil,
+		data:       make(chan *Data, 100),
+		state:      0,
+		routes:     make([]string, 0, 1024),
 		ClientTLSConfig: config.TLSConfig{
 			CAFile:         cfg.CAFile,
 			CAKeyFile:      filepath.Join(cfg.NetworkCertDir, contant.CAKeyFile),
@@ -80,10 +86,22 @@ func NewClient(cfg config.ClientConfig) *Client {
 			ClientKeyFile:  cfg.ClientKeyFile,
 		},
 	}
+
+	// init log
+	utils.InitLogger(cfg.LogDir, contant.ClientLogName, cfg.Debug)
+	client.Logger = utils.GetLogger()
+	logger = client.Logger
+
 	return client
 }
 
 func (client *Client) Run() error {
+	defer func() {
+		logger.Debug("client Run done")
+		client.externalWg.Done()
+	}()
+
+	client.externalWg.Add(1)
 
 	go client.cleanUp()
 
@@ -128,13 +146,19 @@ func (client *Client) Run() error {
 		logger.Error(err)
 		return err
 	}
+	// support tls
+	dialer := websocket.Dialer{
+		TLSClientConfig: &tls.Config{
+			RootCAs:      pool,
+			Certificates: []tls.Certificate{tlsCert},
+		},
+	}
+
 	for ok := true; ok; ok = (connection == nil) {
-		// support tls
-		dialer := websocket.Dialer{
-			TLSClientConfig: &tls.Config{
-				RootCAs:      pool,
-				Certificates: []tls.Certificate{tlsCert},
-			},
+		select {
+		case <-client.stopCh:
+			return nil
+		default:
 		}
 		connection, _, err = dialer.Dial(u.String(), header)
 		//connection, _, err = websocket.DefaultDialer.Dial(u.String(), header)
@@ -166,16 +190,25 @@ func (client *Client) Run() error {
 		ConnectionState: contant.STATE_CONNECT,
 	}
 
+	go func() {
+		select {
+		case <-client.stopCh:
+			connection.Close()
+			return
+		}
+	}()
+
 	// read
 	for {
 		messageType, r, err := connection.ReadMessage()
 		if err != nil {
-			logger.Error(err)
+			logger.Warning(err)
 			delRoute("0.0.0.0/1")
 			delRoute("128.0.0.0/1")
 			for _, dest := range client.routes {
 				delRoute(dest)
 			}
+			close(client.stopCh)
 			break
 		} else {
 			if messageType == websocket.TextMessage {
@@ -183,7 +216,7 @@ func (client *Client) Run() error {
 			}
 		}
 	}
-	return errors.New("Not expected to exit")
+	return nil
 }
 
 func (client *Client) dispatcher(p []byte) {
@@ -208,7 +241,6 @@ func (client *Client) dispatcher(p []byte) {
 					logger.Errorf("Redirect gateway error: %+v", err.Error())
 				}
 			}
-
 			client.state = contant.STATE_CONNECTED
 			client.handleInterface()
 		}
@@ -219,6 +251,7 @@ func (client *Client) dispatcher(p []byte) {
 }
 
 func (client *Client) handleInterface() {
+	defer logger.Debug("client handleInterface done")
 	// network packet to interface
 	go func() {
 		for {
@@ -256,10 +289,13 @@ func (client *Client) writePump() {
 	defer func() {
 		ticker.Stop()
 		client.ws.Close()
+		logger.Debug("client writePump done")
 	}()
 
 	for {
 		select {
+		case <-client.stopCh:
+			return
 		case message, ok := <-client.data:
 			if !ok {
 				client.write(websocket.CloseMessage, &Data{})
@@ -293,10 +329,11 @@ func (client *Client) write(mt int, message *Data) error {
 
 // client exit gracefully
 func (client *Client) cleanUp() {
+	defer logger.Debug("client cleanup done")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	<-c
-	logger.Info("Cleaning Up")
+	logger.Info("client start cleaning up")
 	// redirectGateway = true
 	delRoute("0.0.0.0/1")
 	delRoute("128.0.0.0/1")
@@ -304,5 +341,11 @@ func (client *Client) cleanUp() {
 		delRoute(dest)
 	}
 
-	os.Exit(0)
+	close(client.stopCh)
+	//os.Exit(0)
+}
+
+func (client *Client) Wait() {
+	defer client.externalWg.Wait()
+	<-client.stopCh
 }

@@ -18,6 +18,7 @@
 package network
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,6 +39,8 @@ const (
 
 type connection struct {
 	stopCh    chan struct{}
+	ctx       context.Context
+	cancel    context.CancelFunc
 	id        int
 	ws        *websocket.Conn
 	server    *NetworkServer
@@ -79,7 +82,8 @@ func NewConnection(ws *websocket.Conn, server *NetworkServer, token string) (*co
 	// auto inc
 	maxId++
 	data := make(chan *Data)
-	c := &connection{server.stopCh, maxId, ws, server, data, contant.STATE_INIT, nil, token, bindIp}
+	ctx, cancel := context.WithCancel(context.TODO())
+	c := &connection{server.stopCh, ctx, cancel, maxId, ws, server, data, contant.STATE_INIT, nil, token, bindIp}
 
 	// fix server gen token, no need insert now
 	if len(bindIp) == 0 {
@@ -123,14 +127,6 @@ func (c *connection) readPump() {
 		return nil
 	})
 
-	go func() {
-		select {
-		case <-c.stopCh:
-			flag = true
-			return
-		}
-	}()
-
 	// continue to read
 	for {
 		messageType, r, err := c.ws.ReadMessage()
@@ -138,7 +134,7 @@ func (c *connection) readPump() {
 			c.cleanUp()
 			break
 		} else if err != nil {
-			logger.Info(err)
+			logger.Warning(err)
 			c.cleanUp()
 			break
 		} else {
@@ -160,6 +156,8 @@ func (c *connection) writePump() {
 	for {
 		if c != nil {
 			select {
+			case <-c.ctx.Done():
+				return
 			case <-c.stopCh:
 				return
 			case message, ok := <-c.data:

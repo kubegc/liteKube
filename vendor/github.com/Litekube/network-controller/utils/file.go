@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"syscall"
 )
@@ -29,6 +30,58 @@ func CreateDir(path string) {
 	if !Exists(path) {
 		os.MkdirAll(path, os.ModePerm)
 	}
+}
+
+func GetHomeDir() string {
+	if home, err := os.UserHomeDir(); err != nil {
+		return ""
+	} else {
+		return home
+	}
+}
+
+func CopyFile(src, dst string) error {
+
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return fmt.Errorf("%s is not a regular file.", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	if Exists(dst) {
+		return fmt.Errorf("File %s already exists.", dst)
+	}
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return nil
+	}
+	defer destination.Close()
+
+	buf := make([]byte, 1024)
+	for {
+		n, err := source.Read(buf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if n == 0 {
+			break
+		}
+
+		if _, err := destination.Write(buf[:n]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func Pwd() (string, error) {

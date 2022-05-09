@@ -16,8 +16,9 @@ type NetManagerOptions struct {
 }
 
 type NetOptions struct {
-	Address        string `yaml:"network-address"`
-	SecurePort     uint16 `yaml:"secure-port"`
+	Address    string `yaml:"network-address"`
+	SecurePort uint16 `yaml:"secure-port"`
+	//InSecurePort     uint16 `yaml:"insecure-port"`
 	CACert         string `yaml:"ca-cert"`
 	ClientCertFile string `yaml:"client-cert-file"`
 	ClientkeyFile  string `yaml:"client-key-file"`

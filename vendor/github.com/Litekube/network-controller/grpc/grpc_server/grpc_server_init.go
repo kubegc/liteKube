@@ -5,11 +5,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/Litekube/network-controller/certs"
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/contant"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
 	"github.com/Litekube/network-controller/internal"
 	"github.com/Litekube/network-controller/utils"
+	"github.com/op/go-logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -37,14 +39,14 @@ type GrpcServer struct {
 	networkTlsConfig  config.TLSConfig
 }
 
-var logger = utils.GetLogger()
+var logger *logging.Logger
 var gServer *GrpcServer
 
 func GetGServer() *GrpcServer {
 	return gServer
 }
 
-func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan struct{}, unRegisterCh chan string, serverIp string) *GrpcServer {
+func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan struct{}, Logger *logging.Logger, unRegisterCh chan string, serverIp string) *GrpcServer {
 	s := &GrpcServer{
 		ctx:               ctx,
 		stopCh:            stopCh,
@@ -70,13 +72,15 @@ func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan str
 		},
 	}
 
+	logger = Logger
+
 	ip := cfg.Ip
 	if ip == "" {
 		//backup
 		ip = utils.QueryPublicIp()
 	}
 
-	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, serverIp, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.GrpcPort), strconv.Itoa(cfg.Port))
+	s.service = internal.NewLiteNCService(Logger, unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, serverIp, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.GrpcPort), strconv.Itoa(cfg.Port))
 	return s
 }
 
@@ -93,8 +97,14 @@ func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan str
 func (s *GrpcServer) StartGrpcServerTcp() error {
 	defer logger.Debug("StartGrpcServerTcp done")
 
+	err := certs.CheckGrpcClientCertConfig(s.grpcTlsConfig)
+	if err != nil {
+		logger.Errorf("CheckGrpcClientCertConfig err: %+v", err)
+		return err
+	}
 	tcpAddr := fmt.Sprintf(":%d", s.port)
 	lis, err := net.Listen("tcp", tcpAddr)
+	defer lis.Close()
 	if err != nil {
 		logger.Errorf("tcp failed to listen: %v", err)
 		return err

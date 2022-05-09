@@ -59,7 +59,9 @@ func (s *NetWorkJoinClient) Run() error {
 			klog.Infof("network controller client exited: %v", err)
 			panic(err)
 		}
+
 	}()
+	defer client.Wait()
 
 	return nil
 }

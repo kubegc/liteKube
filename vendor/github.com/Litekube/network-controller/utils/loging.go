@@ -18,26 +18,54 @@
 package utils
 
 import (
-	"os"
-
+	"github.com/Litekube/network-controller/contant"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/op/go-logging"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 var logger *logging.Logger
 
 func GetLogger() *logging.Logger {
-	if logger == nil {
-		InitLogger()
-	}
 	return logger
 }
 
-func InitLogger() {
+func InitLogger(logDir, logName string, debug bool) {
+	if logName == "" {
+		logName = contant.DefualtLogName
+	}
+
+	// set rotate log
+	latestPath := filepath.Join(logDir, logName)
+	prefix := strings.Split(latestPath, ".log")[0]
+
+	content, _ := rotatelogs.New(
+		// retate log format
+		prefix+"_%Y-%m-%d.log",
+		// ref to latest log file
+		rotatelogs.WithLinkName(latestPath),
+		//MaxAge and RotationCount cannot be both set
+		rotatelogs.WithMaxAge(time.Duration(168)*time.Hour),
+		//rotate each day
+		rotatelogs.WithRotationTime(time.Duration(24)*time.Hour),
+	)
+
+	// set logging format
 	logger = logging.MustGetLogger("network-controller")
-	fmt_string := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}"
-	format := logging.MustStringFormatter(fmt_string)
+	loggerFmt := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}"
+	format := logging.MustStringFormatter(loggerFmt)
 	logging.SetFormatter(format)
-	logging.SetBackend(logging.NewLogBackend(os.Stdout, "", 0))
+
+	// set output: stdout & file
+	fback := logging.NewLogBackend(content, "", 0)
+	stdback := logging.NewLogBackend(os.Stdout, "", 0)
+	logging.SetBackend(fback, stdback)
+
+	// set log level
+	SetLoggerLevel(debug)
 }
 
 func SetLoggerLevel(debug bool) {

@@ -56,26 +56,26 @@ func GenerateServerCertKey(regen bool, commonName string, organization []string,
 		return keyBytes, certutil.EncodeCertPEM(cert), false, nil
 	}
 
-	return GenerateCertKey(regen, commonName, organization, altNames, []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, caCertPath, caKeyPath, certPath, keyPath)
+	return GenerateCertKey(regen, false, commonName, organization, altNames, []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, caCertPath, caKeyPath, certPath, keyPath)
 }
 
-func GenerateClientCertKey(regen bool, commonName string, organization []string, caCertPath, caKeyPath, certPath, keyPath string) ([]byte, []byte, bool, error) {
+func GenerateClientCertKey(regen, writeFile bool, commonName string, organization []string, caCertPath, caKeyPath, certPath, keyPath string) ([]byte, []byte, bool, error) {
 	if !ValidateTLSPair(caCertPath, caKeyPath) {
 		return []byte{}, []byte{}, false, fmt.Errorf("bad CA")
 	}
 
 	// already exist and valid
-	//if !regen && utils.Exists(certPath, keyPath) && ValidateCA(certPath, caCertPath) {
-	//	keyBytes, _, _ := certutil.LoadOrGenerateKeyFile(keyPath, regen)
-	//	cert, _ := LoadCertificate(caCertPath)
-	//	return keyBytes, certutil.EncodeCertPEM(cert), false, nil
-	//}
+	if !regen && utils.Exists(certPath, keyPath) && ValidateCA(certPath, caCertPath) {
+		keyBytes, _, _ := certutil.LoadOrGenerateKeyFile(keyPath, regen)
+		cert, _ := LoadCertificate(caCertPath)
+		return keyBytes, certutil.EncodeCertPEM(cert), false, nil
+	}
 	// always re-generate for new client
-	return GenerateCertKey(true, commonName, organization, nil, []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}, caCertPath, caKeyPath, certPath, keyPath)
+	return GenerateCertKey(regen, writeFile, commonName, organization, nil, []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}, caCertPath, caKeyPath, certPath, keyPath)
 }
 
 // set regen=true to force gen new cert
-func GenerateCertKey(regen bool, commonName string, organization []string, altNames *certutil.AltNames, extKeyUsage []x509.ExtKeyUsage, caCertPath, caKeyPath, certPath, keyPath string) ([]byte, []byte, bool, error) {
+func GenerateCertKey(regen, writeFile bool, commonName string, organization []string, altNames *certutil.AltNames, extKeyUsage []x509.ExtKeyUsage, caCertPath, caKeyPath, certPath, keyPath string) ([]byte, []byte, bool, error) {
 	caBytes, err := ioutil.ReadFile(caCertPath)
 	if err != nil {
 		return []byte{}, []byte{}, false, err
@@ -135,15 +135,16 @@ func GenerateCertKey(regen bool, commonName string, organization []string, altNa
 		return []byte{}, []byte{}, false, err
 	}
 
-	err = certutil.WriteCert(certPath, append(certutil.EncodeCertPEM(cert), certutil.EncodeCertPEM(caCert[0])...))
-	if err != nil {
-		return []byte{}, []byte{}, false, err
-	}
+	if writeFile {
+		err = certutil.WriteCert(certPath, append(certutil.EncodeCertPEM(cert), certutil.EncodeCertPEM(caCert[0])...))
+		if err != nil {
+			return []byte{}, []byte{}, false, err
+		}
 
-	// for local admin use
-	if !utils.Exists(certPath, keyPath) || flag {
-		fmt.Println("1111")
-		certutil.WriteCert(certPath, certutil.EncodeCertPEM(cert))
+		// for local admin use
+		if !utils.Exists(certPath, keyPath) || flag {
+			certutil.WriteCert(certPath, certutil.EncodeCertPEM(cert))
+		}
 	}
 
 	return keyBytes, certutil.EncodeCertPEM(cert), true, nil

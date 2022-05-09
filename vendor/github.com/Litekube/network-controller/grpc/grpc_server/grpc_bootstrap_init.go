@@ -17,6 +17,7 @@ func (s *GrpcServer) StartBootstrapServerTcp() error {
 
 	tcpAddr := fmt.Sprintf(":%d", s.bootstrapPort)
 	lis, err := net.Listen("tcp", tcpAddr)
+	defer lis.Close()
 	if err != nil {
 		logger.Errorf("tcp failed to listen: %v", err)
 		return err

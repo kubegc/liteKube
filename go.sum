@@ -121,6 +121,8 @@ github.com/Litekube/kubernetes/staging/src/k8s.io/pod-security-admission v1.24.1
 github.com/Litekube/kubernetes/staging/src/k8s.io/pod-security-admission v1.24.1-0.20220506094841-51802d7e46cc/go.mod h1:2ljelMwPZ+poqKFNur05XPyGGmWjdE2vnA8K034AIU4=
 github.com/Litekube/network-controller v0.0.0-20220501105021-4c9f2593b97d h1:7vHtzndtZ+WoByafa6Aq9l7zn+cK+5bFHEy4KYpUSTs=
 github.com/Litekube/network-controller v0.0.0-20220501105021-4c9f2593b97d/go.mod h1:C37fFw5PrO3K2UAGwbxjzTzW5ZJJpvW5KD+64mUqNFo=
+github.com/Litekube/network-controller v0.0.0-20220506025156-5b3a454d2058 h1:0cOzlqs3RIUCJR2UhtoSeDkNh7ky7BsD7BBsM//872g=
+github.com/Litekube/network-controller v0.0.0-20220506025156-5b3a454d2058/go.mod h1:QtjPYYD187VjaJhy8bgf2hcOWz9ykc/MarnIisxXhkg=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd/go.mod h1:64YHyfSL2R96J44Nlwm39UHepQbyR5q10x7iYa1ks2E=
 github.com/Microsoft/go-winio v0.4.15/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=
 github.com/Microsoft/go-winio v0.4.17 h1:iT12IBVClFevaf8PuVyi3UmZOVh4OqnaLxDTW2O6j3w=

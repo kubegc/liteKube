@@ -92,6 +92,7 @@ func (s *NetWorkControllerServer) Run() error {
 
 		s.ctx.Done()
 	}()
+	defer server.Stop()
 
 	return nil
 }

@@ -51,7 +51,7 @@ func (c *GrpcClient) InitGrpcClientConn() error {
 		}
 		if ok := certPool.AppendCertsFromPEM(ca); !ok {
 			logger.Errorf("certPool.AppendCertsFromPEM err")
-			return err
+			return errors.New("certPool.AppendCertsFromPEM err")
 		}
 		creds = credentials.NewTLS(&tls.Config{
 			Certificates: []tls.Certificate{cert},

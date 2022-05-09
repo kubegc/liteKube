@@ -26,6 +26,10 @@ const NetTokenKey = "net-token"
 
 const ReservedToken = "reserverd"
 
+const DefualtLogName = "nc-default-log.log"
+const ServerLogName = "nc-server-log.log"
+const ClientLogName = "nc-client-log.log"
+
 const (
 	IFACE_BUFSIZE = 2048
 )

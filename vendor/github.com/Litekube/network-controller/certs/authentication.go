@@ -26,7 +26,7 @@ func CheckGrpcCertConfig(tlsConfig config.TLSConfig) error {
 	}
 
 	// generate client
-	if _, _, _, err := GenerateClientCertKey(regenGrpc, "network-controller-grpc-client", []string{"network-controller-grpc"}, tlsConfig.CAFile, tlsConfig.CAKeyFile, tlsConfig.ClientCertFile, tlsConfig.ClientKeyFile); err != nil {
+	if _, _, _, err := GenerateClientCertKey(regenGrpc, false, "network-controller-grpc-client", []string{"network-controller-grpc"}, tlsConfig.CAFile, tlsConfig.CAKeyFile, tlsConfig.ClientCertFile, tlsConfig.ClientKeyFile); err != nil {
 		return err
 	}
 	return nil
@@ -50,7 +50,7 @@ func CheckNetworkCertConfig(tlsConfig config.TLSConfig) error {
 	}
 
 	// generate client
-	if _, _, _, err := GenerateClientCertKey(regenGrpc, "network-controller-client", []string{"network-controller"}, tlsConfig.CAFile, tlsConfig.CAKeyFile, tlsConfig.ClientCertFile, tlsConfig.ClientKeyFile); err != nil {
+	if _, _, _, err := GenerateClientCertKey(regenGrpc, false, "network-controller-client", []string{"network-controller"}, tlsConfig.CAFile, tlsConfig.CAKeyFile, tlsConfig.ClientCertFile, tlsConfig.ClientKeyFile); err != nil {
 		return err
 	}
 	return nil

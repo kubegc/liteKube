@@ -39,6 +39,8 @@ type ServerConfig struct {
 
 	NetworkAddr     string `yaml:"networkAddr"`
 	DbPath          string `yaml:"dbPath"`
+	LogDir          string `yaml:"logDir"`
+	Debug           bool   `yaml:"debug"`
 	MTU             int    `yaml:"mtu"`
 	Interconnection bool   `yaml:"interconnection"`
 
@@ -58,6 +60,8 @@ type ClientConfig struct {
 	NetworkCertDir  string `yaml:"networkCertDir"`
 	ServerAddr      string `yaml:"serverAddr"`
 	Port            int    `yaml:"port"`
+	LogDir          string `yaml:"logDir"`
+	Debug           bool   `yaml:"debug"`
 	MTU             int    `yaml:"mut"`
 	Token           string `yaml:"token"`
 	RedirectGateway bool   `yaml:"redirectGateway"`
