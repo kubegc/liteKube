@@ -99,7 +99,7 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 		}
 	}
 
-	// todo wait to be enhance by network-controller
+	// wait to be enhance by network-controller
 	//time.Sleep(10 * time.Second) // only for debug, waiting for network-controller to start
 
 	leaderRuntime.NetworkRegisterClient = runtime.NewNetWorkRegisterClient(leaderRuntime.control.ctx, leaderRuntime.RuntimeOption.NetmamagerOptions)

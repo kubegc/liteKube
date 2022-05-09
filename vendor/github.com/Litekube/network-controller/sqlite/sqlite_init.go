@@ -2,12 +2,15 @@ package sqlite
 
 import (
 	"database/sql"
+	"github.com/Litekube/network-controller/utils"
 	_ "github.com/mattn/go-sqlite3"
+	"path/filepath"
 )
 
 const (
 	dbDriverName = "sqlite3"
-	dbName       = "/tmp/litekube-nc.db"
+	dbDir        = ".litekube/network-controller/server/"
+	dbName       = "litekube-nc.db"
 )
 
 var db *sql.DB
@@ -18,9 +21,11 @@ func GetDb() *sql.DB {
 
 func InitSqlite(dbPath string) (err error) {
 	if dbPath == "" {
-		dbPath = dbName
+		dbPath = filepath.Join(utils.GetHomeDir(), dbDir)
 	}
-	db, err = sql.Open(dbDriverName, dbPath)
+	dbPath = filepath.Join(dbPath, "db")
+	utils.CreateDir(dbPath)
+	db, err = sql.Open(dbDriverName, filepath.Join(dbPath, dbName))
 	if err != nil {
 		return
 	}

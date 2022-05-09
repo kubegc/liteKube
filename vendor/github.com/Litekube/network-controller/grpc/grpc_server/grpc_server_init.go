@@ -37,6 +37,7 @@ type GrpcServer struct {
 	service           *internal.NetworkControllerService
 	grpcTlsConfig     config.TLSConfig
 	networkTlsConfig  config.TLSConfig
+	tlsDir            string
 }
 
 var logger *logging.Logger
@@ -54,6 +55,7 @@ func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan str
 		bootstrapPort:     cfg.BootstrapPort,
 		networkServerPort: cfg.Port,
 		UnRegisterCh:      unRegisterCh,
+		tlsDir:            cfg.TlsDir,
 		grpcTlsConfig: config.TLSConfig{
 			CAFile:         cfg.GrpcCAFile,
 			CAKeyFile:      cfg.GrpcCAKeyFile,
@@ -97,7 +99,7 @@ func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan str
 func (s *GrpcServer) StartGrpcServerTcp() error {
 	defer logger.Debug("StartGrpcServerTcp done")
 
-	err := certs.CheckGrpcClientCertConfig(s.grpcTlsConfig)
+	err := certs.CheckGrpcClientCertConfig(s.grpcTlsConfig, s.tlsDir)
 	if err != nil {
 		logger.Errorf("CheckGrpcClientCertConfig err: %+v", err)
 		return err

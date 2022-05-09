@@ -72,6 +72,7 @@ type NetworkServer struct {
 	idleCheckTimer   *time.Ticker
 	networkTLSConfig config.TLSConfig
 	Logger           *logging.Logger
+	DbPath           string
 }
 
 var networkServer *NetworkServer
@@ -103,6 +104,7 @@ func NewServer(cfg config.ServerConfig) *NetworkServer {
 		externalWg:     sync.WaitGroup{},
 		unRegisterCh:   nil,
 		idleCheckTimer: time.NewTicker(contant.IdleTokenCheckDuration),
+		DbPath:         cfg.WorkDir,
 		networkTLSConfig: config.TLSConfig{
 			CAFile:         cfg.NetworkCAFile,
 			CAKeyFile:      cfg.NetworkCAKeyFile,
@@ -130,7 +132,7 @@ func (server *NetworkServer) Run() error {
 	networkServer.wg.Add(1)
 
 	// init db
-	err := sqlite.InitSqlite(server.cfg.DbPath)
+	err := sqlite.InitSqlite(server.DbPath)
 	if err != nil {
 		return err
 	}
@@ -364,6 +366,7 @@ func (server *NetworkServer) initSyncBindIpWithDb(serverIp string) error {
 		State:  3,
 		BindIp: serverIp,
 	})
+	nm.UpdateStateByToken(3, contant.ReservedToken)
 	logger.Debug("initSyncBindIpWithDb done")
 	return nil
 }
@@ -419,15 +422,23 @@ func (server *NetworkServer) cleanUp() {
 		client.ws.Close()
 		delete(server.clients, key)
 	}
-	//close(server.unregister)
-	close(server.stopCh)
+
+	select {
+	case <-server.stopCh:
+		break
+	default:
+		close(server.stopCh)
+	}
 	// code zero indicates success
 	//os.Exit(0)
 }
 
-func (server *NetworkServer) Stop() {
-	defer func() {
-		server.externalWg.Wait()
-	}()
+func (server *NetworkServer) Wait() {
+	defer server.externalWg.Wait()
 	<-server.stopCh
+}
+
+func (server *NetworkServer) Stop() {
+	defer server.externalWg.Wait()
+	close(server.stopCh)
 }

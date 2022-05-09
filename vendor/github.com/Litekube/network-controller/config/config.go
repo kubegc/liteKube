@@ -37,9 +37,11 @@ type ServerConfig struct {
 	GrpcPort       int    `yaml:"grpcPort"`
 	GrpcCertDir    string `yaml:"grpcCertDir"`
 
-	NetworkAddr     string `yaml:"networkAddr"`
-	DbPath          string `yaml:"dbPath"`
+	NetworkAddr string `yaml:"networkAddr"`
+	//DbPath          string `yaml:"dbPath"`
 	LogDir          string `yaml:"logDir"`
+	WorkDir         string `yaml:"workDir"`
+	TlsDir          string `yaml:"tlsDir"`
 	Debug           bool   `yaml:"debug"`
 	MTU             int    `yaml:"mtu"`
 	Interconnection bool   `yaml:"interconnection"`
@@ -61,6 +63,7 @@ type ClientConfig struct {
 	ServerAddr      string `yaml:"serverAddr"`
 	Port            int    `yaml:"port"`
 	LogDir          string `yaml:"logDir"`
+	WorkDir         string `yaml:"workDir"`
 	Debug           bool   `yaml:"debug"`
 	MTU             int    `yaml:"mut"`
 	Token           string `yaml:"token"`

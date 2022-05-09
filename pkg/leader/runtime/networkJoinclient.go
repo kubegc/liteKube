@@ -2,8 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/Litekube/network-controller/config"
 	// link to github.com/Litekube/kine, we have make some addition
 	"github.com/Litekube/network-controller/network"
@@ -45,11 +43,14 @@ func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions
 func (s *NetWorkJoinClient) Run() error {
 	klog.Info("run network manager client")
 
-	fmt.Printf("node-token here %s\n", s.NodeToken)
 	client := network.NewClient(config.ClientConfig{
-		CAFile:          s.CAPath,
-		ClientCertFile:  s.CertPath,
-		ClientKeyFile:   s.KeyPath,
+		CAFile:         s.CAPath,
+		ClientCertFile: s.CertPath,
+		ClientKeyFile:  s.KeyPath,
+
+		WorkDir: s.WorkDir,
+		LogDir:  s.LogDir,
+
 		ServerAddr:      s.BindAddress,
 		Port:            int(s.Port),
 		MTU:             1400,
@@ -65,7 +66,6 @@ func (s *NetWorkJoinClient) Run() error {
 		}
 
 	}()
-	defer client.Wait()
 
 	return nil
 }

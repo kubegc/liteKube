@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/network"
 
@@ -76,6 +75,10 @@ func (s *NetWorkControllerServer) Run() error {
 		MTU:             1400,
 		Interconnection: false,
 
+		LogDir:  s.LogDir,
+		TlsDir:  s.TLSDir,
+		WorkDir: s.WorkDir,
+
 		NetworkCAFile:         s.JoinCACert,
 		NetworkCAKeyFile:      s.JoinCAKey,
 		NetworkServerCertFile: s.JoinServerCert,
@@ -96,7 +99,6 @@ func (s *NetWorkControllerServer) Run() error {
 
 		s.ctx.Done()
 	}()
-	defer server.Stop()
 
 	return nil
 }
