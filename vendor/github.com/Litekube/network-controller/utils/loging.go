@@ -55,13 +55,20 @@ func InitLogger(logDir, logName string, debug bool) {
 
 	// set logging format
 	logger = logging.MustGetLogger("network-controller")
-	loggerFmt := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}"
-	format := logging.MustStringFormatter(loggerFmt)
-	logging.SetFormatter(format)
+
+	// set stdout backend & logger formatter
+	stdBackend := logging.NewLogBackend(os.Stdout, "", 0)
+	loggerStdFmt := `%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}`
+	stdFormatter, _ := logging.NewStringFormatter(loggerStdFmt)
+	stdback := logging.NewBackendFormatter(stdBackend, stdFormatter)
+
+	// set file backend & logger formatter
+	fBackend := logging.NewLogBackend(content, "", 0)
+	loggerFileFmt := "[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc} %{message}"
+	fFormatter, _ := logging.NewStringFormatter(loggerFileFmt)
+	fback := logging.NewBackendFormatter(fBackend, fFormatter)
 
 	// set output: stdout & file
-	fback := logging.NewLogBackend(content, "", 0)
-	stdback := logging.NewLogBackend(os.Stdout, "", 0)
 	logging.SetBackend(fback, stdback)
 
 	// set log level
