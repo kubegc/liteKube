@@ -32,6 +32,21 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 `
 
+// kubectl create clusterrolebinding node-autoapprove-bootstrap --clusterrole=system:certificates.k8s.io:certificatesigningrequests:nodeclient  --user=kubelet-bootstrap
+var rolebindingBootstrapAutoApproveYAML = `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-autoapprove-bootstrap
+subjects:
+- kind: User
+  name: kubelet-bootstrap
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: system:certificates.k8s.io:certificatesigningrequests:nodeclient
+  apiGroup: rbac.authorization.k8s.io
+`
+
 var rolebindingAccessKubeletYAML = `apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -107,10 +122,25 @@ func (s *KubernatesServer) RunAfter() error {
 		return err
 	}
 
+	// add kubelet-bootstrap
 	if _, err := k8sClient.RbacV1().ClusterRoleBindings().Get(s.ctx, "kubelet-bootstrap", metav1.GetOptions{}); err != nil {
 		clusterRoleBindings := &rbacv1.ClusterRoleBinding{}
 		if err := yaml.Unmarshal([]byte(rolebindingBootstrapYAML), clusterRoleBindings); err != nil {
 			klog.Errorf("fail to unmarshal ClusterRoleBinding yaml, maybe version is not valid, you can run: kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap instead")
+			return nil
+		}
+
+		if _, err := k8sClient.RbacV1().ClusterRoleBindings().Create(s.ctx, clusterRoleBindings, metav1.CreateOptions{}); err != nil {
+			klog.Errorf("fail to create clusterrolebinding for kubelet-bootstrap")
+			return err
+		}
+	}
+
+	// add kubelet-bootstrap auto-approve
+	if _, err := k8sClient.RbacV1().ClusterRoleBindings().Get(s.ctx, "node-autoapprove-bootstrap", metav1.GetOptions{}); err != nil {
+		clusterRoleBindings := &rbacv1.ClusterRoleBinding{}
+		if err := yaml.Unmarshal([]byte(rolebindingBootstrapAutoApproveYAML), clusterRoleBindings); err != nil {
+			klog.Errorf("fail to unmarshal ClusterRoleBinding yaml, maybe version is not valid, you can run: kubectl create clusterrolebinding node-autoapprove-bootstrap --clusterrole=system:certificates.k8s.io:certificatesigningrequests:nodeclient  --user=kubelet-bootstrap instead")
 			return nil
 		}
 

@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/network"
 
@@ -62,7 +63,7 @@ func NewNetWorkControllerServer(ctx context.Context, opt *authentication.Network
 
 // start run in routine and no wait
 func (s *NetWorkControllerServer) Run() error {
-	klog.Info("run network manager")
+	klog.Info("run network-controller server")
 
 	server := network.NewServer(config.ServerConfig{
 		Ip:   s.JoinBindAddress,
@@ -93,7 +94,7 @@ func (s *NetWorkControllerServer) Run() error {
 	go func() {
 		err := server.Run()
 		if err != nil {
-			klog.Infof("network controller exited: %v", err)
+			klog.Infof("network-controller exited: %v", err)
 			panic(err)
 		}
 

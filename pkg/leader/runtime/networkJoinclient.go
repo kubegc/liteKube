@@ -2,7 +2,9 @@ package runtime
 
 import (
 	"context"
+
 	"github.com/Litekube/network-controller/config"
+
 	// link to github.com/Litekube/kine, we have make some addition
 	"github.com/Litekube/network-controller/network"
 	"github.com/litekube/LiteKube/pkg/options/leader/netmanager"
@@ -41,7 +43,7 @@ func NewNetWorkJoinClient(ctx context.Context, opt *netmanager.NetManagerOptions
 
 // start run in routine and no wait
 func (s *NetWorkJoinClient) Run() error {
-	klog.Info("run network manager client")
+	klog.Info("run network-controller client")
 
 	client := network.NewClient(config.ClientConfig{
 		CAFile:         s.CAPath,
@@ -61,7 +63,7 @@ func (s *NetWorkJoinClient) Run() error {
 	go func() {
 		err := client.Run()
 		if err != nil {
-			klog.Infof("network controller client exited: %v", err)
+			klog.Infof("network-controller client exited: %v", err)
 			panic(err)
 		}
 

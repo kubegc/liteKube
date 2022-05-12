@@ -3,15 +3,15 @@ package config
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"sync"
+
 	workerapp "github.com/litekube/LiteKube/cmd/worker/app"
 	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/leader/runtime"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
-	"github.com/litekube/LiteKube/pkg/options/worker"
 	workeroptions "github.com/litekube/LiteKube/pkg/options/worker"
 	"k8s.io/klog/v2"
-	"path/filepath"
-	"sync"
 )
 
 type LeaderRuntime struct {
@@ -83,7 +83,7 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/network-controller/server/"),
 		)
 		if err := leaderRuntime.NetworkControllerServer.Run(); err != nil {
-			klog.Errorf("bad args for network manager server")
+			klog.Errorf("bad args for network-controller server")
 			return err
 		}
 	} else {
@@ -94,7 +94,7 @@ func (leaderRuntime *LeaderRuntime) RunForward() error {
 			filepath.Join(leaderRuntime.RuntimeOption.GlobalOptions.WorkDir, "logs/network-controller/client/"),
 		)
 		if err := leaderRuntime.NetworkJoinClient.Run(); err != nil {
-			klog.Errorf("bad args for network manager client")
+			klog.Errorf("bad args for network-controller client")
 			return err
 		}
 	}
@@ -147,7 +147,7 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 
 	// run worker
 	if leaderRuntime.RuntimeOption.GlobalOptions.EnableWorker {
-		worker.ConfigFile = leaderRuntime.RuntimeOption.GlobalOptions.WorkerConfig
+		workeroptions.ConfigFile = leaderRuntime.RuntimeOption.GlobalOptions.WorkerConfig
 		workerOpt := workeroptions.NewWorkerOptions()
 		if err := workerOpt.LoadConfig(); err != nil {
 			klog.Errorf("fail to run worker")
@@ -165,11 +165,56 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 		workerOpt.NetmamagerOptions.JoinOptions.SecurePort = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.SecurePort
 		workerOpt.GlobalOptions.LeaderToken = fmt.Sprintf("%s@local", global.ReservedNodeToken)
 		go func() {
+			// go func() {
+			// 	// max 12-hour to wait worker start unless restart leader
+			// 	for i := 0; i < 8640; i++ {
+			// 		kubeconfig, err := clientcmd.BuildConfigFromFlags("", leaderRuntime.RuntimeAuthentication.Kubernetes.KubeConfigAdmin)
+			// 		if err != nil {
+			// 			klog.Errorf("bad kubeconfig while listen node-csr for leader")
+			// 			return
+			// 		}
+
+			// 		k8sClient, err := kubernetes.NewForConfig(kubeconfig)
+			// 		if err != nil {
+			// 			klog.Errorf("fail to create client while listen node-csr for leader")
+			// 			return
+			// 		}
+
+			// 		if csrList, err := k8sClient.CertificatesV1().CertificateSigningRequests().List(leaderRuntime.control.ctx, metav1.ListOptions{}); err != nil {
+			// 			klog.Errorf("fail to get csr-list")
+			// 			return
+			// 		} else {
+			// 			for _, csr := range csrList.Items {
+			// 				block, rest := pem.Decode(csr.Spec.Request)
+			// 				if block == nil || len(rest) > 0 {
+			// 					klog.Errorf("get bad csr request")
+			// 					return
+			// 				}
+
+			// 				key, _ := x509.ParseCertificateRequest(block.Bytes)
+			// 				current_ip, err := leaderRuntime.NetworkRegisterClient.QueryIp()
+			// 				if err != nil {
+			// 					klog.Errorf("fail to get current ip")
+			// 					return
+			// 				}
+			// 				if strings.Contains(key.Subject.CommonName, current_ip) {
+			// 					k8sClient.CertificatesV1().CertificateSigningRequests().up
+			// 					// k8sClient.CertificatesV1().CertificateSigningRequests().ApplyStatus(leaderRuntime.control.ctx,)
+			// 				}
+			// 			}
+			// 		}
+
+			// 		time.Sleep(5 * time.Second)
+			// 	}
+			// }()
+
 			err := workerapp.Run(workerOpt, leaderRuntime.control.ctx.Done())
 			if err != nil {
 				klog.Errorf("==> worker exit: %v", err)
 			}
 		}()
+
+		// kubectl certificate approve node-csr-xxxxxx
 	}
 
 	return nil
