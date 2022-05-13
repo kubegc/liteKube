@@ -8,7 +8,8 @@ WORKDIR /
 
 RUN yum install wget -y && \
     yum install git -y && \
-    yum install tar -y
+    yum install tar -y && \
+    yum install gcc -y
 
 RUN mkdir -p /usr/local && \
     mkdir -p /home/go && \
