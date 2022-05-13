@@ -16,7 +16,7 @@
 
 .idea
 .vscode
-build
+build/outputs
 
 cmd/leader/leader*
 cmd/worker/worker*
