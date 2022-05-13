@@ -7,8 +7,7 @@ LABEL maintainer="a_flying_fish@outlook.com"
 WORKDIR /
 
 RUN yum install wget -y && \
-    yum install git -y && \
-    yum install tar -y
+    yum install git -y
 
 RUN mkdir -p /usr/local && \
     mkdir -p /home/go && \
