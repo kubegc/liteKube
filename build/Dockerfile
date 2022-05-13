@@ -37,7 +37,9 @@ RUN mkdir -p /usr/local/toolchain/ && \
 
 ENV PATH=$PATH:/usr/local/toolchain/gcc-linaro-7.5.0-2019.12-i686_arm-linux-gnueabihf/bin
 
+RUN mkdir -p /LiteKube
+
 WORKDIR /LiteKube
 
-RUN chmod +x scripts/build/build.sh
-CMD ["bin/bash","scripts/build/build.sh" ]
+# RUN chmod +x scripts/build/build.sh
+CMD ["bin/bash"]
