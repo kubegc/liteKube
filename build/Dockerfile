@@ -1,5 +1,6 @@
 FROM centos:7
 
+# docker run -v $ProjectPath:/LiteKube 
 LABEL maintainer="a_flying_fish@outlook.com"
 
 # build golang environment 
@@ -36,4 +37,7 @@ RUN mkdir -p /usr/local/toolchain/ && \
 
 ENV PATH=$PATH:/usr/local/toolchain/gcc-linaro-7.5.0-2019.12-i686_arm-linux-gnueabihf/bin
 
-WORKDIR /Litekube
+WORKDIR /LiteKube
+
+RUN chmod +x scripts/build/build.sh
+CMD ["bin/bash","scripts/build/build.sh" ]
