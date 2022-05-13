@@ -25,20 +25,20 @@ func Get() Info {
 	// These variables typically come from -ldflags settings and in
 	// their absence fallback to the settings in pkg/version/base.go
 	return Info{
-		LiteKube:     litekube,
-		GitVersion:   gitVersion,
-		GitBranch:    gitBranch,
-		GitCommit:    gitCommit,
-		GitTreeState: gitTreeState,
-		BuildDate:    buildDate,
+		LiteKube:     Litekube,
+		GitVersion:   GitVersion,
+		GitBranch:    GitBranch,
+		GitCommit:    GitCommit,
+		GitTreeState: GitTreeState,
+		BuildDate:    BuildDate,
 		GoVersion:    runtime.Version(),
 		Compiler:     runtime.Compiler,
 		Platform:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
-		Kubernetes:   kubernetes,
-		Kine:         kine,
+		Kubernetes:   Kubernetes,
+		Kine:         Kine,
 	}
 }
 
 func GetSimple() string {
-	return fmt.Sprintf("Version: LiteKube %s, kubernetes %s, kine %s", litekube, kubernetes, kine)
+	return fmt.Sprintf("Version: LiteKube %s, kubernetes %s, kine %s", Litekube, Kubernetes, Kine)
 }
