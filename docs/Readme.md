@@ -52,7 +52,7 @@
         > * the same arch with your machine for Linux
         > * `Armv7l ` for Linux
 
-## How to deploy
+## 2. How to deploy
 
 **Notice:** 
 
@@ -69,7 +69,7 @@
 * [likuadm](likuadm/deploy.md)
 * [containerd](containerd/deploy.md)
 
-## How to use
+## 3. How to use
 
 **Components**
 
