@@ -20,9 +20,10 @@ build/outputs
 
 cmd/leader/leader*
 cmd/worker/worker*
+cmd/worker/likuadm*
 leader.yaml
 worker.yaml
 test
 kine_test
 note.txt
-outputs
+build/outputs
