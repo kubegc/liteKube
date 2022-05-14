@@ -20,7 +20,8 @@ build/outputs
 
 cmd/leader/leader*
 cmd/worker/worker*
-cmd/worker/likuadm*
+cmd/likuadm/likuadm*
+cmd/kubectl/kubectl*
 leader.yaml
 worker.yaml
 test
