@@ -22,8 +22,8 @@ cmd/leader/leader*
 cmd/worker/worker*
 cmd/likuadm/likuadm*
 cmd/kubectl/kubectl*
-leader.yaml
-worker.yaml
+!docs/examples/leader.yaml
+!docs/examples/worker.yaml
 test
 kine_test
 note.txt

@@ -1,0 +1,111 @@
+global:
+  work-dir: /root/work/golang/LiteKube/cmd/leader/test/
+  log-dir: /root/work/golang/LiteKube/cmd/leader/test/logs
+  log-to-dir: true
+  log-to-std: true
+  run-kine: true
+  run-network-manager: true
+  enable-worker: false
+kube-apiserver:
+  reserve: {}
+  professional:
+    storage-backend: etcd3
+    etcd-servers: https://127.0.0.1:2379
+    etcd-cafile: /root/work/golang/LiteKube/cmd/leader/test/tls/kine/ca.crt
+    etcd-certfile: /root/work/golang/LiteKube/cmd/leader/test/tls/kine/client.crt
+    etcd-keyfile: /root/work/golang/LiteKube/cmd/leader/test/tls/kine/client.key
+    cert-dir: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/tls
+    tls-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/server/server.crt
+    tls-private-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/server/server.key
+    api-audiences: unknown
+    token-auth-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kubelet/token.csv
+    enable-bootstrap-token-auth: true
+    service-account-signing-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/service/service-account.key
+    service-account-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/service/service-account.key
+    service-account-issuer: litekube
+    client-ca-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-client.crt
+    requestheader-extra-headers-prefix: X-Remote-Extra-
+    requestheader-group-headers: X-Remote-Group
+    requestheader-username-headers: X-Remote-User
+    requestheader-client-ca-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/kube-apiserver-auth-proxy.crt
+    requestheader-allowed-names: system:auth-proxy
+    proxy-client-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/auth-proxy/auth-proxy.crt
+    proxy-client-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/auth-proxy/auth-proxy.key
+    enable-aggregator-routing: true
+    kubelet-certificate-authority: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-kubelet-server.crt
+    kubelet-client-certificate: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/client/client.crt
+    kubelet-client-key: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/client/client.key
+    bind-address: 0.0.0.0
+    advertise-address: 10.1.1.1
+    insecure-port: 0
+    feature-gates: JobTrackingWithFinalizers=true
+  options:
+    allow-privileged: true
+    authorization-mode: Node,RBAC
+    anonymous-auth: false
+    enable-swagger-ui: false
+    enable-admission-plugins: NodeRestriction
+    encryption-provider-config: ""
+    profiling: false
+    service-cluster-ip-range: 10.0.0.0/16
+    service-node-port-range: 30000-32767
+    secure-port: 6443
+kube-controller-manager:
+  reserve: {}
+  professional:
+    bind-address: 0.0.0.0
+    secure-port: 10257
+    leader-elect: false
+    configure-cloud-routes: false
+    controllers: '*,-service,-route,-cloud-node-lifecycle'
+    feature-gates: JobTrackingWithFinalizers=true
+    kubeconfig: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/controller/controller.kubeconfig
+    authorization-kubeconfig: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/controller/controller.kubeconfig
+    authentication-kubeconfig: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/controller/controller.kubeconfig
+    service-account-private-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/kube-apiserver/service/service-account.key
+    root-ca-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/cluster-server.crt
+    cluster-signing-kube-apiserver-client-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/kubelet-apiserver-client.crt
+    cluster-signing-kube-apiserver-client-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/kubelet-apiserver-client.key
+    cluster-signing-kubelet-client-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-client.crt
+    cluster-signing-kubelet-client-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-client.key
+    cluster-signing-kubelet-serving-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-kubelet-server.crt
+    cluster-signing-kubelet-serving-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-kubelet-server.key
+    cluster-signing-legacy-unknown-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-client.crt
+    cluster-signing-legacy-unknown-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/ca/apiserver-client.key
+  options:
+    allocate-node-cidrs: false
+    cluster-cidr: 172.17.0.0/16
+    profiling: false
+    use-service-account-credentials: true
+kube-scheduler:
+  reserve: {}
+  professional:
+    bind-address: 0.0.0.0
+    secure-port: 10259
+    leader-elect: false
+    kubeconfig: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/scheduler/scheduler.kubeconfig
+    authorization-kubeconfig: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/scheduler/scheduler.kubeconfig
+    authentication-kubeconfig: /root/work/golang/LiteKube/cmd/leader/test/tls/kubernetes/cert/scheduler/scheduler.kubeconfig
+  options:
+    profiling: false
+kine:
+  bind-address: 127.0.0.1
+  secure-port: 2379
+  ca-cert: /root/work/golang/LiteKube/cmd/leader/test/tls/kine/ca.crt
+  server-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kine/server.crt
+  server-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/kine/server.key
+network-manager:
+  register:
+    network-address: 192.168.154.101
+    secure-port: 6440
+    ca-cert: /root/work/golang/LiteKube/cmd/leader/test/tls/network-controller/local/register/ca.crt
+    client-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/network-controller/local/register/client.crt
+    client-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/network-controller/local/register/client.key
+  join:
+    network-address: 192.168.154.101
+    secure-port: 6441
+    ca-cert: /root/work/golang/LiteKube/cmd/leader/test/tls/network-controller/local/join/ca.crt
+    client-cert-file: /root/work/golang/LiteKube/cmd/leader/test/tls/network-controller/local/join/client.crt
+    client-key-file: /root/work/golang/LiteKube/cmd/leader/test/tls/network-controller/local/join/client.key
+  token: local
+  node-token: reserverd

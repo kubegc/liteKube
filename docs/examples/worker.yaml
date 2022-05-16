@@ -1,0 +1,43 @@
+global:
+  work-dir: /root/test-worker/test/
+  log-dir: /root/test-worker/test/logs/worker
+  log-to-dir: true
+  log-to-std: true
+  leader-token: reserverd@acdba5160c3e7a9b925036c6e4706d56
+kubelet:
+  reserve: {}
+  professional:
+    node-ip: 127.0.0.1
+    kubeconfig: /root/test-worker/test/tls/reserverd@acdba5160c3e7a9b925036c6e4706d56/kubelet.kubeconfig
+    config: /root/test-worker/test/reserverd@acdba5160c3e7a9b925036c6e4706d56/kube-proxy/kubelet.config
+    cgroup-driver: systemd
+    hostname-override: 10.1.1.5
+    container-runtime: remote
+    bootstrap-kubeconfig: /root/test-worker/test/reserverd@acdba5160c3e7a9b925036c6e4706d56/kube-proxy/bootstrap.kubeconfig
+    container-runtime-endpoint: unix:///run/containerd/containerd.sock
+  options:
+    pod-infra-container-image: registry.cn-hangzhou.aliyuncs.com/google-containers/pause-amd64:3.0
+    cert-dir: /root/test-worker/test/tls/reserverd@acdba5160c3e7a9b925036c6e4706d56/kubelet
+kube-proxy:
+  reserve: {}
+  professional:
+    hostname-override: 10.1.1.5
+    cluster-cidr: 172.17.0.0/16
+    proxy-mode: ipvs
+    kubeconfig: /root/test-worker/test/reserverd@acdba5160c3e7a9b925036c6e4706d56/kube-proxy/kube-proxy.kubeconfig
+  options: {}
+network-manager:
+  register:
+    network-address: 10.1.1.1
+    secure-port: 6440
+    ca-cert: /root/test-worker/test/tls/network-controller/137c53476d5542ba/register/ca.crt
+    client-cert-file: /root/test-worker/test/tls/network-controller/137c53476d5542ba/register/client.crt
+    client-key-file: /root/test-worker/test/tls/network-controller/137c53476d5542ba/register/client.key
+  join:
+    network-address: 192.168.154.101
+    secure-port: 6441
+    ca-cert: /root/test-worker/test/tls/network-controller/137c53476d5542ba/join/ca.crt
+    client-cert-file: /root/test-worker/test/tls/network-controller/137c53476d5542ba/join/client.crt
+    client-key-file: /root/test-worker/test/tls/network-controller/137c53476d5542ba/join/client.key
+  token: 137c53476d5542ba@192.168.154.101:6439
+  node-token: 368e49e23b47433c
