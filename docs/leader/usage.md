@@ -175,3 +175,26 @@ kine:
 You can go straight to a real YAML startup [config-file](../examples/leader.yaml)
 
 ## parameter specification
+> you can set only part or even none of yaml-config, there will be good default-value as usual.
+>
+> You can view the actual startup configuration in `global.work-dir/startup/leader.yaml` or even use it directly as a new startup configuration file
+- global
+  - work-dir
+    > we will try our best to set file-cache to this directory instead of `$HOME/.litekube`. Special files will still be saved in `$HOME/.litekube`, but they are  trivial.
+  - log-dir
+    > if set `global.log-to-dir=true`, `log files` can redirect to independent path instead of `work-dir/logs`
+  - run-kine
+    > LiteKube run `kine` as one lite-etcd to start for default. You can set to `false` of course. Instead you need to give `ETCD Args` for `kube-apiserver`
+  - run-network-manager
+    > LiteKube run `network-controller server` for default. This results in Leader still have to run at the top-level of the network. 
+    >
+    > You can set this value to `false` and set `network-manager.token`(manually configuring network-manager parameters is not recommended). With the help of network-controller-bootstrap, leader can config network-manager args automatically. `leader` will be able to run in any network-level once Seperate `network-controller server` with `leader` like `worker`
+  - enable-worker
+    > if you want to run `leader` and `worker` in same node, set this value to `true` and `false` is for default. This need you prepare worker running environment for `leader`. if you want to give your own setting, you many need to change `global.work-dir/startup/worker.yaml` and restart `leader`.
+- `kube-apiserver`, `kube-scheduler` and `kube-controller-manager`
+  - professional
+    > if you are not familiar with kubernetes startup parameters and architecture of LiteKube, ignoring these Settings is recommended.
+  - options
+    > parameters that you may normally still want to set, although default values are given.
+  - reserve
+    > parameters that Litekube doesn't mention can still be set by key-value pairs. They will be explain as `--<key>=<value>` for `kubernetes component`
