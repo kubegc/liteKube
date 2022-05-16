@@ -4,7 +4,7 @@
 - [Deployment](#deployment)
 - [Usage](#usage)
 
-# [Deployment](deploy.md)
-
+# Deployment
+- [doc](deploy.md)
 # Usage
 There is not change to raw `kubectl`, you can use it as usual.

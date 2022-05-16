@@ -4,5 +4,7 @@
 - [Deployment](#deployment)
 - [Usage](#usage)
 
-# [Deployment](deploy.md)
-# [Usage](usage.md)
+# Deployment
+- [doc](deploy.md)
+# Usage
+- [doc](usage.md)
