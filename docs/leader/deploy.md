@@ -5,9 +5,9 @@
   - [Introduce](#introduce)
   - [Configuration](#configuration)
     - [Indispensable](#indispensable)
-    - [Enable Kine in leader (default: true)](#enable-kine-in-leader-default-true)
-    - [Enable Network-Controller (default: true)](#enable-network-controller-default-true)
-    - [Enable Worker (default: false)](#enable-worker-default-false)
+    - [enable kine](#enable-kine)
+    - [enable network-controller](#enable-network-controller)
+    - [enable worker](#enable-worker)
 # Deployment
 
 ## Introduce
@@ -25,13 +25,16 @@ You will need to allow the following ports to be access:
   - 10257
   - 10259
 
-### Enable Kine in leader (default: true)
+### enable kine
+> default: true
 - Exposing firewall Ports
   - 2379
 
-### Enable Network-Controller (default: true)
+### enable network-controller
+> default: true
 - Exposing firewall Ports
   - 6439
 
-### Enable Worker (default: false)
+### enable worker
+> default: false
 - please refer directly to [worker deployment](../worker/deploy.md) and configuration requirements, all in need.
