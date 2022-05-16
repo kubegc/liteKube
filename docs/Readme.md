@@ -2,16 +2,16 @@
 
 # Catalogue
 - [Catalogue](#catalogue)
-- [1. How to build](#1-how-to-build)
+- [Build](#build)
   - [Simple](#simple)
   - [Cross-compile](#cross-compile)
   - [By Docker](#by-docker)
-- [2. How to deploy](#2-how-to-deploy)
-  - [Notice:](#notice)
-  - [Components:](#components)
-- [3. How to use](#3-how-to-use)
-  - [Components:](#components-1)
-# 1. How to build
+- [Deployment](#deployment)
+  - [Notice](#notice)
+  - [Components](#components)
+- [Usage](#usage)
+  - [Components](#components-1)
+# Build
 
 ## Simple
 
@@ -50,8 +50,8 @@ We also provide a [Dockerfile](https://github.com/Litekube/LiteKube/blob/main/bu
     docker build --network=host -t litekube/centos-go:v1 .
     ```
 
-3. run build
-4. 
+3. start to build binaries for LiteKube
+
     ```shell
     chmod +x /mywork/LiteKube/scripts/build/build.sh
     docker run -v /mywork/LiteKube:/LiteKube --name=compile-litekube litekube/centos-go:v1 /LiteKube/scripts/build/build.sh
@@ -64,14 +64,14 @@ We also provide a [Dockerfile](https://github.com/Litekube/LiteKube/blob/main/bu
     > * the same arch with your machine for Linux
     > * `Armv7l ` for Linux
 
-# 2. How to deploy
+# Deployment
 
-## Notice:
+## Notice
 
 * `network-controller`and `kine` can run in `leader` for default. They can also run in separate nodes or replace kine with `ETCD Cluster` by set `global.run-network-manager=false` and `global.run-kine=false` . As a cost, you need to set corresponding parameters for them.
 *  `build-in worker` for `leader` is also allowed but we set it disabled, you can enable by set `global.enable-worker=true`. Note that you will additionally need to provide `leader` with the same running environment as the `worker` if you do this.
 
-## Components:
+## Components
 
 * network-controller
 * [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
@@ -81,8 +81,8 @@ We also provide a [Dockerfile](https://github.com/Litekube/LiteKube/blob/main/bu
 * [likuadm](likuadm/deploy.md)
 * [containerd](containerd/deploy.md)
 
-# 3. How to use
-## Components:
+# Usage
+## Components
 
 * [leader](leader/usage.md)
 * [worker](worker/usage.md)

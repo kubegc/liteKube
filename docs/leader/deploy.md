@@ -1,12 +1,18 @@
-**Catalogues:**
+# Catalogue
 
-[TOC]
+- [Catalogue](#catalogue)
+- [Usage](#usage)
+  - [Introduce](#introduce)
+  - [Command-Line parameters](#command-line-parameters)
+  - [`YAML` format](#yaml-format)
+  - [parameter specification](#parameter-specification)
+# Usage
 
-# deploy leader
+## Introduce
 
-leader is one important component for `LiteKube`. At its most basic, it contains `Kube-Apiserver`, Kube-Scheduler, and Kube-Controller for `k8s`, as well as `LiteKube`'s network plug-in and a control component. For ease of use, the leader allows the `Kine(A lightweight similar to ETCD created by k3s)`, `network-Controller` and `worker` component to be automatically configured internally in an integrated manner.
+`leader` is an important component for `LiteKube`. At its most basic, it contains `Kube-Apiserver`, `Kube-Scheduler`, and `Kube-Controller` for `k8s`, as well as `LiteKube`'s `network part` and a `control component`. For ease of use, `leader` allow `kine`(A lightweight similar to ETCD created by k3s), `network-Controller` and `worker` component to be automatically configured internally in an integrated manner.
 
-## 1. Command-Line parameters
+## Command-Line parameters
 
 Because there are so many parameters that can be set, and some components have similar parameter meanings. We use completely file-based parameter input, and only a few necessary functions take command-line arguments. such as ：
 
@@ -28,7 +34,7 @@ Because there are so many parameters that can be set, and some components have s
     ./leader --config-file=/path-to/config.yaml
     ```
 
-`YAML` format:
+## `YAML` format
 
 ```yaml
 global:
@@ -165,12 +171,6 @@ kine:
     server-cert-file: string
     server-key-file:  string,  SSL key file used to secure etcd communication.
 ```
+You can go straight to a real YAML startup [config-file](../examples/leader.yaml)
 
-
-
-
-
-
-
-
-
+## parameter specification
