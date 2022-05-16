@@ -5,7 +5,7 @@
 - [Build](#build)
   - [Simple](#simple)
   - [Cross-compile](#cross-compile)
-  - [By Docker](#by-docker)
+  - [By dockerfile](#by-dockerfile)
 - [Deployment](#deployment)
   - [Notice](#notice)
   - [Components](#components)
@@ -21,9 +21,9 @@
 
     `LiteKube`need to set `CGO_ENABLED=1` . If you are compiling for arm architecture, set `GOARM=7` additionally when necessary and `GOARM=6` is `golang-default`.
 
-## By Docker
+## By [dockerfile](../build/Dockerfile)
 
-We also provide a [Dockerfile](https://github.com/Litekube/LiteKube/blob/main/build/Dockerfile) to help simplify operations or as a reference, you can run by:
+We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations or as a reference, you can run by:
 
 > assum you start your work in /mywork/
 
@@ -61,30 +61,30 @@ We also provide a [Dockerfile](https://github.com/Litekube/LiteKube/blob/main/bu
     
     > we only provide two version in this container. 
     >
-    > * the same arch with your machine for Linux
-    > * `Armv7l ` for Linux
+    > - the same arch with your machine for Linux
+    > - `Armv7l` for Linux
 
 # Deployment
 
 ## Notice
 
-* `network-controller`and `kine` can run in `leader` for default. They can also run in separate nodes or replace kine with `ETCD Cluster` by set `global.run-network-manager=false` and `global.run-kine=false` . As a cost, you need to set corresponding parameters for them.
-*  `build-in worker` for `leader` is also allowed but we set it disabled, you can enable by set `global.enable-worker=true`. Note that you will additionally need to provide `leader` with the same running environment as the `worker` if you do this.
+- `network-controller`and `kine` can run in `leader` for default. They can also run in separate nodes or replace kine with `ETCD Cluster` by set `global.run-network-manager=false` and `global.run-kine=false` . As a cost, you need to set corresponding parameters for them.
+- `build-in worker` for `leader` is also allowed but we set it disabled, you can enable by set `global.enable-worker=true`. Note that you will additionally need to provide `leader` with the same running environment as the `worker` if you do this.
 
 ## Components
 
-* network-controller
-* [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
-* [leader](leader/deploy.md)
-* [worker](worker/deploy.md)
-* [kubectl](kubectl/deploy.md) (no change to kubectl in kubernetes)
-* [likuadm](likuadm/deploy.md)
-* [containerd](containerd/deploy.md)
+- network-controller
+- [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
+- [leader](leader/deploy.md)
+- [worker](worker/deploy.md)
+- [kubectl](kubectl/deploy.md) (no change to kubectl in kubernetes)
+- [likuadm](likuadm/deploy.md)
+- [containerd](containerd/deploy.md)
 
 # Usage
 ## Components
 
-* [leader](leader/usage.md)
-* [worker](worker/usage.md)
-* [kubectl](https://github.com/kubernetes/kubectl)
-* [likuadm](likuadm/usage.md)
+- [leader](leader/usage.md)
+- [worker](worker/usage.md)
+- [kubectl](https://github.com/kubernetes/kubectl)
+- [likuadm](likuadm/usage.md)

@@ -15,13 +15,13 @@ One portable [kubernetes (k8s)](https://github.com/kubernetes/kubernetes) versio
 
 Great For:
 
-* Dynamic Network
-* Hierarchical Network
-* IOT
-* ARM
-* Edge
-* Raw kubernetes
-* Physically moving cluster of devices
+- Dynamic Network
+- Hierarchical Network
+- IOT
+- ARM
+- Edge
+- Raw kubernetes
+- Physically moving cluster of devices
 
 # Compatibility
 
@@ -110,5 +110,5 @@ If you want more detailed instructions, please read the [documentation](docs/Rea
 # About us
 
 Litekube is still in its very early stages, so if you have any questions, please feel free to contact me by:
-* yutian20@otcaix.iscas.ac.cn
-* a_flying_fish@outlook.com
+- yutian20@otcaix.iscas.ac.cn
+- a_flying_fish@outlook.com
