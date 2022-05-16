@@ -1,65 +1,75 @@
 <h1 align="center">Tutorial</h1>
 
-## 1. How to build
+- [1. How to build](#1-how-to-build)
+  - [Simple](#simple)
+  - [Cross-compile](#cross-compile)
+  - [By Docker](#by-docker)
+- [2. How to deploy](#2-how-to-deploy)
+  - [Notice:](#notice)
+  - [Components:](#components)
+- [3. How to use](#3-how-to-use)
+  - [Components:](#components-1)
+# 1. How to build
 
-* **Simple**
+## Simple
 
     you can build  simplely by `go build .` [simple-script](https://github.com/Litekube/LiteKube/blob/main/scripts/build/build.sh) is provided to build binaries for you. It will auto build all components for your local-enviroment into `build/outputs`. Of course, `golang` and `gcc` environment are needed.
 
-* **Cross-compile**
+## Cross-compile
 
     `LiteKube`need to set `CGO_ENABLED=1` . If you are compiling for arm architecture, set `GOARM=7` additionally when necessary and `GOARM=6` is `golang-default`.
 
-* **By Docker**
+## By Docker
 
-    We also provide a [Dockerfile](https://github.com/Litekube/LiteKube/blob/main/build/Dockerfile) to help simplify operations or as a reference, you can run by:
+We also provide a [Dockerfile](https://github.com/Litekube/LiteKube/blob/main/build/Dockerfile) to help simplify operations or as a reference, you can run by:
 
-    > assum you start your work in /mywork/
+> assum you start your work in /mywork/
 
-    * download code from github
+1. download code from github
 
-        ```shell
-        cd /mywork
-        git clone https://github.com/Litekube/LiteKube.git 
-        ```
+    ```shell
+    cd /mywork
+    git clone https://github.com/Litekube/LiteKube.git 
+    ```
 
-    * build image by docker
+2. build image by docker
 
-        ```shell
-        cd /mywork/LiteKube/build/
-        docker build -t litekube/centos-go:v1 .
-        ```
+    ```shell
+    cd /mywork/LiteKube/build/
+    docker build -t litekube/centos-go:v1 .
+    ```
 
-        if you need proxy, you can use proxy of your host-device and run:
+    if you need proxy, you can use proxy of your host-device and run:
 
-        ```shell
-        cd /mywork/LiteKube/build/
-        export http_proxy="your proxy"
-        export https_proxy="your proxy"
-        docker build --network=host -t litekube/centos-go:v1 .
-        ```
+    ```shell
+    cd /mywork/LiteKube/build/
+    export http_proxy="your proxy"
+    export https_proxy="your proxy"
+    docker build --network=host -t litekube/centos-go:v1 .
+    ```
 
-    * run build
+3. run build
+4. 
+    ```shell
+    chmod +x /mywork/LiteKube/scripts/build/build.sh
+    docker run -v /mywork/LiteKube:/LiteKube --name=compile-litekube litekube/centos-go:v1 /LiteKube/scripts/build/build.sh
+    ```
 
-        ```shell
-        chmod +x /mywork/LiteKube/scripts/build/build.sh
-        docker run -v /mywork/LiteKube:/LiteKube --name=compile-litekube litekube/centos-go:v1 /LiteKube/scripts/build/build.sh
-        ```
-        now, you can view binaries in `/mywork/LiteKube/build/outputs/`. 
-        
-        > we only provide two version in this container. 
-        >
-        > * the same arch with your machine for Linux
-        > * `Armv7l ` for Linux
+    now, you can view binaries in `/mywork/LiteKube/build/outputs/`. 
+    
+    > we only provide two version in this container. 
+    >
+    > * the same arch with your machine for Linux
+    > * `Armv7l ` for Linux
 
-## 2. How to deploy
+# 2. How to deploy
 
-**Notice:** 
+## Notice:
 
 * `network-controller`and `kine` can run in `leader` for default. They can also run in separate nodes or replace kine with `ETCD Cluster` by set `global.run-network-manager=false` and `global.run-kine=false` . As a cost, you need to set corresponding parameters for them.
 *  `build-in worker` for `leader` is also allowed but we set it disabled, you can enable by set `global.enable-worker=true`. Note that you will additionally need to provide `leader` with the same running environment as the `worker` if you do this.
 
-**Components:**
+## Components:
 
 * network-controller
 * [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
@@ -69,9 +79,8 @@
 * [likuadm](likuadm/deploy.md)
 * [containerd](containerd/deploy.md)
 
-## 3. How to use
-
-**Components**
+# 3. How to use
+## Components:
 
 * [leader](leader/usage.md)
 * [worker](worker/usage.md)
