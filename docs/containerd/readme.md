@@ -4,7 +4,8 @@
 - [Deployment](#deployment)
 - [Usage](#usage)
 
-# [Deployment](deploy.md)
+# Deployment
+- [doc](deploy.md)
 
 # Usage
 There is not change to raw `containerd`, you can use it as usual.
