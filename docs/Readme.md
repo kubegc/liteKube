@@ -10,16 +10,13 @@
   - [Notice](#notice)
   - [Components](#components)
 - [Usage](#usage)
-  - [Components](#components-1)
 # Build
 
 ## Simple
-
-    you can build  simplely by `go build .` [simple-script](https://github.com/Litekube/LiteKube/blob/main/scripts/build/build.sh) is provided to build binaries for you. It will auto build all components for your local-enviroment into `build/outputs`. Of course, `golang` and `gcc` environment are needed.
+you can build  simplely by `go build .` [simple-script](https://github.com/Litekube/LiteKube/blob/main/scripts/build/build.sh) is provided to build binaries for you. It will auto build all components for your local-enviroment into `build/outputs`. Of course, `golang` and `gcc` environment are needed.
 
 ## Cross-compile
-
-    `LiteKube`need to set `CGO_ENABLED=1` . If you are compiling for arm architecture, set `GOARM=7` additionally when necessary and `GOARM=6` is `golang-default`.
+`LiteKube`need to set `CGO_ENABLED=1` . If you are compiling for arm architecture, set `GOARM=7` additionally when necessary and `GOARM=6` is `golang-default`.
 
 ## By [dockerfile](../build/Dockerfile)
 
@@ -82,8 +79,6 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 - [containerd](containerd/deploy.md)
 
 # Usage
-## Components
-
 - [leader](leader/usage.md)
 - [worker](worker/usage.md)
 - [kubectl](https://github.com/kubernetes/kubectl)
