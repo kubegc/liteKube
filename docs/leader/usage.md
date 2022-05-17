@@ -15,7 +15,7 @@
 
 # Command-Line parameters
 
-Because there are so many parameters that can be set, and some components have similar parameter meanings. We use completely file-based parameter input, and only a few necessary functions take command-line arguments. such as ：
+Because there are so many parameters that can be set, and some components have similar parameter meanings. We use completely file-based parameter input, and only a few necessary functions take command-line arguments. such as:
 
 - get help and view allowed args:
 
