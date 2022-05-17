@@ -2,6 +2,7 @@
 
 - [Catalogue](#catalogue)
 - [Introduce](#introduce)
+- [Simple start](#simple-start)
 - [Command-Line parameters](#command-line-parameters)
 - [`YAML` format](#yaml-format)
 - [parameter specification](#parameter-specification)
@@ -11,6 +12,51 @@
 # Introduce
 
 `worker` is an important component for `LiteKube`. At its most basic, it contains `kubelet` and `Kube-Proxy` for `k8s`, as well as `LiteKube`'s `network part`. 
+
+# Simple start
+
+you can start leader simply by:
+
+```shell
+mv ./worker* worker && chmod +x ./worker && mv ./worker /usr/bin/
+mkdir -p /opt/litekube/
+
+# ############ run this command in leader node ####################
+# $ likuadm create-token
+# 
+# # assum process print as follow:
+# _________________________________________________________________
+# global:
+#    leader-token: reserverd@884d6c0e9427aa028d033996043975ad
+# network-manager:
+#     token: 04a62af77ec44311@192.168.154.21:6439
+# _________________________________________________________________
+# #################################################################
+
+cat >/opt/litekube/worker.yaml <<EOF
+global:
+    log-to-dir: true
+    leader-token: reserverd@884d6c0e9427aa028d033996043975ad
+network-manager:
+    token: 04a62af77ec44311@192.168.154.21:6439
+EOF
+
+cat >/etc/systemd/system/worker.service <<EOF
+[Unit]
+Description=LiteKube worker
+
+[Service]
+ExecStart=/usr/bin/leader --config-file=/opt/litekube/worker.yaml
+Restart=on-failure
+KillMode=process
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable worker
+systemctl restart worker
+```
 
 # Command-Line parameters
 

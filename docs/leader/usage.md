@@ -2,6 +2,7 @@
 
 - [Catalogue](#catalogue)
 - [Introduce](#introduce)
+- [Simple start](#simple-start)
 - [Command-Line parameters](#command-line-parameters)
 - [`YAML` format](#yaml-format)
 - [parameter specification](#parameter-specification)
@@ -12,6 +13,38 @@
 # Introduce
 
 `leader` is an important component for `LiteKube`. At its most basic, it contains `Kube-Apiserver`, `Kube-Scheduler`, and `Kube-Controller` for `k8s`, as well as `LiteKube`'s `network part` and a `control component`. For ease of use, `leader` allow `kine`(A lightweight similar to ETCD created by k3s), `network-Controller` and `worker` component to be automatically configured internally in an integrated manner.
+
+# Simple start
+
+you can start leader simply by:
+
+```shell
+mv ./leader* leader && chmod +x ./leader && mv ./leader /usr/bin/
+mv ./kubectl* kubectl && chmod +x ./kubectl && mv ./kubectl /usr/bin/
+mv ./likuadm* likuadm && chmod +x ./likuadm && mv ./likuadm /usr/bin/
+mkdir -p /opt/litekube/
+
+cat >/opt/litekube/leader.yaml <<EOF
+global:
+  log-to-dir: true
+EOF
+
+cat >/etc/systemd/system/leader.service <<EOF
+[Unit]
+Description=LiteKube leader
+
+[Service]
+ExecStart=/usr/bin/leader --config-file=/opt/litekube/leader.yaml
+Restart=on-failure
+KillMode=process
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable leader
+systemctl restart leader
+```
 
 # Command-Line parameters
 

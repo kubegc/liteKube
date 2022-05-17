@@ -177,7 +177,6 @@ We will provide the recommended reference configuration, if you have some knowle
 
   if you meet some error while run containerd, try to remove your old libseccomp and install the latest version refer to [doc](scripts/prepare-container-runtime/update-libseccomp.md).
 
-
 ## adapt containerd to `LiteKube`
 > [Script](../../scripts/prepare-container-runtime/containerd-to-k8s.sh) for Linux is ready, we only tested it on `Centos 7.9` and you can adapt it to your local system.
 

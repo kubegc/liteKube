@@ -47,9 +47,8 @@ Tips:
 
 # Quick Start
 
-at this time, you may need install containerd by yourself with systemctl. We will simplify this part of the operation as soon as possible. Once this work are ok, you can run by:
-
 ## run one signal-node-cluster
+> Read [doc](docs/leader/deploy.md) to know how to deploy.
 
 ```shell
 # create ./leader.yaml:
@@ -66,7 +65,7 @@ EOF
 ## run a cluster and disable worker for leader-node
 
 1. run in node to deploy leader
-   > there is no need for container-runtime, you can run directly.
+   > No need for container runtime. Read [doc](docs/leader/deploy.md) for more detail.
  
     ```shell
     ./leader
@@ -87,7 +86,7 @@ EOF
     ```
     
 2. run in node to deploy worker
-   > deploy `containerd` by `systemctl` is necessary.
+   > deploy `containerd` by `systemctl` is necessary. Read [doc](docs/worker/deploy.md) for more detail.
     
     ```shell
     # create ./worker.yaml:

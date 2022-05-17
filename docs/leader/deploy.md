@@ -28,9 +28,9 @@ The operation of leader has a certain complexity. According to its own operation
 
 ## enable network-controller
 > default: true
-> refer to https://github.com/Litekube/network-controller
 - Exposing firewall Ports
   - 6439
+- refer to https://github.com/Litekube/network-controller
 
 ## enable worker
 > default: false
