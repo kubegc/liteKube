@@ -78,7 +78,6 @@ func (opt *WorkerOptions) ConfigHelpSection() []*help.Section {
 func (opt *WorkerOptions) HelpSections() []*help.Section {
 	flagSection := help.NewSection("FLAGS", "", nil)
 	flagSection.AddTip("--"+ConfigFileFlagName, "string", "YAML File to store leader startup parameters", "")
-	flagSection.AddTip("--join", "string", "[only need for the first time]. string use to join to cluster, you can get from leader by seek administrator for help.", "")
 	flagSection.AddTip("--versions", "string", "view the version info, value: {true,false,simple,raw}. ", "false")
 	flagSection.AddTip("--help", "bool", "print usage", "false")
 
