@@ -1,10 +1,8 @@
 # Catalogue
 
 - [Catalogue](#catalogue)
-- [Deployment](#deployment)
-- [Usage](#usage)
+- [Documents](#documents)
 
-# Deployment
-- [doc](deploy.md)
-# Usage
-- [doc](usage.md)
+# Documents
+- [deploy](deploy.md)
+- [usage](usage.md)
