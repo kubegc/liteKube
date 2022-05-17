@@ -7,8 +7,6 @@
   - [Cross-compile](#cross-compile)
   - [By dockerfile](#by-dockerfile)
 - [Deployment](#deployment)
-  - [Notice](#notice)
-  - [Components](#components)
 - [Usage](#usage)
 # Build
 
@@ -63,12 +61,12 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 
 # Deployment
 
-## Notice
+**Notice**
 
 - `network-controller`and `kine` can run in `leader` for default. They can also run in separate nodes or replace kine with `ETCD Cluster` by set `global.run-network-manager=false` and `global.run-kine=false` . As a cost, you need to set corresponding parameters for them.
 - `build-in worker` for `leader` is also allowed but we set it disabled, you can enable by set `global.enable-worker=true`. Note that you will additionally need to provide `leader` with the same running environment as the `worker` if you do this.
 
-## Components
+**Components**
 - [network-controller]()
 - [ncadm]()
 - [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
