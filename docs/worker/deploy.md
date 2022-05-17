@@ -50,6 +50,8 @@ We will provide the recommended reference configuration, if you have some knowle
   validate
 
   ```shell
+  # if not exist, you can install "selinux-utils"
+
   getenforce
   ```
 
