@@ -69,16 +69,17 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 - `build-in worker` for `leader` is also allowed but we set it disabled, you can enable by set `global.enable-worker=true`. Note that you will additionally need to provide `leader` with the same running environment as the `worker` if you do this.
 
 ## Components
-
-- network-controller
+- [network-controller]()
+- [ncadm]()
 - [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
 - [leader](leader/deploy.md)
 - [worker](worker/deploy.md)
 - [kubectl](kubectl/deploy.md) (no change to kubectl in kubernetes)
 - [likuadm](likuadm/deploy.md)
-- [containerd](containerd/deploy.md)
 
 # Usage
+- [network-controller]()
+- [ncadm]()
 - [leader](leader/usage.md)
 - [worker](worker/usage.md)
 - [kubectl](https://github.com/kubernetes/kubectl)

@@ -15,6 +15,24 @@ else
     arch=$2
 fi
 
+echo "install runc:"
+
+rm -r /usr/local/sbin/runc
+rm -r /usr/bin/runc
+
+if [[ ! -f runc.$arch ]] ; then
+    wget https://github.com/opencontainers/runc/releases/download/v1.1.0/runc.$arch
+fi
+
+cp runc.$arch runc
+chmod 777 runc
+mv runc /usr/local/bin/runc
+
+ln -s /usr/local/bin/runc /usr/local/sbin/
+ln -s /usr/local/bin/runc /usr/bin/
+
+echo "success to install runc."
+
 if [[ ! -f cri-containerd-cni-$version-linux-$arch.tar.gz ]] ; then
     wget https://github.com/containerd/containerd/releases/download/v$version/cri-containerd-cni-$version-linux-$arch.tar.gz
 fi
@@ -50,27 +68,5 @@ systemctl restart containerd
 
 echo "success to install containerd."
 
-echo "install runc:"
-
-rm -r /usr/local/sbin/runc
-rm -r /usr/bin/runc
-
-if [[ ! -f runc.$arch ]] ; then
-    wget https://github.com/opencontainers/runc/releases/download/v1.1.0/runc.$arch
-fi
-
-cp runc.$arch runc
-chmod 777 runc
-mv runc /usr/local/bin/runc
-
-ln -s /usr/local/bin/runc /usr/local/sbin/
-ln -s /usr/local/bin/runc /usr/bin/
-
-systemctl daemon-reload 
-systemctl enable containerd
-systemctl restart containerd
-
-echo "success to install runc."
-
-echo "if you meet some error while run container, try to remove your old libseccomp and install the latest version refer to scripts/update-libseccomp.md."
+echo "if you meet some error while run container, try to remove your old libseccomp and install the latest version refer to scripts/prepare-container-runtime/update-libseccomp.md."
 
