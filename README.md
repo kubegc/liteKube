@@ -53,7 +53,7 @@ at this time, you may need install containerd by yourself with systemctl. We wil
 
 ```shell
 # create ./leader.yaml:
-cat >./leader <<EOF
+cat >./leader.yaml <<EOF
 global:
     enable-worker: true
 EOF
@@ -91,7 +91,7 @@ EOF
     
     ```shell
     # create ./worker.yaml:
-    cat >./worker <<EOF
+    cat >./worker.yaml <<EOF
     global:
         leader-token: reserverd@884d6c0e9427aa028d033996043975ad
     network-manager:
