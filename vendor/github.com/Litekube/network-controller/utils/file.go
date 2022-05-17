@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"syscall"
 )
 
@@ -32,12 +33,21 @@ func CreateDir(path string) {
 	}
 }
 
+//func GetHomeDir() string {
+//	if home, err := os.UserHomeDir(); err != nil {
+//		return "/"
+//	} else {
+//		return home
+//	}
+//}
+
 func GetHomeDir() string {
-	if home, err := os.UserHomeDir(); err != nil {
+	currentUser, err := user.Current()
+	if err != nil {
 		return ""
-	} else {
-		return home
 	}
+
+	return currentUser.HomeDir
 }
 
 func CopyFile(src, dst string) error {

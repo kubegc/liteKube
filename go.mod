@@ -35,7 +35,7 @@ replace (
 )
 
 require (
-	github.com/Litekube/network-controller v0.0.0-20220512093236-1b98b50ffaaa
+	github.com/Litekube/network-controller v0.0.0-20220517143040-645fae17827f
 	github.com/k3s-io/kine v0.0.0-00010101000000-000000000000
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/litekube/likuadm v0.0.0-20220501085030-cf482698c773

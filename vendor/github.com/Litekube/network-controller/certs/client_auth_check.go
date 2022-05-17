@@ -15,46 +15,44 @@ func CheckGrpcClientCertConfig(tlsConfig config.TLSConfig, tlsDir string) error 
 		return errors.New("tlsDir can't be empty")
 	}
 	// generate default client certs for grpc
-	defualtDir := filepath.Join(utils.GetHomeDir(), ".litekube/nc/certs/grpc")
-	utils.CreateDir(defualtDir)
-	caFile := filepath.Join(defualtDir, contant.CAFile)
-
-	if !utils.Exists(caFile) {
-		err := utils.CopyFile(tlsConfig.CAFile, caFile)
-		if err != nil {
-			return err
-		}
-	}
-
-	clientCertFile := filepath.Join(defualtDir, contant.ClientCertFile)
-	clientKeyFile := filepath.Join(defualtDir, contant.ClientKeyFile)
-
-	if _, _, _, err := GenerateClientCertKey(false, true, "register-client", []string{"lknm:register"}, tlsConfig.CAFile, tlsConfig.CAKeyFile, clientCertFile, clientKeyFile); err != nil {
-		return err
-	}
-
-	// soft link with tlsDir
 	newTlsDir := filepath.Join(tlsDir, "/grpc")
 	utils.CreateDir(newTlsDir)
 	caPath := filepath.Join(newTlsDir, "ca.crt")
 	certPath := filepath.Join(newTlsDir, "client.crt")
 	keyPath := filepath.Join(newTlsDir, "client.key")
 
-	// create cert symlink
+	// soft link with tlsDir
+	defualtDir := filepath.Join(utils.GetHomeDir(), ".litekube/nc/certs/grpc")
+	caFile := filepath.Join(defualtDir, contant.CAFile)
+	clientCertFile := filepath.Join(defualtDir, contant.ClientCertFile)
+	clientKeyFile := filepath.Join(defualtDir, contant.ClientKeyFile)
+
+	// in tls dir: generate default client certs for grpc
 	if !utils.Exists(caPath) {
-		if err := os.Symlink(caFile, caPath); err != nil {
-			return fmt.Errorf("fail to create link for network-manager adm certs err:%s", err.Error())
+		err := utils.CopyFile(tlsConfig.CAFile, caPath)
+		if err != nil {
+			return err
 		}
 	}
-	if !utils.Exists(certPath) {
-		if err := os.Symlink(clientCertFile, certPath); err != nil {
-			return fmt.Errorf("fail to create link for network-manager adm certs err:%s", err.Error())
-		}
+
+	if _, _, _, err := GenerateClientCertKey(false, true, "register-client", []string{"lknm:register"}, tlsConfig.CAFile, tlsConfig.CAKeyFile, certPath, keyPath); err != nil {
+		return err
 	}
-	if !utils.Exists(keyPath) {
-		if err := os.Symlink(clientKeyFile, keyPath); err != nil {
-			return fmt.Errorf("fail to create link for network-manager adm certs err:%s", err.Error())
-		}
+
+	if err := os.RemoveAll(defualtDir); err != nil {
+		return err
+	}
+	utils.CreateDir(defualtDir)
+
+	// in ncadm certs dir: create cert symlink
+	if err := os.Symlink(caPath, caFile); err != nil {
+		return fmt.Errorf("fail to create link for network-controller adm certs err:%s", err.Error())
+	}
+	if err := os.Symlink(certPath, clientCertFile); err != nil {
+		return fmt.Errorf("fail to create link for network-controller adm certs err:%s", err.Error())
+	}
+	if err := os.Symlink(keyPath, clientKeyFile); err != nil {
+		return fmt.Errorf("fail to create link for network-controller adm certs err:%s", err.Error())
 	}
 
 	return nil

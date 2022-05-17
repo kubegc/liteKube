@@ -120,8 +120,8 @@ github.com/Litekube/kubernetes/staging/src/k8s.io/mount-utils v1.24.1-0.20220506
 github.com/Litekube/kubernetes/staging/src/k8s.io/mount-utils v1.24.1-0.20220506094841-51802d7e46cc/go.mod h1:nv4A0Aw/lVw66kjPyJ3Zl9e24mE/tB4f6JdGd2uFJfE=
 github.com/Litekube/kubernetes/staging/src/k8s.io/pod-security-admission v1.24.1-0.20220506094841-51802d7e46cc h1:waMfyMaGu294qpPilK0DQ3ARDouMAsigUsBN/GlWKOw=
 github.com/Litekube/kubernetes/staging/src/k8s.io/pod-security-admission v1.24.1-0.20220506094841-51802d7e46cc/go.mod h1:2ljelMwPZ+poqKFNur05XPyGGmWjdE2vnA8K034AIU4=
-github.com/Litekube/network-controller v0.0.0-20220512093236-1b98b50ffaaa h1:lI16b+YDgK63//aPUhE70Kdor7xmJLFiEOUU9qv81IM=
-github.com/Litekube/network-controller v0.0.0-20220512093236-1b98b50ffaaa/go.mod h1:QtjPYYD187VjaJhy8bgf2hcOWz9ykc/MarnIisxXhkg=
+github.com/Litekube/network-controller v0.0.0-20220517143040-645fae17827f h1:nKHlGZm0u/m9JywvMYiEcwHVE96ywe9MVy+lhBGvlZw=
+github.com/Litekube/network-controller v0.0.0-20220517143040-645fae17827f/go.mod h1:E29btopgmG1Ujp6zSC3UHw9R/R/afLGwjEo562J/U6g=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd h1:sjQovDkwrZp8u+gxLtPgKGjk5hCxuy2hrRejBTA9xFU=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd/go.mod h1:64YHyfSL2R96J44Nlwm39UHepQbyR5q10x7iYa1ks2E=
 github.com/Microsoft/go-winio v0.4.15/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=

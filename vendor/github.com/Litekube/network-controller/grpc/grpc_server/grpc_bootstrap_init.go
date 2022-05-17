@@ -17,11 +17,11 @@ func (s *GrpcServer) StartBootstrapServerTcp() error {
 
 	tcpAddr := fmt.Sprintf(":%d", s.bootstrapPort)
 	lis, err := net.Listen("tcp", tcpAddr)
-	defer lis.Close()
 	if err != nil {
 		logger.Errorf("tcp failed to listen: %v", err)
 		return err
 	}
+	defer lis.Close()
 
 	gopts := []grpc.ServerOption{}
 	if len(s.grpcTlsConfig.ServerCertFile) != 0 && len(s.grpcTlsConfig.ServerKeyFile) != 0 {
