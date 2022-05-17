@@ -18,9 +18,9 @@ RUN mkdir -p /usr/local && \
     rm -r go1.18.2.linux-amd64.tar.gz
 
 ENV PATH=/usr/local/go/bin:$PATH
-ENV GOPATH /home/go
-ENV GOROOT /usr/local/go
-ENV GOPROXY goproxy.cn
+ENV GOPATH=/home/go
+ENV GOROOT=/usr/local/go
+ENV GOPROXY=goproxy.cn
 
 RUN go version
 
