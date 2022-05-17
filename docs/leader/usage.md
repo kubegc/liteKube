@@ -1,22 +1,19 @@
 # Catalogue
 
 - [Catalogue](#catalogue)
-- [Usage](#usage)
-  - [Introduce](#introduce)
-  - [Command-Line parameters](#command-line-parameters)
-  - [`YAML` format](#yaml-format)
-  - [parameter specification](#parameter-specification)
-    - [global](#global)
-    - [`kube-apiserver`, `kube-scheduler` and `kube-controller-manager`](#kube-apiserver-kube-scheduler-and-kube-controller-manager)
-    - [`kine`](#kine)
-    - [`network-manager`](#network-manager)
-# Usage
-
-## Introduce
+- [Introduce](#introduce)
+- [Command-Line parameters](#command-line-parameters)
+- [`YAML` format](#yaml-format)
+- [parameter specification](#parameter-specification)
+  - [global](#global)
+  - [`kube-apiserver`, `kube-scheduler` and `kube-controller-manager`](#kube-apiserver-kube-scheduler-and-kube-controller-manager)
+  - [`kine`](#kine)
+  - [`network-manager`](#network-manager)
+# Introduce
 
 `leader` is an important component for `LiteKube`. At its most basic, it contains `Kube-Apiserver`, `Kube-Scheduler`, and `Kube-Controller` for `k8s`, as well as `LiteKube`'s `network part` and a `control component`. For ease of use, `leader` allow `kine`(A lightweight similar to ETCD created by k3s), `network-Controller` and `worker` component to be automatically configured internally in an integrated manner.
 
-## Command-Line parameters
+# Command-Line parameters
 
 Because there are so many parameters that can be set, and some components have similar parameter meanings. We use completely file-based parameter input, and only a few necessary functions take command-line arguments. such as ：
 
@@ -38,7 +35,7 @@ Because there are so many parameters that can be set, and some components have s
     ./leader --config-file=/path-to/config.yaml
     ```
 
-## `YAML` format
+# `YAML` format
 
 ```yaml
 global:
@@ -178,11 +175,11 @@ kine:
 
 You can go straight to a real YAML startup [config-file](../examples/leader.yaml)
 
-## parameter specification
+# parameter specification
 > you can set only part or even none of yaml-config, there will be good default-value as usual.
 >
 > You can view the actual startup configuration in `global.work-dir/startup/leader.yaml` or even use it directly as a new startup configuration file
-### global
+## global
 - work-dir
   > we will try our best to set file-cache to this directory instead of `$HOME/.litekube`. Special files will still be saved in `$HOME/.litekube`, but they are  trivial.
 - log-dir
@@ -195,7 +192,7 @@ You can go straight to a real YAML startup [config-file](../examples/leader.yaml
   > You can set this value to `false` and set `network-manager.token`(manually configuring network-manager parameters is not recommended). With the help of network-controller-bootstrap, leader can config network-manager args automatically. `leader` will be able to run in any network-level once seperate `network-controller server` with `leader` like `worker`
 - enable-worker
   > if you want to run `leader` and `worker` in same node, set this value to `true` and `false` is default. This need you prepare `worker` running environment for `leader`. if you want to give your own setting, you many need to change `global.work-dir/startup/worker.yaml` and restart `leader`.
-### `kube-apiserver`, `kube-scheduler` and `kube-controller-manager`
+## `kube-apiserver`, `kube-scheduler` and `kube-controller-manager`
 > all args will finally be explain as `--<key>=<value>`
 - professional
   > if you are not familiar with kubernetes startup parameters and architecture of LiteKube, ignoring these Settings is recommended.
@@ -205,11 +202,11 @@ You can go straight to a real YAML startup [config-file](../examples/leader.yaml
   > parameters that Litekube doesn't mention can still be set by key-value pairs. They will also be explain as `--<key>=<value>` for `kubernetes component`, we do none check to these parameters.
   > 
   > parameters mentioned in `options` or `professional` will be ignored. Usually, we will print tips for you.
-### `kine`
+## `kine`
 > you can discard these parameters if you set `global.run-kine=false`. Or you can partially customize kine Server parameters. Unless you set up the certificates manually, they will be generated automatically.
 >
 > Notice: `kube-Apiserver`'s ETCD parameters need to be configured manually once you manually set up the certificate, as we lack the necessary information to complete the automation.
-### `network-manager`
+## `network-manager`
 > *(Due to the history of the program, we have retained the old name in our code and comments.It's essentially equivalent to `network-controller`)*
 > 
 > Take the complexity of the network components into consideration, we established the `bootstrap` mechanism for convenience. You only need to set the value for `token` here.
