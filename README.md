@@ -101,8 +101,6 @@ EOF
     ./leader --config-file=./worker.yaml
     ```
 
-    use `kubectl get csr` to check request in leader-node now.
-
 # Document
 
 If you want more detailed instructions, please read the [documentation](docs/Readme.md).
