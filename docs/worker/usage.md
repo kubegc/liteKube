@@ -44,7 +44,6 @@ global:
     log-to-dir:   bool  
     log-to-std:   bool  
     work-dir:     string
-
 kubelet:
     # kubelet's startup parameters
     options:
@@ -65,7 +64,6 @@ kubelet:
         # reserve parameters
         <name-1>: <value-1>
         <name-n>: <value-n>
-
 kube-proxy:
     # kube-proxy's startup parameters
     options:
