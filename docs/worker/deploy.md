@@ -19,7 +19,7 @@ We will provide the recommended reference configuration, if you have some knowle
 > The following commands are only tested in `Centos 7.9`. You can replace them with the local settings. [script](../../scripts/prepare-container-runtime/prepare-os.md) for centos is ready.
 
 - close firewall and disable reboot
-  > can be replaced with firewall rules
+  > can be replaced with firewall rules, for port 10248,10249,10250,10255,10256
 
   ```shell
   systemctl stop firewalld
