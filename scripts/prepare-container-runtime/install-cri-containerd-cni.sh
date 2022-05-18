@@ -8,7 +8,7 @@ version=0
 arch=amd64
 if [ $# -lt 2 ]
 then
-    version=1.6.2
+    version=1.6.4
     arch=amd64
 else
     version=$1
