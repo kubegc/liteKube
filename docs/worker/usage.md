@@ -46,7 +46,7 @@ cat >/etc/systemd/system/worker.service <<EOF
 Description=LiteKube worker
 
 [Service]
-ExecStart=/usr/bin/leader --config-file=/opt/litekube/worker.yaml
+ExecStart=/usr/bin/worker --config-file=/opt/litekube/worker.yaml
 Restart=on-failure
 KillMode=process
 [Install]
