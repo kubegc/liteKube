@@ -147,8 +147,6 @@ We will provide the recommended reference configuration, if you have some knowle
   source ~/.bashrc
   ```
 
-  you can consider run `yum install -y containerd` for `Centos` or `apt-get install containerd` for `Ubuntu` instead.
-
 - create config-file
 
   ```shell
