@@ -38,7 +38,7 @@ if [[ ! -f cri-containerd-cni-$version-linux-$arch.tar.gz ]] ; then
         wget https://github.com/Litekube/LiteKube/releases/download/release-v0.1.0/cri-containerd-cni-$version-linux-$arch.tar.gz
     else
         wget https://github.com/containerd/containerd/releases/download/v$version/cri-containerd-cni-$version-linux-$arch.tar.gz
-    fi 
+    fi
 fi
 
 if [[ ! -f cri-containerd-cni-$version-linux-$arch.tar.gz ]] ; then
@@ -76,4 +76,3 @@ systemctl restart containerd
 echo "success to install containerd."
 
 echo "if you meet some error while run container, try to remove your old libseccomp and install the latest version refer to scripts/prepare-container-runtime/update-libseccomp.md."
-

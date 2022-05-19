@@ -21,7 +21,7 @@ var DefaultGO GlobalOptions = GlobalOptions{
 	WorkDir:     filepath.Join(global.HomePath, ".litekube/"),
 	LogDir:      "",
 	LogToStd:    true,
-	LogToDir:    false,
+	LogToDir:    true,
 	LeaderToken: global.ReservedNodeToken,
 }
 
