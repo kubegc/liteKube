@@ -15,7 +15,7 @@
 
 # Simple start
 
-you can start leader simply by:
+prepare enviroment and download worker, then you can start worker simply by:
 
 ```shell
 mv ./worker* worker && chmod +x ./worker && mv ./worker /usr/bin/
