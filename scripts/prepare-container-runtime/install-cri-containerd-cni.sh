@@ -1,48 +1,57 @@
 #!/bin/bash
 
 # run as: sudo ./install-containerd.sh $version $arch
-# default version=1.6.2
+# arch: arm,arm64 and amd64 is ready
+# arm only for 1.6.4
+# default version=1.6.4
 # default arch=amd64
 
 version=0
 arch=amd64
 if [ $# -lt 2 ]
 then
-    version=1.6.2
+    version=1.6.4
     arch=amd64
 else
     version=$1
     arch=$2
 fi
 
-echo "install runc:"
+# echo "install runc:"
 
-rm -r /usr/local/sbin/runc
-rm -r /usr/bin/runc
+# rm -r /usr/local/sbin/runc
+# rm -r /usr/bin/runc
 
-if [[ ! -f runc.$arch ]] ; then
-    wget https://github.com/opencontainers/runc/releases/download/v1.1.0/runc.$arch
-fi
+# if [[ ! -f runc.$arch ]] ; then
+#     wget https://github.com/opencontainers/runc/releases/download/v1.1.0/runc.$arch
+# fi
 
-cp runc.$arch runc
-chmod 777 runc
-mv runc /usr/local/bin/runc
+# cp runc.$arch runc
+# chmod 777 runc
+# mv runc /usr/local/bin/runc
 
-ln -s /usr/local/bin/runc /usr/local/sbin/
-ln -s /usr/local/bin/runc /usr/bin/
+# ln -s /usr/local/bin/runc /usr/local/sbin/
+# ln -s /usr/local/bin/runc /usr/bin/
 
-echo "success to install runc."
-
-if [[ ! -f cri-containerd-cni-$version-linux-$arch.tar.gz ]] ; then
-    wget https://github.com/containerd/containerd/releases/download/v$version/cri-containerd-cni-$version-linux-$arch.tar.gz
-fi
+# echo "success to install runc."
 
 if [[ ! -f cri-containerd-cni-$version-linux-$arch.tar.gz ]] ; then
-    echo "https://github.com/containerd/containerd/releases/download/v$version/cri-containerd-cni-$version-linux-$arch.tar.gz is not exit"
+    if [ "$arch" == "arm" ] ; then
+        wget https://github.com/Litekube/LiteKube/releases/download/release-v0.1.0/cri-containerd-cni-$version-linux-$arch.tar.gz
+    else
+        wget https://github.com/containerd/containerd/releases/download/v$version/cri-containerd-cni-$version-linux-$arch.tar.gz
+    fi
+fi
+
+if [[ ! -f cri-containerd-cni-$version-linux-$arch.tar.gz ]] ; then
+    echo "fail to download cri-containerd-cni-$version-linux-$arch.tar.gz, exit."
     exit
 fi
 
 tar -C / -xavf cri-containerd-cni-$version-linux-$arch.tar.gz
+
+ln -s /usr/local/sbin/runc /usr/local/bin/
+ln -s /usr/local/sbin/runc /usr/bin/
 
 cat >>/etc/profile<<EOF
 export PATH=$PATH:/usr/local/bin:/usr/local/sbin
@@ -69,4 +78,3 @@ systemctl restart containerd
 echo "success to install containerd."
 
 echo "if you meet some error while run container, try to remove your old libseccomp and install the latest version refer to scripts/prepare-container-runtime/update-libseccomp.md."
-

@@ -10,13 +10,14 @@
   - [`kube-apiserver`, `kube-scheduler` and `kube-controller-manager`](#kube-apiserver-kube-scheduler-and-kube-controller-manager)
   - [`kine`](#kine)
   - [`network-manager`](#network-manager)
+- [install CNI](#install-cni)
 # Introduce
 
 `leader` is an important component for `LiteKube`. At its most basic, it contains `Kube-Apiserver`, `Kube-Scheduler`, and `Kube-Controller` for `k8s`, as well as `LiteKube`'s `network part` and a `control component`. For ease of use, `leader` allow `kine`(A lightweight similar to ETCD created by k3s), `network-Controller` and `worker` component to be automatically configured internally in an integrated manner.
 
 # Simple start
 
-you can start leader simply by:
+Download leader, likuadm and kubectl, then you can start leader simply by:
 
 ```shell
 mv ./leader* leader && chmod +x ./leader && mv ./leader /usr/bin/
@@ -45,6 +46,8 @@ systemctl daemon-reload
 systemctl enable leader
 systemctl restart leader
 ```
+
+goto [install CNI](#install-cni)
 
 # Command-Line parameters
 
@@ -245,3 +248,10 @@ You can go straight to a real YAML startup [config-file](../examples/leader.yaml
 > Take the complexity of the network components into consideration, we established the `bootstrap` mechanism for convenience. You only need to set the value for `token` here.
 - token
   > By default, this value does not need to be configured for `leader`. But if you choose to separate the `leader` and `network controller server`, it will be necessary to run `ncadm` on node running `network-controller server` to get the token value. 
+
+# install CNI
+> Current `leader` version does not install network plug-ins such as `flannel` by default. You can install by:
+
+```shell
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```

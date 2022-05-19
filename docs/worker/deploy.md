@@ -16,10 +16,10 @@
 We will provide the recommended reference configuration, if you have some knowledge of kubernetes configuration parameters, you can also follow your own custom settings.
 
 ## set up os
-> The following commands are only tested in `Centos 7.9`. You can replace them with the local settings. [script](../../scripts/prepare-container-runtime/prepare-os.md) for centos is ready.
+> The following commands are only tested in `Centos 7.9`. You can replace them with the local settings. 
 
 - close firewall and disable reboot
-  > can be replaced with firewall rules
+  > can be replaced with firewall rules, for port 10248,10249,10250,10255,10256
 
   ```shell
   systemctl stop firewalld
@@ -146,8 +146,6 @@ We will provide the recommended reference configuration, if you have some knowle
   source /etc/profile
   source ~/.bashrc
   ```
-
-  you can consider run `yum install -y containerd` for `Centos` or `apt-get install containerd` for `Ubuntu` instead.
 
 - create config-file
 

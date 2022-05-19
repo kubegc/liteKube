@@ -15,7 +15,7 @@
 
 # Simple start
 
-you can start leader simply by:
+prepare enviroment and download worker, then you can start worker simply by:
 
 ```shell
 mv ./worker* worker && chmod +x ./worker && mv ./worker /usr/bin/
@@ -46,7 +46,7 @@ cat >/etc/systemd/system/worker.service <<EOF
 Description=LiteKube worker
 
 [Service]
-ExecStart=/usr/bin/leader --config-file=/opt/litekube/worker.yaml
+ExecStart=/usr/bin/worker --config-file=/opt/litekube/worker.yaml
 Restart=on-failure
 KillMode=process
 [Install]

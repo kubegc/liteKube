@@ -67,6 +67,7 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 - `build-in worker` for `leader` is also allowed but we set it disabled, you can enable by set `global.enable-worker=true`. Note that you will additionally need to provide `leader` with the same running environment as the `worker` if you do this.
 
 **Components**
+> If you have proxy configured on your nodes, be sure to delete the proxy rule for 10.1.1.0/24.
 
 - [network-controller](https://github.com/Litekube/network-controller/blob/main/README.md)
 - [ncadm](https://github.com/Litekube/network-controller/blob/main/docs/ncadm-explain.md)

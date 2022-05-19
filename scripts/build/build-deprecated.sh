@@ -17,7 +17,6 @@ VersionTags="\
     -X \"github.com/litekube/LiteKube/pkg/version.BuildDate=$BuildDate\" \
 "
 
-
 mkdir -p $LeaderFold
 cd $ProjectPath/cmd/leader
 

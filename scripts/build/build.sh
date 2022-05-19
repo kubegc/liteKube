@@ -52,7 +52,7 @@ function compile(){
     go build -ldflags "$VersionTags -w -s" -o $Tag . && mv $Tag  $saveDir/
 
     # build for linux-armv7l
-    rungobuild arm-linux-gnueabihf-gcc $codePath $fileName linux arm armv7l $saveDir GOARM=7
+    rungobuild arm-linux-gnueabihf-gcc $codePath $fileName linux arm arm $saveDir GOARM=7
 }
 
 
