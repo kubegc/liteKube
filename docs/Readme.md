@@ -78,7 +78,7 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 - [likuadm](likuadm/deploy.md)
 
 # Usage
-- [network-controller](https://github.com/Litekube/network-controller)
+- [network-controller](https://github.com/Litekube/network-controller/blob/main/docs/demo-usage.md)
 - [ncadm](https://github.com/Litekube/network-controller/blob/main/docs/ncadm-explain.md)
 - [leader](leader/usage.md)
 - [worker](worker/usage.md)
