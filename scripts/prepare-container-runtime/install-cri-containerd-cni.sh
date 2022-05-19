@@ -37,7 +37,7 @@ fi
 
 if [[ ! -f cri-containerd-cni-$version-linux-$arch.tar.gz ]] ; then
     if [ "$arch" == "arm" ] ; then
-        wget https://github.com/Litekube/LiteKube/releases/download/release-v0.1.0/cri-containerd-cni-$version-linux-$arch.tar.gz
+        wget https://github.com/Litekube/LiteKube/releases/download/v0.1.0/cri-containerd-cni-$version-linux-$arch.tar.gz
     else
         wget https://github.com/containerd/containerd/releases/download/v$version/cri-containerd-cni-$version-linux-$arch.tar.gz
     fi
