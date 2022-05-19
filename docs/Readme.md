@@ -103,7 +103,6 @@ spec:
     metadata:
       labels:
         app: test-litekube
-      name: test-pod
     spec:
       containers:
       - name: nginx
@@ -113,7 +112,7 @@ spec:
         - containerPort: 80
       - name: centos 
         image: centos:7
-        command: ["/usr/bin/bash","-c","sleep 3600s"]
+        command: ["sh","-c",'sleep 3600s']
 # test: kubectl exec -it test-deployment-*  -c busybox  -- /usr/bin/bash
 
 ---
@@ -123,18 +122,34 @@ kind: Service
 metadata:
   labels:
     app: test-litekube
-  name: test-nginx-service
+  name: test-nginx-service-nodeport
 spec:
   ports:
   - port: 80
     protocol: TCP
-    targetPort: 8080
     nodePort: 30001
   selector:
     app: test-litekube
   type: NodePort
 
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-litekube
+  name: test-nginx-service-clusterip
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: test-litekube
+  type: ClusterIP
+
 # test: 
 # - curl in host: http://{node-ip}:30001
-# - curl in pod: http://{cluster-ip}:8080
+# - curl in pod: http://{cluster-ip}:80
 ```
