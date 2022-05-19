@@ -113,7 +113,7 @@ spec:
       - name: centos 
         image: centos:7
         command: ["sh","-c",'sleep 3600s']
-# test: kubectl exec -it test-deployment-*  -c busybox  -- /usr/bin/bash
+# test: kubectl exec -it test-deployment-*  -c centos  -- /usr/bin/bash
 
 ---
 
