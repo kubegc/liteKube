@@ -68,8 +68,8 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 
 **Components**
 
-- [network-controller]()
-- [ncadm]()
+- [network-controller](https://github.com/Litekube/network-controller/blob/main/README.md)
+- [ncadm](https://github.com/Litekube/network-controller/blob/main/docs/ncadm-explain.md)
 - [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
 - [leader](leader/deploy.md)
 - [worker](worker/deploy.md)
@@ -77,8 +77,8 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 - [likuadm](likuadm/deploy.md)
 
 # Usage
-- [network-controller]()
-- [ncadm]()
+- [network-controller](https://github.com/Litekube/network-controller/blob/main/docs/demo-usage.md)
+- [ncadm](https://github.com/Litekube/network-controller/blob/main/docs/ncadm-explain.md)
 - [leader](leader/usage.md)
 - [worker](worker/usage.md)
 - [kubectl](https://github.com/kubernetes/kubectl)
