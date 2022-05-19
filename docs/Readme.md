@@ -69,7 +69,7 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 **Components**
 > If you have proxy configured on your nodes, be sure to delete the proxy rule for 10.1.1.0/24.
 
-- [network-controller](https://github.com/Litekube/network-controller/blob/main/README.md)
+- [network-controller](https://github.com/Litekube/network-controller)
 - [ncadm](https://github.com/Litekube/network-controller/blob/main/docs/ncadm-explain.md)
 - [Kine](https://github.com/Litekube/kine) (you can also use `ETCD` cluster instead)
 - [leader](leader/deploy.md)
@@ -78,7 +78,7 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 - [likuadm](likuadm/deploy.md)
 
 # Usage
-- [network-controller](https://github.com/Litekube/network-controller/blob/main/docs/demo-usage.md)
+- [network-controller](https://github.com/Litekube/network-controller)
 - [ncadm](https://github.com/Litekube/network-controller/blob/main/docs/ncadm-explain.md)
 - [leader](leader/usage.md)
 - [worker](worker/usage.md)
