@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # run as: sudo ./install-containerd.sh $version $arch
+# arch: arm,arm64 and amd64 is ready
+# arm only for 1.6.4
 # default version=1.6.4
 # default arch=amd64
 
