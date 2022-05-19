@@ -8,6 +8,7 @@
   - [By dockerfile](#by-dockerfile)
 - [Deployment](#deployment)
 - [Usage](#usage)
+- [Test LiteKube](#test-litekube)
 # Build
 
 ## Simple
