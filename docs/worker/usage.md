@@ -35,7 +35,6 @@ mkdir -p /opt/litekube/
 
 cat >/opt/litekube/worker.yaml <<EOF
 global:
-    log-to-dir: true
     leader-token: reserverd@884d6c0e9427aa028d033996043975ad
 network-manager:
     token: 04a62af77ec44311@192.168.154.21:6439
