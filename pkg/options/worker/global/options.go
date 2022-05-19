@@ -31,7 +31,7 @@ func NewGlobalOptions() *GlobalOptions {
 }
 
 func (opt *GlobalOptions) HelpSection() *help.Section {
-	section := help.NewSection("global", "leader startup parameters and common args for kubernetes components", nil)
+	section := help.NewSection("global", "worker startup parameters and common args for kubernetes components", nil)
 	section.AddTip("work-dir", "string", "dir to store file generate by litekube", DefaultGO.WorkDir)
 	section.AddTip("log-dir", "string", "fold path to store logs", "$WorkDir/logs")
 	section.AddTip("log-to-dir", "bool", "store log to disk or not", fmt.Sprintf("%t", DefaultGO.LogToDir))
