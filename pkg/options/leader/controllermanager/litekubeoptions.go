@@ -15,7 +15,7 @@ type ControllerManagerLitekubeOptions struct {
 }
 
 var DefaultCMLO ControllerManagerLitekubeOptions = ControllerManagerLitekubeOptions{
-	AllocateNodeCidrs:            false,
+	AllocateNodeCidrs:            true,
 	ClusterCidr:                  "172.17.0.0/16",
 	Profiling:                    false,
 	UseServiceAccountCredentials: true,

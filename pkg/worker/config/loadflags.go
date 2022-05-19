@@ -223,12 +223,6 @@ func (workerRuntime *WorkerRuntime) LoadNetManager() error {
 			workerRuntime.RuntimeAuthentication.NetWorkManagerClient = nil
 			klog.Infof("network manager client certificates specified ok, ignore --token")
 		} else {
-			raw.PrintFlags("error-tip", func() func(format string, a ...interface{}) error {
-				return func(format string, a ...interface{}) error {
-					klog.Errorf(format, a...)
-					return nil
-				}
-			}())
 			return fmt.Errorf("you have provide bad network manager client certificates or node-token for network manager")
 		}
 	}

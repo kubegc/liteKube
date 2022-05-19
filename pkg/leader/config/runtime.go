@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	workerapp "github.com/litekube/LiteKube/cmd/worker/app"
-	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/litekube/LiteKube/pkg/leader/runtime"
 	options "github.com/litekube/LiteKube/pkg/options/leader"
 	workeroptions "github.com/litekube/LiteKube/pkg/options/worker"
@@ -159,11 +158,18 @@ func (leaderRuntime *LeaderRuntime) Run() error {
 		workerOpt.GlobalOptions.LogToStd = leaderRuntime.RuntimeOption.GlobalOptions.LogToStd
 		workerOpt.GlobalOptions.LogToDir = leaderRuntime.RuntimeOption.GlobalOptions.LogToDir
 		workerOpt.NetmamagerOptions.Token = "local"
+		workerOpt.NetmamagerOptions.NodeToken = leaderRuntime.RuntimeOption.NetmamagerOptions.NodeToken
 		workerOpt.NetmamagerOptions.RegisterOptions.Address = leaderRuntime.RuntimeOption.NetmamagerOptions.RegisterOptions.Address
 		workerOpt.NetmamagerOptions.RegisterOptions.SecurePort = leaderRuntime.RuntimeOption.NetmamagerOptions.RegisterOptions.SecurePort
+		workerOpt.NetmamagerOptions.RegisterOptions.CACert = leaderRuntime.RuntimeOption.NetmamagerOptions.RegisterOptions.CACert
+		workerOpt.NetmamagerOptions.RegisterOptions.ClientCertFile = leaderRuntime.RuntimeOption.NetmamagerOptions.RegisterOptions.ClientCertFile
+		workerOpt.NetmamagerOptions.RegisterOptions.ClientkeyFile = leaderRuntime.RuntimeOption.NetmamagerOptions.RegisterOptions.ClientkeyFile
 		workerOpt.NetmamagerOptions.JoinOptions.Address = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.Address
 		workerOpt.NetmamagerOptions.JoinOptions.SecurePort = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.SecurePort
-		workerOpt.GlobalOptions.LeaderToken = fmt.Sprintf("%s@local", global.ReservedNodeToken)
+		workerOpt.NetmamagerOptions.JoinOptions.CACert = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.CACert
+		workerOpt.NetmamagerOptions.JoinOptions.ClientCertFile = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.ClientCertFile
+		workerOpt.NetmamagerOptions.JoinOptions.ClientkeyFile = leaderRuntime.RuntimeOption.NetmamagerOptions.JoinOptions.ClientkeyFile
+		workerOpt.GlobalOptions.LeaderToken = fmt.Sprintf("%s@local", leaderRuntime.RuntimeOption.NetmamagerOptions.NodeToken)
 		go func() {
 			// go func() {
 			// 	// max 12-hour to wait worker start unless restart leader

@@ -27,4 +27,4 @@ cmd/kubectl/kubectl*
 test
 kine_test
 note.txt
-build/outputs
+build/outputs*

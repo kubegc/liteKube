@@ -114,7 +114,8 @@ We will provide the recommended reference configuration, if you have some knowle
 [Script](../../scripts/prepare-container-runtime/install-cri-containerd-cni.sh) for Linux is ready, we only tested it on `Centos 7.9` and you can adapt it to your local system.
 
 - install `runc`
-  
+  >  `libseccomp`>`2.4` is required, you can try to install by package-manager such as `apt-get install libseccomp-dev` or install the latest version refer to [doc](../../scripts/prepare-container-runtime/update-libseccomp.md).
+
   ```shell
   wget https://github.com/opencontainers/runc/releases/download/v1.1.0/runc.amd64 && mv runc.amd64 runc && chmod 777 runc
 
@@ -174,8 +175,6 @@ We will provide the recommended reference configuration, if you have some knowle
   ```shell
   systemctl status containerd -l
   ```
-
-  if you meet some error while run containerd, try to remove your old libseccomp and install the latest version refer to [doc](scripts/prepare-container-runtime/update-libseccomp.md).
 
 ## adapt containerd to `LiteKube`
 > [Script](../../scripts/prepare-container-runtime/containerd-to-k8s.sh) for Linux is ready, we only tested it on `Centos 7.9` and you can adapt it to your local system.

@@ -84,3 +84,57 @@ We also provide a [Dockerfile](../build/Dockerfile) to help simplify operations 
 - [worker](worker/usage.md)
 - [kubectl](https://github.com/kubernetes/kubectl)
 - [likuadm](likuadm/usage.md)
+
+# Test LiteKube
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-litekube
+  name: test-deployment
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: test-litekube
+  template:
+    metadata:
+      labels:
+        app: test-litekube
+      name: test-pod
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.17.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+      - name: centos 
+        image: centos:7
+        command: ["/usr/bin/bash","-c","sleep 3600s"]
+# test: kubectl exec -it test-deployment-*  -c busybox  -- /usr/bin/bash
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-litekube
+  name: test-nginx-service
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 30001
+  selector:
+    app: test-litekube
+  type: NodePort
+
+# test: 
+# - curl in host: http://{node-ip}:30001
+# - curl in pod: http://{cluster-ip}:8080
+```
