@@ -17,7 +17,7 @@
 
 # Simple start
 
-you can start leader simply by:
+Download leader, likuadm and kubectl, then you can start leader simply by:
 
 ```shell
 mv ./leader* leader && chmod +x ./leader && mv ./leader /usr/bin/
